@@ -26,3 +26,7 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# Web build artefacts
+*.tsbuildinfo
+next-env.d.ts
