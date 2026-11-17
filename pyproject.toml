@@ -6,18 +6,22 @@ requires-python = ">=3.12"
 dependencies = [
     "core",
     "providers",
+    "market_data",
     "api",
     "worker",
+    "collector",
 ]
 
 [tool.uv.workspace]
-members = ["packages/*", "apps/api", "apps/worker"]
+members = ["packages/*", "apps/api", "apps/worker", "apps/collector"]
 
 [tool.uv.sources]
 core = { workspace = true }
 providers = { workspace = true }
+market_data = { workspace = true }
 api = { workspace = true }
 worker = { workspace = true }
+collector = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -29,9 +33,11 @@ dev = [
     "httpx>=0.27",
     "import-linter>=2.1",
     "email-validator>=2.4.0",
+    "respx>=0.23.1",
 ]
 
 [tool.ruff]
+extend-exclude = ["docs", "*_pb2.py", "*_pb2.pyi"]
 line-length = 100
 target-version = "py312"
 src = ["packages/*/src", "apps/*/src"]
@@ -47,9 +53,10 @@ ignore = ["S101", "RUF012"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-mypy_path = "packages/core/src:packages/providers/src:apps/api/src:apps/worker/src"
+mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:apps/api/src:apps/worker/src:apps/collector/src"
 namespace_packages = true
 explicit_package_bases = true
+exclude = ["/tests/", "_pb2"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -58,16 +65,22 @@ testpaths = ["packages", "apps"]
 addopts = "-q"
 
 [tool.importlinter]
-root_packages = ["core", "providers", "api", "worker"]
+root_packages = ["core", "providers", "market_data", "api", "worker", "collector"]
 
 [[tool.importlinter.contracts]]
 name = "core depends on nothing above it"
 type = "forbidden"
 source_modules = ["core"]
-forbidden_modules = ["providers", "api", "worker"]
+forbidden_modules = ["providers", "api", "worker", "collector"]
 
 [[tool.importlinter.contracts]]
 name = "providers never import apps"
 type = "forbidden"
 source_modules = ["providers"]
-forbidden_modules = ["api", "worker"]
+forbidden_modules = ["api", "worker", "collector"]
+
+[[tool.importlinter.contracts]]
+name = "market_data never imports apps"
+type = "forbidden"
+source_modules = ["market_data"]
+forbidden_modules = ["api", "worker", "collector"]

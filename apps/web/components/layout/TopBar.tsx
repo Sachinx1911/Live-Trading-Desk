@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { LogOut, Server, User as UserIcon } from "lucide-react";
+import Link from "next/link";
+import { KeyRound, LogOut, Server, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DataStateBadge } from "@/components/design";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { logout, useMe, useProviders } from "@/lib/api/queries";
+import { logout, useBrokers, useMe, useProviders } from "@/lib/api/queries";
 import { formatTime } from "@/lib/format";
 import { findNavItem } from "@/lib/nav";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,26 @@ function ProviderChip() {
   return <DataStateBadge state={state} detail={primary.display_name} />;
 }
 
+function BrokerChip() {
+  const { data } = useBrokers();
+  const upstox = data?.find((b) => b.broker === "upstox");
+  if (!upstox || !upstox.configured) return null;
+  const valid = upstox.status === "valid";
+  return (
+    <Link
+      href="/settings/brokers"
+      className="flex items-center gap-1.5"
+      aria-label={valid ? "Broker session valid" : "Broker login required"}
+    >
+      <KeyRound className="size-3.5 text-text-muted" aria-hidden />
+      <DataStateBadge
+        state={valid ? "live" : "disconnected"}
+        detail={valid ? "Upstox session" : "Login required"}
+      />
+    </Link>
+  );
+}
+
 export function TopBar() {
   const pathname = usePathname();
   const item = findNavItem(pathname);
@@ -91,6 +112,7 @@ export function TopBar() {
           <Server className="size-3.5 text-text-muted" aria-hidden />
           <ProviderChip />
         </div>
+        <BrokerChip />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

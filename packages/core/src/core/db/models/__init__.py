@@ -19,6 +19,7 @@ from core.db.models.market_data import (
     DataQualityCheck,
     HistoricalCandle,
     MarketQuote,
+    OptionChainSnapshot,
 )
 from core.db.models.reference import (
     Broker,
@@ -59,6 +60,7 @@ __all__ = [
     "InstrumentMapping",
     "Market",
     "MarketQuote",
+    "OptionChainSnapshot",
     "RefreshSession",
     "Role",
     "Segment",

@@ -20,6 +20,8 @@ api:
 	uv run uvicorn api.main:app --reload --port 8000
 worker:
 	uv run arq worker.main.WorkerSettings
+collector:
+	uv run python -m collector.main
 web:
 	pnpm --dir apps/web dev
 gen-api:       ## regenerate TypeScript API types from the running API

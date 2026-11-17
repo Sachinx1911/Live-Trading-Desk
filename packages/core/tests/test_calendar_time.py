@@ -49,3 +49,10 @@ def test_local_to_utc_and_floor() -> None:
     assert floor_to(datetime(2026, 11, 17, 3, 47, 30, tzinfo=UTC), 300) == datetime(
         2026, 11, 17, 3, 45, tzinfo=UTC
     )
+
+
+def test_ensure_utc_parses_iso_strings() -> None:
+    assert ensure_utc("2026-11-17T09:15:00+05:30") == datetime(2026, 11, 17, 3, 45, tzinfo=UTC)
+    assert ensure_utc("2026-11-17T03:45:00Z") == datetime(2026, 11, 17, 3, 45, tzinfo=UTC)
+    with pytest.raises(ValueError):
+        ensure_utc("2026-11-17T03:45:00")

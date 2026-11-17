@@ -1,0 +1,9 @@
+{"status": "success", "data": [
+  {"expiry": "2025-11-20", "pcr": 0.92, "strike_price": 26000.0, "underlying_key": "NSE_INDEX|Nifty 50", "underlying_spot_price": 25955.0,
+   "call_options": {"instrument_key": "NSE_FO|40001",
+     "market_data": {"ltp": 118.5, "volume": 2345600, "oi": 4567800, "close_price": 110.2, "bid_price": 118.3, "bid_qty": 300, "ask_price": 118.7, "ask_qty": 225, "prev_oi": 4100000},
+     "option_greeks": {"vega": 12.1, "theta": -18.4, "gamma": 0.0009, "delta": 0.47, "iv": 13.2, "pop": 44.1}},
+   "put_options": {"instrument_key": "NSE_FO|40002",
+     "market_data": {"ltp": 160.0, "volume": 1987000, "oi": 3990000, "close_price": 170.5, "bid_price": 159.8, "bid_qty": 150, "ask_price": 160.3, "ask_qty": 75, "prev_oi": 4200000},
+     "option_greeks": {"vega": 12.0, "theta": -17.9, "gamma": 0.0009, "delta": -0.53, "iv": 13.9, "pop": 41.0}}}
+]}

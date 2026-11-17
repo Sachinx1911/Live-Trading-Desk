@@ -38,4 +38,23 @@ showing real provider status with explicit Disconnected/Demo states. Web: lint, 
 
 ## Phase 2 · Upstox integration + collector
 
+Verified 2026-11-17 locally with the fake provider end to end (collector → candles/quotes/
+chain snapshots → REST + WebSocket → web). The Upstox adapter is tested against recorded
+fixtures and a protobuf round-trip; a live Upstox session has **not** been exercised yet
+(no developer app credentials available at build time).
+
+- [x] `packages/providers/upstox`: OAuth (`UpstoxAuth`), multi-window rate limiter, REST client, instrument master mapping, historical v3 + intraday candles with chunking, full quotes, option chain, v3 WebSocket feed (protobuf, re-authorise + backoff), `bind_mapping` to DB ids
+- [x] `packages/market_data`: CandleBuilder (ticks → 1m), Resampler, candle/quote/instrument/chain repos, instrument sync, chunked backfill, gap/duplicate quality report, ProviderManager (single/comparison/failover)
+- [x] Broker accounts + daily sessions (`core.services.brokers`): encrypted credentials and tokens, `/brokers` API (account upsert, login-url, OAuth callback with state nonce, status, revoke), audit-log writes, Telegram notifier, 08:15 IST + half-hourly session check job
+- [x] `apps/collector`: tracked symbols → live feed → 1m candles (DB) + quote cache/pub-sub (Redis) + option-chain snapshots every 5 min (new `option_chain_snapshots` hypertable, migration 0006) + health key; `COLLECT_RAW_TICKS` Parquet writer (off by default)
+- [x] Worker jobs: nightly instrument sync, on-demand backfill, EOD gap report, NSE reference import (holidays, corporate actions, F&O lot-size history)
+- [x] API: `/instruments`, `/market/candles|quotes|coverage|option-chain|collector`, `/ws/market`
+- [x] Web: `/settings/brokers` (credentials, daily login, status), `/settings/notifications`, top-bar broker chip
+- [ ] Web: `/market` watchlist + chart, `/market/option-chain`, `/market/providers`, dashboard live index strip (in progress)
+- [ ] Import tool (CSV/Excel/JSON/Parquet → data_import_jobs) — deferred to Phase 4 where it is first needed (bhavcopy → D1 candles helper exists in `providers.nse.importer`)
+- [ ] Comparison-mode wiring in the collector (second provider arrives in Phase 7; manager logic is tested now)
+- [ ] Live Upstox validation: real OAuth login, instrument file, feed during market hours, five unattended sessions on the VPS (exit criterion) — needs the owner's Upstox developer app
+
+## Phase 3 · Trading foundation
+
 - [ ] not started

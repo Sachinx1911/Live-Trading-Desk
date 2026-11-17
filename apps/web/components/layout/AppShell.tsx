@@ -16,10 +16,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const authed = useSyncExternalStore(subscribeSession, hasSession, () => false);
 
   useEffect(() => {
-    if (!authed) {
+    // During hydration `authed` is the server snapshot (false); re-read the real session
+    // here so a full page load with a stored token does not bounce to /login.
+    if (!hasSession()) {
       router.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
+    if (!authed) return;
     return connectRealtime();
   }, [authed, router]);
 

@@ -132,6 +132,12 @@ Likelihood and impact use **L / M / H**. Risk owner is the single developer unle
 
 ---
 
+### Finding (2026-11-17): expired-contract candles need Upstox Plus
+Upstox's expired-instruments historical candle API (`/v2/expired-instruments/historical-candle/...`)
+is documented as available only with an Upstox Plus subscription (error UDAPI1149). Options
+backtests on past expiries therefore need either that subscription or a licensed vendor (Phase 4
+decision). Live chain snapshots collected from Phase 2 onward reduce the dependency over time.
+
 ## 3. Legal and compliance risks
 
 ### 3.1 SEBI framework for retail algorithmic trading — **verify before Phase 10**

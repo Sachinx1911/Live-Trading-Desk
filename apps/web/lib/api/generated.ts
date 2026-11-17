@@ -24,7 +24,7 @@ export type ConnectionState =
 export interface User {
   id: number;
   email: string;
-  name: string | null;
+  display_name: string | null;
   roles: string[];
 }
 
@@ -74,3 +74,173 @@ export interface HealthResponse {
 export interface ApiError {
   error: { code: string; message: string; details?: unknown };
 }
+
+export type BrokerCode = "upstox" | "dhan";
+export type BrokerSessionState = "valid" | "expired" | "revoked" | "missing";
+
+export interface BrokerSessionStatus {
+  broker: BrokerCode;
+  account_id: number | null;
+  client_code: string | null;
+  configured: boolean;
+  status: BrokerSessionState;
+  issued_at: string | null;
+  expires_at: string | null;
+  last_checked_at: string | null;
+  login_supported: boolean;
+}
+
+export interface BrokerAccountIn {
+  client_code: string;
+  api_key?: string | null;
+  api_secret?: string | null;
+  label?: string;
+}
+
+export interface BrokerLoginUrl {
+  url: string;
+  state: string;
+  expires_in: number;
+}
+
+// --- Market data (Phase 2) ----------------------------------------------------------------
+
+export type Timeframe = "tick" | "1s" | "1m" | "5m" | "15m" | "30m" | "1h" | "1d" | "1w" | "1M";
+
+export type Segment =
+  | "equity"
+  | "index"
+  | "futures"
+  | "options"
+  | "commodity"
+  | "currency"
+  | "crypto";
+
+export interface Instrument {
+  instrument_id: number;
+  exchange: string;
+  segment: Segment;
+  asset_class: string;
+  symbol: string;
+  name: string;
+  isin?: string | null;
+  underlying_symbol?: string | null;
+  expiry?: string | null;
+  strike?: string | null;
+  option_type?: "CE" | "PE" | null;
+  lot_size: number;
+  tick_size: string;
+  currency: string;
+  is_active: boolean;
+}
+
+export interface Candle {
+  instrument_id: number;
+  timeframe: Timeframe;
+  ts: string;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume: number;
+  oi?: number | null;
+  provider_id: string;
+  is_demo: boolean;
+}
+
+export interface CandlesResponse {
+  instrument_id: number;
+  timeframe: Timeframe;
+  source: string;
+  is_demo: boolean;
+  freshness: Freshness;
+  candles: Candle[];
+}
+
+export interface Quote {
+  instrument_id: number;
+  ts: string;
+  ltp: string;
+  bid?: string | null;
+  ask?: string | null;
+  bid_qty?: number | null;
+  ask_qty?: number | null;
+  volume?: number | null;
+  oi?: number | null;
+  open?: string | null;
+  high?: string | null;
+  low?: string | null;
+  prev_close?: string | null;
+  freshness: Freshness;
+  provider_id: string;
+  provider_ts?: string | null;
+  received_at?: string;
+  is_demo: boolean;
+}
+
+export interface QuotesResponse {
+  quotes: Record<string, Quote>;
+  missing: number[];
+  as_of: string;
+}
+
+export interface CoverageRow {
+  instrument_id: number;
+  timeframe: string;
+  provider: string;
+  first_ts: string | null;
+  last_ts: string | null;
+  rows: number;
+}
+
+export interface OptionChainRow {
+  instrument_id: number;
+  strike: string;
+  option_type: "CE" | "PE";
+  ltp?: string | null;
+  bid?: string | null;
+  ask?: string | null;
+  volume?: number | null;
+  oi?: number | null;
+  oi_change?: number | null;
+  iv?: string | null;
+  delta?: string | null;
+  theta?: string | null;
+  gamma?: string | null;
+  vega?: string | null;
+}
+
+export interface OptionChainResponse {
+  underlying_instrument_id: number;
+  expiry: string;
+  ts: string;
+  source: string;
+  freshness: Freshness;
+  underlying_price: string | null;
+  rows: OptionChainRow[];
+}
+
+export interface CollectorDetail {
+  provider: string;
+  state: ConnectionState;
+  last_message_at: string | null;
+  latency_ms: number | null;
+  reconnects_today: number;
+  message: string | null;
+  is_demo: boolean;
+  tracked: string[];
+  builder: Record<string, number | null>;
+  updated_at: string;
+}
+
+export interface CollectorHealth {
+  running: boolean;
+  detail: CollectorDetail | null;
+}
+
+/** Messages on /ws/market (binary frames carrying JSON). */
+export type MarketWsMessage =
+  | ({ type: "quote" } & Quote)
+  | ({ type: "candle" } & Candle)
+  | { type: "status"; collector: CollectorDetail | null }
+  | { type: "subscribed"; instrument_ids: number[] };

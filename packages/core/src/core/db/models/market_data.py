@@ -155,3 +155,31 @@ class DataQualityCheck(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class OptionChainSnapshot(Base):
+    """Hypertable on `ts`; one row per underlying x expiry x provider every ~5 minutes.
+    Per-strike rows are kept as JSONB (list of canonical OptionChainRow dicts): this data is
+    read whole-chain-at-a-time and never retroactively available, so storage simplicity wins
+    (ADR-010). Normalise into a strike table if analytics need it."""
+
+    __tablename__ = "option_chain_snapshots"
+    __table_args__ = (
+        PrimaryKeyConstraint("underlying_instrument_id", "expiry", "ts", "provider_id"),
+    )
+
+    underlying_instrument_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("instruments.id", ondelete="CASCADE"), nullable=False
+    )
+    expiry: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    provider_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("data_providers.id", ondelete="RESTRICT"), nullable=False
+    )
+    underlying_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 4), nullable=True)
+    row_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rows: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    provider_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

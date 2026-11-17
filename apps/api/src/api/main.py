@@ -10,8 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 
 from api.middleware import RequestLogMiddleware
-from api.routers import auth, health, providers
+from api.routers import auth, brokers, health, market, providers
 from api.state import AppState
+from api.ws import market as ws_market
 from core.logging import configure_logging, get_logger
 from core.settings import get_settings
 
@@ -57,6 +58,9 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix=API_PREFIX)
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(providers.router, prefix=API_PREFIX)
+    app.include_router(brokers.router, prefix=API_PREFIX)
+    app.include_router(market.router, prefix=API_PREFIX)
+    app.include_router(ws_market.router)
     return app
 
 

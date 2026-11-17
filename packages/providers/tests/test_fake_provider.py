@@ -99,3 +99,20 @@ def test_registry() -> None:
     assert prov.info.is_demo and prov.info.code == "fake"
     with pytest.raises(ValueError):
         registry.create("nope")
+
+
+async def test_bind_mapping_translates_ids() -> None:
+    p = FakeMarketDataProvider(seed=1, tick_interval=0)
+    await p.connect()
+    nifty = next(i for i in await p.fetch_instruments() if i.symbol == "NIFTY")
+    p.bind_mapping({5001: "NIFTY"})
+    quotes = await p.get_quotes([5001])
+    assert [q.instrument_id for q in quotes] == [5001]
+    internal = await p.get_quotes([nifty.instrument_id])
+    assert internal[0].ltp == quotes[0].ltp
+    ticks = []
+    async for t in p.stream_ticks([5001]):
+        ticks.append(t)
+        if len(ticks) >= 3:
+            break
+    assert {t.instrument_id for t in ticks} == {5001}

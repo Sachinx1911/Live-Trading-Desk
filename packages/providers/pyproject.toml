@@ -3,7 +3,14 @@ name = "providers"
 version = "0.1.0"
 description = "Market data and broker provider interfaces plus adapters (fake, upstox, dhan)"
 requires-python = ">=3.12"
-dependencies = ["core", "httpx>=0.27", "tenacity>=9.0"]
+dependencies = [
+    "core",
+    "httpx>=0.27",
+    "polars>=1.12",
+    "protobuf>=7.36.2",
+    "tenacity>=9.0",
+    "websockets>=17.4",
+]
 
 [tool.uv.sources]
 core = { workspace = true }
@@ -14,3 +21,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/providers"]
+
+[tool.ruff]
+extend = "../../pyproject.toml"
+extend-exclude = ["src/providers/upstox/proto/*_pb2.py", "src/providers/upstox/proto/*_pb2.pyi"]
+
+[[tool.mypy.overrides]]
+module = "providers.upstox.proto.*"
+ignore_errors = true

@@ -34,7 +34,8 @@ EXPECTED_TABLES = {
     "strategies", "strategy_versions", "strategy_conditions", "strategy_approvals",
     "strategy_activations",
     # market data
-    "historical_candles", "market_quotes", "data_import_jobs", "data_quality_checks",
+    "historical_candles", "market_quotes", "option_chain_snapshots",
+    "data_import_jobs", "data_quality_checks",
 }  # fmt: skip
 
 

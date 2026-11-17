@@ -1,23 +1,11 @@
 import { DataStateBadge, Dash, PanelCard, PhasePlaceholder } from "@/components/design";
-import { IndexCard } from "@/components/dashboard/IndexCard";
+import { MarketStrip } from "@/components/dashboard/MarketStrip";
 import { ProviderStatusPanel } from "@/components/dashboard/ProviderStatusPanel";
 
 export default function DashboardPage() {
   return (
     <div className="grid grid-cols-12 gap-3">
-      <div className="col-span-12 grid grid-cols-3 gap-3">
-        <IndexCard symbol="NIFTY 50" name="NSE · Index" />
-        <IndexCard symbol="BANKNIFTY" name="NSE · Index" />
-        <IndexCard symbol="SENSEX" name="BSE · Index" reason="BSE adapter ships in Phase 9" />
-      </div>
-
-      <PanelCard
-        title="Market chart"
-        className="col-span-12 min-h-72 xl:col-span-8"
-        actions={<DataStateBadge state="disconnected" />}
-      >
-        <PhasePlaceholder phase={2} what="Live and historical charting" />
-      </PanelCard>
+      <MarketStrip />
 
       <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
         <ProviderStatusPanel />

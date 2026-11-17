@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"  # noqa: S104 - bound inside containers; nginx fronts it
     api_port: int = 8000
     cors_origins: str = "http://localhost:3000"
+    api_base_url: str = "http://localhost:8000"  # public URL of the API (OAuth redirects)
+    web_base_url: str = "http://localhost:3000"  # where to send the user after broker login
 
     collect_raw_ticks: bool = False
     default_market_data_provider: Literal["fake", "upstox", "dhan"] = "fake"

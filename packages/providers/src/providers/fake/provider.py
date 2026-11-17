@@ -87,6 +87,9 @@ class FakeMarketDataProvider(MarketDataProvider):
         self._last_message_at: datetime | None = None
         self._instruments = self._build_universe()
         self._by_id = {i.instrument_id: i for i in self._instruments}
+        # Optional canonical-id binding: db_id -> internal id, so callers may use DB ids.
+        self._alias: dict[int, int] = {}
+        self._reverse: dict[int, int] = {}
         # base price and daily volatility per instrument
         self._base: dict[int, float] = {}
         self._vol: dict[int, float] = {}
@@ -370,7 +373,30 @@ class FakeMarketDataProvider(MarketDataProvider):
     async def fetch_instruments(self) -> Sequence[Instrument]:
         return list(self._instruments)
 
+    def provider_token(self, instrument: Instrument) -> str:
+        """Token stored in instrument_mappings for this provider: the symbol."""
+        return instrument.symbol
+
+    def bind_mapping(self, mapping: dict[int, str]) -> None:
+        """Accept canonical DB ids: {db_instrument_id: provider_token(symbol)}. After this,
+        every method accepts either internal or DB ids and emits DB ids."""
+        by_symbol = {i.symbol: i.instrument_id for i in self._instruments}
+        self._alias = {db_id: by_symbol[tok] for db_id, tok in mapping.items() if tok in by_symbol}
+        self._reverse = {v: k for k, v in self._alias.items()}
+
+    def _internal(self, instrument_id: int) -> int:
+        return self._alias.get(instrument_id, instrument_id)
+
+    def _external(self, internal_id: int) -> int:
+        return self._reverse.get(internal_id, internal_id)
+
     async def get_quotes(self, instrument_ids: Sequence[int]) -> Sequence[Quote]:
+        quotes = await self._get_quotes_internal([self._internal(i) for i in instrument_ids])
+        return [
+            q.model_copy(update={"instrument_id": self._external(q.instrument_id)}) for q in quotes
+        ]
+
+    async def _get_quotes_internal(self, instrument_ids: Sequence[int]) -> Sequence[Quote]:
         now = utcnow()
         out: list[Quote] = []
         for iid in instrument_ids:
@@ -405,10 +431,20 @@ class FakeMarketDataProvider(MarketDataProvider):
     async def get_candles(
         self, instrument_id: int, timeframe: Timeframe, start: datetime, end: datetime
     ) -> Sequence[Candle]:
+        ext = instrument_id
+        instrument_id = self._internal(instrument_id)
         if timeframe not in _SUPPORTED:
             raise ValueError(f"fake provider does not support timeframe {timeframe}")
         if instrument_id not in self._by_id:
             return []
+        bars = await self._get_candles_internal(instrument_id, timeframe, start, end)
+        if ext == instrument_id:
+            return bars
+        return [b.model_copy(update={"instrument_id": ext}) for b in bars]
+
+    async def _get_candles_internal(
+        self, instrument_id: int, timeframe: Timeframe, start: datetime, end: datetime
+    ) -> Sequence[Candle]:
         start, end = ensure_utc(start), ensure_utc(end)
         d = start.astimezone(IST).date()
         last = end.astimezone(IST).date()
@@ -421,6 +457,19 @@ class FakeMarketDataProvider(MarketDataProvider):
         return out
 
     async def get_option_chain(
+        self, underlying_instrument_id: int, expiry: datetime
+    ) -> OptionChainSnapshot:
+        ext = underlying_instrument_id
+        snap = await self._get_option_chain_internal(self._internal(ext), expiry)
+        if not self._alias:
+            return snap
+        rows = tuple(
+            r.model_copy(update={"instrument_id": self._external(r.instrument_id)})
+            for r in snap.rows
+        )
+        return snap.model_copy(update={"underlying_instrument_id": ext, "rows": rows})
+
+    async def _get_option_chain_internal(
         self, underlying_instrument_id: int, expiry: datetime
     ) -> OptionChainSnapshot:
         expiry = ensure_utc(expiry)
@@ -475,7 +524,7 @@ class FakeMarketDataProvider(MarketDataProvider):
         )
 
     async def stream_ticks(self, instrument_ids: Sequence[int]) -> AsyncIterator[Tick]:
-        ids = [i for i in instrument_ids if i in self._by_id]
+        ids = [self._internal(i) for i in instrument_ids if self._internal(i) in self._by_id]
         while self._state == ConnectionState.CONNECTED:
             now = datetime.now(UTC)
             for iid in ids:
@@ -484,7 +533,7 @@ class FakeMarketDataProvider(MarketDataProvider):
                 self._session_volume[iid] = self._session_volume.get(iid, 0) + qty
                 self._last_message_at = now
                 yield Tick(
-                    instrument_id=iid,
+                    instrument_id=self._external(iid),
                     ts=now,
                     ltp=p,
                     ltq=qty or None,

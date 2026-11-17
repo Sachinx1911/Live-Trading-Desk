@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sys
 
@@ -9,6 +10,9 @@ import structlog
 
 
 def configure_logging(level: str = "INFO", json: bool = False) -> None:
+    # Line-buffered stdout so logs reach files/journald promptly when redirected.
+    with contextlib.suppress(AttributeError, ValueError):
+        sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level.upper())
     processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,

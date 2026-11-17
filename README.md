@@ -5,7 +5,7 @@ Institutional-style, provider-independent algorithmic trading platform for NSE I
 creation in Marathi/Hindi/English, reproducible backtesting, realistic paper trading,
 user-approved live execution, AI-assisted research and trade review.
 
-**Status:** Phase 0 (architecture) — see [`docs/progress.md`](docs/progress.md).
+**Status:** Phase 2 (Upstox integration + collector) — see [`docs/progress.md`](docs/progress.md).
 
 ## Start here
 
@@ -39,12 +39,20 @@ Python 3.12 · FastAPI · Pydantic · arq · SQLAlchemy/Alembic · Polars · Pos
 TimescaleDB · Redis · MinIO/Parquet · DuckDB · Next.js · React 19 · TypeScript · Tailwind ·
 shadcn/ui · Lightweight Charts · OpenAI (behind a provider interface) · Docker Compose · Nginx.
 
-## Local development (after Phase 1 lands)
+## Local development
 
 ```bash
-docker compose up -d          # Timescale, Redis, MinIO
+cp .env.example .env            # then set SECRETS_KEY, JWT_SECRET, DEV_OWNER_PASSWORD
+docker compose up -d          # TimescaleDB (port 5433), Redis
 uv sync                       # Python workspace
-uv run alembic upgrade head
-uv run uvicorn api.main:app --reload
-pnpm --dir apps/web install && pnpm --dir apps/web dev
+uv run alembic -c infra/migrations/alembic.ini upgrade head
+make seed-owner               # creates the owner user from DEV_OWNER_* in .env
+make api                      # http://localhost:8000/api/docs
+make worker                   # arq jobs (session checks, sync, backfill, EOD reports)
+make collector                # live feed -> candles / quotes / option chains
+make web                      # http://localhost:3000
 ```
+
+With `DEFAULT_MARKET_DATA_PROVIDER=fake` everything runs on deterministic demo data and the
+UI says so on every number. Switch to `upstox` after registering an app and logging in on
+`/settings/brokers`.

@@ -1,0 +1,18 @@
+{"status": "success", "data": {
+  "NSE_EQ:RELIANCE": {
+    "ohlc": {"open": 1480.0, "high": 1495.5, "low": 1476.0, "close": 1482.3},
+    "depth": {"buy": [{"quantity": 120, "price": 1490.1, "orders": 3}, {"quantity": 50, "price": 1490.0, "orders": 1}],
+              "sell": [{"quantity": 80, "price": 1490.3, "orders": 2}]},
+    "timestamp": "2025-11-14T15:29:58+05:30", "instrument_token": "NSE_EQ|INE002A01018", "symbol": "RELIANCE",
+    "last_price": 1490.2, "volume": 5432100, "average_price": 1486.4, "oi": 0.0, "net_change": 7.9,
+    "total_buy_quantity": 10000.0, "total_sell_quantity": 9000.0, "lower_circuit_limit": 1334.1, "upper_circuit_limit": 1630.5,
+    "last_trade_time": "1763114398000", "oi_day_high": 0.0, "oi_day_low": 0.0
+  },
+  "NSE_INDEX:Nifty 50": {
+    "ohlc": {"open": 25880.0, "high": 25990.0, "low": 25850.0, "close": 25910.0},
+    "depth": {"buy": [], "sell": []},
+    "timestamp": "2025-11-14T15:30:00+05:30", "instrument_token": "NSE_INDEX|Nifty 50", "symbol": "Nifty 50",
+    "last_price": 25955.0, "volume": 0, "average_price": 0.0, "oi": 0.0, "net_change": 45.0,
+    "last_trade_time": "1763114400000"
+  }
+}}

@@ -13,8 +13,11 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
-def ensure_utc(value: datetime) -> datetime:
-    """Return an aware UTC datetime. Naive input is rejected: callers must know the zone."""
+def ensure_utc(value: datetime | str) -> datetime:
+    """Return an aware UTC datetime. Accepts ISO-8601 strings (JSON round-trips).
+    Naive input is rejected: callers must know the zone."""
+    if isinstance(value, str):
+        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if value.tzinfo is None:
         raise ValueError("naive datetime not allowed; attach a timezone first")
     return value.astimezone(UTC)
