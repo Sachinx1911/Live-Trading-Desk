@@ -252,6 +252,18 @@ class RiskLimitScope(StrEnum):
     STRATEGY = "strategy"
 
 
+class AiAgent(StrEnum):
+    """Who made an LLM call (ADR-009). Each agent has one job and one output table."""
+
+    TRANSLATOR = "translator"  # NL -> strategy DSL draft
+    ANALYST = "analyst"  # morning brief, regime commentary
+    RESEARCHER = "researcher"  # hypotheses -> candidate draft versions
+    REVIEWER = "reviewer"  # per-trade reviews
+    RISK_REVIEWER = "risk_reviewer"  # risk report narrative
+    MONITOR_EXPLAINER = "monitor_explainer"  # explains deterministic monitor alerts
+    AUDITOR = "auditor"  # reviews other agents' outputs against data
+
+
 class OptimizationKind(StrEnum):
     GRID = "grid"
     RANDOM = "random"

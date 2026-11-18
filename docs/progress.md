@@ -102,4 +102,14 @@ import-linter, web lint/typecheck/build clean.
 
 ## Phase 5 · Strategy intelligence
 
-- [ ] not started
+Started 2026-11-18. The LLM boundary from ADR-009 exists and is tested without network
+(respx-recorded OpenAI shapes); no agent uses it yet. With `OPENAI_API_KEY` empty `/health`
+reports `llm: not_configured` and nothing pretends otherwise.
+
+- [x] `packages/ai/llm`: `LLMProvider` interface (messages + JSON Schema → raw JSON + usage), OpenAI adapter (Chat Completions `response_format=json_schema`, retries with backoff on 408/429/5xx, refusal/truncation/empty → `LLMOutputError`, static price table → `cost_usd` or `None`, key never logged), `TokenBudget` (per-job hard stop, checked before the call) + `DailyTokenBudget` (Redis counter per UTC day), `call_structured` (budget → provider → Pydantic validation → `ai_calls` entry; invalid output is recorded, not raised), provider registry from settings, versioned prompt loader (`prompt_version = <name>@<version>`)
+- [x] Migration 0009: `ai_calls` (append-only, indexed by ts / agent / job) + `strategy_versions.ai_call_id` FK; `AiAgent` enum; `DbAiCallLogger` commits each record in its own session so a failed job cannot erase it
+- [x] Settings: `OPENAI_MODEL`, `OPENAI_BASE_URL`; `/health.llm`
+- [ ] `payload_uri`: archive prompt + raw response to MinIO (Phase 8 storage layer; column exists)
+- [ ] NL strategy builder service (`POST /strategies/generate`, clarification thread, missing-information detection, DSL validation, original-text pinning); prompt `nl_builder@1` is drafted
+- [ ] Evaluation set (≥100 mr/hi/en descriptions → expected DSL) and CI accuracy gate
+- [ ] Visual builder, scanner, approval workflow, AI candidate generation (Mode A), `/strategies/*`, `/scanner`, `/settings/ai` UI

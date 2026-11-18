@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import text
 
+from ai.llm import llm_status
 from api.deps import State
 from core.db import get_session_factory
 
@@ -18,6 +19,7 @@ class HealthResponse(BaseModel):
     redis: str
     provider: str
     secrets_configured: bool
+    llm: str  # not_configured | <provider>:<model>
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -45,4 +47,5 @@ async def health(state: State) -> HealthResponse:
         redis=redis,
         provider=f"{ph.code}:{ph.state.value}",
         secrets_configured=state.settings.secrets_configured,
+        llm=llm_status(state.settings),
     )

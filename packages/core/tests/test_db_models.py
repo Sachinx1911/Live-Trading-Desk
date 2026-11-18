@@ -44,6 +44,8 @@ EXPECTED_TABLES = {
     # research (Phase 4)
     "backtest_jobs", "backtest_results", "backtest_trades",
     "optimization_jobs", "optimization_results", "replay_sessions",
+    # ai (Phase 5)
+    "ai_calls",
 }  # fmt: skip
 
 

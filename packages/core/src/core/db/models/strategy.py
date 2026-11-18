@@ -83,8 +83,9 @@ class StrategyVersion(Base):
     source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_language: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[CreatedBy] = mapped_column(pg_enum(CreatedBy, "created_by"), nullable=False)
-    # FK to ai_calls is added in the AI migration (Phase 5-6); kept as plain id until then.
-    ai_call_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    ai_call_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("ai_calls.id", ondelete="SET NULL"), nullable=True
+    )
     change_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     frozen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -9,6 +9,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "ai",
     "api",
     "backtest",
     "collector",
@@ -21,6 +22,29 @@ members = [
     "trader",
     "trading-platform",
     "worker",
+]
+
+[[package]]
+name = "ai"
+version = "0.1.0"
+source = { editable = "packages/ai" }
+dependencies = [
+    { name = "core" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "redis" },
+    { name = "sqlalchemy" },
+    { name = "strategy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "core", editable = "packages/core" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pydantic", specifier = ">=2.9" },
+    { name = "redis", specifier = ">=5.2" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
+    { name = "strategy", editable = "packages/strategy" },
 ]
 
 [[package]]
@@ -73,6 +97,7 @@ name = "api"
 version = "0.1.0"
 source = { editable = "apps/api" }
 dependencies = [
+    { name = "ai" },
     { name = "argon2-cffi" },
     { name = "arq" },
     { name = "backtest" },
@@ -91,6 +116,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ai", editable = "packages/ai" },
     { name = "argon2-cffi", specifier = ">=23.1" },
     { name = "arq", specifier = ">=0.26" },
     { name = "backtest", editable = "packages/backtest" },
@@ -2312,6 +2338,7 @@ name = "trading-platform"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "ai" },
     { name = "api" },
     { name = "backtest" },
     { name = "collector" },
@@ -2341,6 +2368,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ai", editable = "packages/ai" },
     { name = "api", editable = "apps/api" },
     { name = "backtest", editable = "packages/backtest" },
     { name = "collector", editable = "apps/collector" },

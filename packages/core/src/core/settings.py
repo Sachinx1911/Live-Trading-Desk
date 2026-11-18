@@ -43,6 +43,8 @@ class Settings(BaseSettings):
 
     llm_provider: str = "openai"
     openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = "gpt-4o-mini"
+    openai_base_url: str = "https://api.openai.com/v1"
     ai_daily_token_budget: int = 2_000_000
 
     telegram_bot_token: SecretStr = SecretStr("")

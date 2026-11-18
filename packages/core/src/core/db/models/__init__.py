@@ -6,6 +6,7 @@ Phase 3 adds trading: paper/live accounts, orders, positions, trades, risk, jour
 """
 
 from core.db.models import (
+    ai,
     identity,
     instruments,
     market_data,
@@ -14,6 +15,7 @@ from core.db.models import (
     strategy,
     trading,
 )
+from core.db.models.ai import AiCall
 from core.db.models.identity import ApiLog, AuditLog, RefreshSession, Role, User, UserRole
 from core.db.models.instruments import (
     Contract,
@@ -76,6 +78,7 @@ from core.db.models.trading import (
 )
 
 __all__ = [
+    "AiCall",
     "ApiLog",
     "AuditLog",
     "BacktestJob",
@@ -129,6 +132,7 @@ __all__ = [
     "TradingCalendar",
     "User",
     "UserRole",
+    "ai",
     "identity",
     "instruments",
     "market_data",
