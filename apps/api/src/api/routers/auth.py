@@ -17,9 +17,11 @@ from api.security import (
 )
 from core.db.models import RefreshSession
 from core.db.models import User as UserModel
+from core.logging import get_logger
 from core.time import utcnow
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+log = get_logger(__name__)
 
 
 def _user_out(u: UserModel) -> UserOut:
@@ -54,6 +56,24 @@ async def login(body: LoginRequest, db: DB, state: State) -> TokenResponse:
     u = res.scalar_one_or_none()
     if u is None or not u.is_active or not verify_password(body.password, u.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid credentials")
+    return await _issue(db, state, u)
+
+
+@router.post("/dev-login", response_model=TokenResponse)
+async def dev_login(db: DB, state: State) -> TokenResponse:
+    """Local-dev convenience (DEV_AUTO_LOGIN_EMAIL): issue real tokens for the configured user
+    without a password. Returns 404 when disabled, so production has no such route. Settings
+    refuse to start with the flag set in production."""
+    s = state.settings
+    if not s.dev_auto_login_enabled:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "not found")
+    res = await db.execute(
+        select(UserModel).where(UserModel.email == s.dev_auto_login_email.lower())
+    )
+    u = res.scalar_one_or_none()
+    if u is None or not u.is_active:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "dev auto-login user not found")
+    log.warning("auth.dev_login", email=u.email)
     return await _issue(db, state, u)
 
 

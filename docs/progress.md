@@ -33,6 +33,7 @@ showing real provider status with explicit Disconnected/Demo states. Web: lint, 
 - [x] Next.js shell: design tokens, grouped sidebar (15 items), login, dashboard (provider status from API, no fabricated numbers), stub pages per phase
 - [x] CI workflow (ruff, mypy, import-linter, alembic upgrade, pytest, web lint+build)
 - [x] `.env.example` documented; `infra/scripts/create_owner_user.py` + `make seed-owner`
+- [x] Dev-only auto-login (`DEV_AUTO_LOGIN_EMAIL` → `POST /auth/dev-login`, 404 when off, settings refuse it in production); web shell uses it before falling back to `/login`
 - [ ] Audit-log writes on state-changing endpoints (table exists; middleware hook lands with the first mutating endpoints in Phase 2)
 - [ ] TOTP second factor (schema ready; UI/API in Phase 10 hardening)
 

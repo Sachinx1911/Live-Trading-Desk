@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -47,6 +47,21 @@ class Settings(BaseSettings):
 
     telegram_bot_token: SecretStr = SecretStr("")
     telegram_chat_id: str = ""
+
+    # Local-dev convenience only: when set (and APP_ENV != production) POST /auth/dev-login
+    # issues real tokens for this user without a password so the web app opens straight
+    # on the dashboard. Refused at startup in production (see _refuse_dev_auto_login_in_prod).
+    dev_auto_login_email: str = ""
+
+    @model_validator(mode="after")
+    def _refuse_dev_auto_login_in_prod(self) -> Settings:
+        if self.dev_auto_login_email and self.app_env == "production":
+            raise ValueError("DEV_AUTO_LOGIN_EMAIL must be empty when APP_ENV=production")
+        return self
+
+    @property
+    def dev_auto_login_enabled(self) -> bool:
+        return bool(self.dev_auto_login_email) and not self.is_production
 
     @property
     def cors_origin_list(self) -> list[str]:

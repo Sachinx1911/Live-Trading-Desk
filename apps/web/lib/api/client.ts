@@ -87,6 +87,23 @@ async function tryRefresh(): Promise<boolean> {
   return true;
 }
 
+/**
+ * Local-dev convenience: ask the API for tokens without a password. The API only exposes
+ * /auth/dev-login when DEV_AUTO_LOGIN_EMAIL is set and APP_ENV is not production; everywhere
+ * else this returns false and the normal login page takes over.
+ */
+export async function tryDevLogin(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/auth/dev-login`, { method: "POST" });
+    if (!res.ok) return false;
+    const data = (await res.json()) as TokenResponse;
+    setTokens({ access: data.access_token, refresh: data.refresh_token });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function api<T>(
   path: string,
   init: RequestInit & { auth?: boolean } = {},

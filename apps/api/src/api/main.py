@@ -43,6 +43,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     state = AppState.create(settings)
     app.state.app = state
     await state.startup()
+    if settings.dev_auto_login_enabled:
+        log.warning("auth.dev_auto_login_enabled", email=settings.dev_auto_login_email)
     log.info("api.started", env=settings.app_env, provider=settings.default_market_data_provider)
     try:
         yield

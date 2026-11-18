@@ -56,3 +56,6 @@ make web                      # http://localhost:3000
 With `DEFAULT_MARKET_DATA_PROVIDER=fake` everything runs on deterministic demo data and the
 UI says so on every number. Switch to `upstox` after registering an app and logging in on
 `/settings/brokers`.
+
+To skip the login screen while developing, set `DEV_AUTO_LOGIN_EMAIL=owner@example.com` in
+`.env` (development only; the API refuses it in production).
