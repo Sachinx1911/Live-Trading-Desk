@@ -12,6 +12,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -174,23 +175,31 @@ export function TopBar() {
         <h1 className="truncate text-[14px] font-semibold text-text-1">{item?.label ?? "Trading Platform"}</h1>
         <SymbolSearch />
       </div>
-      <div className="flex items-center gap-2">
-        <SessionPill />
-        <ProviderPill />
-        <BrokerPill />
+      <div className="flex min-w-0 shrink items-center gap-2">
+        {/* Status pills collapse on narrow windows; the account menu must always stay reachable. */}
+        <div className="hidden items-center gap-2 lg:flex">
+          <SessionPill />
+          <ProviderPill />
+          <BrokerPill />
+        </div>
+        <div className="hidden items-center gap-2 md:flex lg:hidden">
+          <SessionPill />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="sm" className="gap-2 text-text-2">
+              <Button variant="ghost" size="sm" className="shrink-0 gap-2 text-text-2" aria-label="Account menu">
                 <UserIcon className="size-4" />
-                <span className="max-w-32 truncate text-[13px]">{me.data?.email ?? "Account"}</span>
+                <span className="hidden max-w-32 truncate text-[13px] md:inline">{me.data?.email ?? "Account"}</span>
               </Button>
             }
           />
           <DropdownMenuContent align="end" className="w-64">
-            <DropdownMenuLabel className="truncate">
-              {me.data ? `${me.data.email} · ${me.data.roles.join(", ")}` : "Not signed in"}
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="truncate">
+                {me.data ? `${me.data.email} · ${me.data.roles.join(", ")}` : "Not signed in"}
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <ThemeMenuItems />
             <DropdownMenuSeparator />
