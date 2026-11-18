@@ -6,11 +6,13 @@ import asyncio
 import importlib
 import json
 import random
+import ssl
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
 from datetime import datetime
 from typing import Any
 
+import certifi
 import websockets
 from websockets.exceptions import ConnectionClosed
 
@@ -68,7 +70,9 @@ class UpstoxFeed:
 
     @staticmethod
     async def _default_connect(url: str) -> object:
-        return await websockets.connect(url, max_size=2**22, ping_interval=None)
+        # python.org builds on macOS ship without system CA certs; use certifi like httpx does.
+        ctx = ssl.create_default_context(cafile=certifi.where())
+        return await websockets.connect(url, max_size=2**22, ping_interval=None, ssl=ctx)
 
     async def authorized_url(self) -> str:
         body = await self._rest.get_json(AUTHORIZE_PATH)

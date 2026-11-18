@@ -54,7 +54,8 @@ fixtures and a protobuf round-trip; a live Upstox session has **not** been exerc
 - [ ] Web: `/market` watchlist + chart, `/market/option-chain`, `/market/providers`, dashboard live index strip (in progress)
 - [ ] Import tool (CSV/Excel/JSON/Parquet → data_import_jobs) — deferred to Phase 4 where it is first needed (bhavcopy → D1 candles helper exists in `providers.nse.importer`)
 - [ ] Comparison-mode wiring in the collector (second provider arrives in Phase 7; manager logic is tested now)
-- [ ] Live Upstox validation: real OAuth login, instrument file, feed during market hours, five unattended sessions on the VPS (exit criterion) — needs the owner's Upstox developer app
+- [x] Live Upstox validation (2026-11-18, after the owner's segments were reactivated): OAuth login → session valid until 03:30 IST; instrument master 47,011 rows synced (NIFTY lot 65); REST quotes, option chain (316 rows), v3 WebSocket connected (7 keys, full mode); historical backfill from the real API: NIFTY/BANKNIFTY/RELIANCE/HDFCBANK/VIX daily since 2010, NIFTY/BANKNIFTY 5m and NIFTY 15m since Jan 2022, NIFTY 1m last year (Upstox holds no intraday before 2022). Fixes found on the way: daily bars stamped at 00:00 IST shifted a UTC day (now 09:15 IST open), WebSocket SSL needed certifi on macOS, sub-15-minute requests must not span a calendar month (28-day chunks), inconsistent OHLC (VIX) widened instead of dropped, quote cache TTL raised to a week so the last close survives the session with an honest "stale" badge, collector symbols moved into Settings
+- [ ] Five unattended market sessions on the VPS with gap reports (needs the VPS; market-hours feed not yet observed)
 
 ## Phase 3 · Trading foundation
 

@@ -96,3 +96,25 @@ def test_map_option_chain_rows_and_oi_change() -> None:
     assert ce.iv == Decimal("13.2") and ce.delta == Decimal("0.47")
     pe = next(r for r in snap.rows if r.option_type is OptionType.PE)
     assert pe.oi_change == -210000
+
+
+def test_daily_candles_use_session_open_not_midnight() -> None:
+    from datetime import UTC, datetime
+
+    body = {
+        "status": "success",
+        "data": {"candles": [["2026-11-16T00:00:00+05:30", 1, 2, 0.5, 1.5, 10, 0]]},
+    }
+    (c,) = map_candles(body, 7, Timeframe.D1, NOW)
+    # 09:15 IST on 16 Nov == 03:45 UTC on 16 Nov; midnight IST would have been 15 Nov UTC
+    assert c.ts == datetime(2026, 11, 16, 3, 45, tzinfo=UTC)
+    assert c.ts.date().isoformat() == "2026-11-16"
+
+
+def test_inconsistent_ohlc_is_widened_not_dropped() -> None:
+    body = {
+        "status": "success",
+        "data": {"candles": [["2026-11-16T00:00:00+05:30", 12.5, 12.0, 11.0, 10.5, 0, 0]]},
+    }
+    (c,) = map_candles(body, 7, Timeframe.D1, NOW)
+    assert c.high == Decimal("12.5") and c.low == Decimal("10.5")

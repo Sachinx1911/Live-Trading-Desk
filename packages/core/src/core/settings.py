@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     web_base_url: str = "http://localhost:3000"  # where to send the user after broker login
 
     collect_raw_ticks: bool = False
+    collect_symbols: str = "NIFTY,BANKNIFTY,INDIAVIX"  # canonical symbols the collector follows
+    collect_chain_underlyings: str = "NIFTY,BANKNIFTY"  # option-chain snapshots every 5 min
+    data_dir: str = "data"  # Parquet archive root (raw ticks)
     live_trading_enabled: bool = False  # hard switch; gateway refuses everything when False
     paper_default_capital: int = 100_000  # ₹1,00,000 per master prompt, user-editable per account
     default_market_data_provider: Literal["fake", "upstox", "dhan"] = "fake"

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import os
 import signal
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -43,6 +42,7 @@ log = get_logger("collector")
 TICK_CHANNEL = "market.tick"
 CANDLE_CHANNEL = "market.candle"
 CHAIN_INTERVAL = timedelta(minutes=5)
+QUOTE_CACHE_TTL_S = 7 * 24 * 3600  # survives weekends and holidays; freshness says how old
 
 
 def _quote_from_tick(t: Tick, prev: Quote | None) -> Quote:
@@ -82,9 +82,7 @@ class Collector:
         self._quotes: dict[int, Quote] = {}
         self._stop = asyncio.Event()
         self._raw: RawTickWriter | None = (
-            RawTickWriter(Path(os.environ.get("DATA_DIR", "data")) / "ticks")
-            if settings.collect_raw_ticks
-            else None
+            RawTickWriter(Path(settings.data_dir) / "ticks") if settings.collect_raw_ticks else None
         )
         self._tokens: dict[str, str] = {}
         self._last_chain_at: datetime | None = None
@@ -135,9 +133,10 @@ class Collector:
             res = await sync_instrument_master(self.provider, db)
             await db.commit()
             bound = await bind_provider(db, self.provider)
-            symbols = parse_symbols(os.environ.get("COLLECT_SYMBOLS", "NIFTY,BANKNIFTY,INDIAVIX"))
-            chains = parse_symbols(os.environ.get("COLLECT_CHAIN_UNDERLYINGS", "NIFTY,BANKNIFTY"))
+            symbols = parse_symbols(self.settings.collect_symbols)
+            chains = parse_symbols(self.settings.collect_chain_underlyings)
             self.tracked = await resolve(db, "NSE", symbols, chains)
+        await self._seed_quotes()
         log.info(
             "collector.prepared",
             provider=self.provider.info.code,
@@ -147,6 +146,23 @@ class Collector:
             missing=self.tracked.missing,
         )
         return bool(self.tracked.instruments)
+
+    async def _seed_quotes(self) -> None:
+        """Outside market hours no ticks arrive; publish the provider's last quotes once so
+        the UI shows the last close with an honest (stale/delayed) freshness."""
+        if not self.tracked.ids:
+            return
+        try:
+            quotes = await self.provider.get_quotes(self.tracked.ids)
+        except Exception as exc:
+            log.warning("collector.seed_quotes_failed", error=str(exc))
+            return
+        for q in quotes:
+            q = q.model_copy(update={"freshness": freshness(q)})
+            self._quotes[q.instrument_id] = q
+            await cache_quote(self.redis, q, ttl_s=QUOTE_CACHE_TTL_S)
+            await self.redis.publish(TICK_CHANNEL, orjson.dumps(q.model_dump(mode="json")))
+        log.info("collector.quotes_seeded", n=len(quotes))
 
     # -- storage --------------------------------------------------------------------
     async def _store_candles(self, candles: list[Candle]) -> None:
@@ -162,7 +178,9 @@ class Collector:
         prev = self._quotes.get(t.instrument_id)
         q = _quote_from_tick(t, prev)
         self._quotes[t.instrument_id] = q
-        await cache_quote(self.redis, q)
+        # Long TTL on purpose: freshness is derived from the quote's own timestamp, so after
+        # the close the UI shows the last price as "stale" instead of nothing at all.
+        await cache_quote(self.redis, q, ttl_s=QUOTE_CACHE_TTL_S)
         await self.redis.publish(TICK_CHANNEL, orjson.dumps(q.model_dump(mode="json")))
         if self._raw is not None:
             self._raw.add(t)

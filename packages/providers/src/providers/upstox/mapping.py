@@ -45,11 +45,12 @@ TF_UNIT: dict[Timeframe, tuple[str, int]] = {
     Timeframe.MN1: ("months", 1),
 }
 
-# Max calendar days per historical request (documented Upstox limits, conservative).
+# Max calendar days per historical request. Upstox's "1 month" for <=15-minute bars is a
+# calendar month (to_date - 1 month >= from_date), so 28 days is the safe span.
 HISTORICAL_LIMITS: dict[Timeframe, int] = {
-    Timeframe.M1: 30,
-    Timeframe.M5: 30,
-    Timeframe.M15: 30,
+    Timeframe.M1: 28,
+    Timeframe.M5: 28,
+    Timeframe.M15: 28,
     Timeframe.M30: 90,
     Timeframe.H1: 90,
     Timeframe.D1: 3650,
@@ -195,15 +196,25 @@ def map_candles(
     out: list[Candle] = []
     for row in rows:
         ts = datetime.fromisoformat(str(row[0]))
+        if not timeframe.is_intraday:
+            # Upstox stamps daily/weekly/monthly bars at 00:00 IST; our convention is the
+            # bar OPEN time (ADR-006), i.e. the 09:15 IST session open of that date. Using
+            # midnight would shift the bar to the previous UTC day.
+            local = ts.astimezone(IST)
+            ts = local.replace(hour=9, minute=15, second=0, microsecond=0)
+        o, h, lo, c = _dec(row[1]), _dec(row[2]), _dec(row[3]), _dec(row[4])
+        # Some index series (e.g. India VIX daily) carry open/close outside [low, high];
+        # widen the range instead of dropping the whole chunk, and remember we did.
+        h, lo = max(h, o, c), min(lo, o, c)
         out.append(
             Candle(
                 instrument_id=instrument_id,
                 timeframe=timeframe,
                 ts=ensure_utc(ts),
-                open=_dec(row[1]),
-                high=_dec(row[2]),
-                low=_dec(row[3]),
-                close=_dec(row[4]),
+                open=o,
+                high=h,
+                low=lo,
+                close=c,
                 volume=int(row[5] or 0),
                 oi=_int_or_none(row[6]) if len(row) > 6 else None,
                 provider_id=PROVIDER_ID,
