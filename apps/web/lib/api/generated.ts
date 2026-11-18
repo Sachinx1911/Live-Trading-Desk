@@ -954,3 +954,244 @@ export interface ScanSnapshotInfo {
   instrument_count: number;
   available_dates: string[];
 }
+
+// --- Historical data imports (apps/api/src/api/routers/imports.py) -------------------
+// Mirrors packages/market_data/src/market_data/imports.py::ImportMapping. Imported candles
+// are stored under provider `import` and are never shown as broker data.
+
+export interface ImportMapping {
+  exchange: string;
+  timeframe: Timeframe;
+  symbol?: string | null;
+  symbol_column?: string | null;
+  ts_column: string;
+  ts_format?: string | null;
+  timezone: string;
+  open_column: string;
+  high_column: string;
+  low_column: string;
+  close_column: string;
+  volume_column?: string | null;
+  oi_column?: string | null;
+  source_label?: string | null;
+}
+
+export interface ImportRejection {
+  row: number;
+  reason: string;
+  sample: Record<string, unknown>;
+}
+
+export interface ImportCoverageRow {
+  symbol: string;
+  first_ts: string;
+  last_ts: string;
+  count: number;
+}
+
+export interface ImportReport {
+  source_type: string;
+  rows_read: number;
+  rows_accepted: number;
+  rows_rejected: number;
+  rejections: ImportRejection[];
+  coverage: ImportCoverageRow[];
+  warnings: string[];
+  content_hash: string;
+  manifest_hash: string;
+}
+
+export interface ImportJobOut {
+  id: number;
+  provider: string;
+  source_type: string;
+  source_uri: string | null;
+  status: string;
+  timeframe: string | null;
+  range_from: string | null;
+  range_to: string | null;
+  rows_read: number;
+  rows_written: number;
+  rows_rejected: number;
+  error: string | null;
+  instrument_scope: Record<string, unknown>;
+  created_at: string;
+  finished_at: string | null;
+}
+
+export interface ImportResponse {
+  committed: boolean;
+  report: ImportReport;
+  job?: ImportJobOut | null;
+}
+
+// ---------------------------------------------------------------- Historical replay (Phase 4; mirrors apps/api/src/api/routers/replay.py + api/replay/session.py)
+export type ReplayStatus = "paused" | "playing" | "ended";
+
+export interface ReplaySessionIn {
+  instrument_id: number;
+  date: string;
+  timeframe?: Timeframe;
+  strategy_version_id?: number | null;
+  speed?: number;
+  seed?: number | null;
+}
+
+export interface ReplayControlIn {
+  action: "play" | "pause" | "step" | "seek" | "set_speed";
+  n?: number | null;
+  ts?: string | null;
+  speed?: number | null;
+}
+
+export interface ReplayPosition {
+  instrument_id: number;
+  quantity: number;
+  avg_price: string;
+  realized_pnl: string;
+  unrealized_pnl: string;
+  last_price: string | null;
+}
+
+/** Overlay state when a strategy version is attached (virtual capital, in memory). */
+export interface ReplayOverlayState {
+  equity: string;
+  cash: string;
+  realized: string;
+  unrealized: string;
+  position: ReplayPosition | null;
+  trades: number;
+  engine: string | null;
+}
+
+export interface ReplayState {
+  type: "state";
+  session_id: string;
+  status: ReplayStatus;
+  speed: number;
+  cursor: number;
+  bars: number;
+  cursor_ts: string | null;
+  warmup_bars: number;
+  overlay: ReplayOverlayState | null;
+}
+
+export interface ReplaySessionOut {
+  session_id: string;
+  instrument_id: number;
+  date: string;
+  timeframe: Timeframe;
+  strategy_version_id: number | null;
+  bars: number;
+  first_ts: string | null;
+  last_ts: string | null;
+  warmup_bars: number;
+  state: ReplayState;
+}
+
+export interface ReplaySignal {
+  signal_id: string;
+  ts: string;
+  side: OrderSide;
+  kind: string;
+  reason: string;
+  reference_price: string;
+  stop_price: string | null;
+  target_price: string | null;
+}
+
+export interface ReplayOrder {
+  order_id: string;
+  side: OrderSide;
+  order_type: string;
+  quantity: number;
+  filled_qty: number;
+  status: string;
+  avg_fill_price: string | null;
+  created_at: string;
+}
+
+export interface ReplayFill {
+  order_id: string;
+  ts: string;
+  side: OrderSide;
+  quantity: number;
+  price: string;
+  costs: string;
+}
+
+export interface ReplayTrade {
+  side: OrderSide;
+  quantity: number;
+  entry_at: string;
+  entry_price: string;
+  exit_at: string;
+  exit_price: string;
+  gross_pnl: string;
+  costs: string;
+  net_pnl: string;
+  entry_reason: string | null;
+  exit_reason: string | null;
+}
+
+/** Messages on /ws/replay/{session_id} (binary frames carrying JSON). */
+export type ReplayWsMessage =
+  | ({ type: "bar" } & Candle)
+  | ({ type: "quote" } & Quote)
+  | ({ type: "signal" } & ReplaySignal)
+  | { type: "signal_rejected"; kind: string; reasons: string[] }
+  | ({ type: "order" } & ReplayOrder)
+  | ({ type: "fill" } & ReplayFill)
+  | ({ type: "position" } & ReplayPosition)
+  | ({ type: "trade" } & ReplayTrade)
+  | { type: "rewound"; cursor: number }
+  | ReplayState
+  | { type: "error"; message: string };
+
+/** Client → server on /ws/replay. */
+export type ReplayWsCommand =
+  | { type: "play" }
+  | { type: "pause" }
+  | { type: "set_speed"; x: number }
+  | { type: "step"; bars: number }
+  | { type: "seek"; ts: string };
+
+// ---- Strategy approval workflow (Phase 5) ----------------------------------
+export interface StrategyApproval {
+  id: number;
+  version_id: number;
+  user_email: string;
+  from_status: StrategyVersionStatus;
+  to_status: StrategyVersionStatus;
+  decision: "approved" | "rejected";
+  note: string | null;
+  evidence: Record<string, unknown>;
+  ts: string;
+}
+
+export interface BacktestEvidence {
+  job_id: number;
+  instrument_id: number;
+  timeframe: string;
+  start_at: string;
+  end_at: string;
+  finished_at: string | null;
+  trades: number | null;
+  total_return_pct: number | null;
+  max_drawdown_pct: number | null;
+  win_rate_pct: number | null;
+  profit_factor: number | null;
+  sharpe: number | null;
+}
+
+export interface VersionReadiness {
+  version_id: number;
+  status: StrategyVersionStatus;
+  allowed: StrategyVersionStatus[];
+  backtests_succeeded: number;
+  backtests: BacktestEvidence[];
+  paper_activations: number;
+  paper_active: number;
+  live_activations: number;
+  blockers: Partial<Record<StrategyVersionStatus, string[]>>;
+}

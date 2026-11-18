@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Money, PanelCard } from "@/components/design";
+import { HistoricalImport } from "@/components/tools/HistoricalImport";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { blackScholes, charges, type CalcProduct, type CalcSegment } from "@/lib/calculators";
@@ -115,6 +116,7 @@ export default function ToolsPage() {
     <div className="flex flex-col gap-3">
       <ChargesCalculator />
       <GreeksCalculator />
+      <HistoricalImport />
     </div>
   );
 }

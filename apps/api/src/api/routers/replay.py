@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from api.deps import DB, User
+from api.deps import DB, State, User
 from api.replay.manager import manager
 from api.replay.session import MAX_SPEED, ReplaySession
 from core.calendar import nse_calendar
@@ -68,15 +68,18 @@ def _out(s: ReplaySession) -> SessionOut:
 
 
 @router.post("/sessions", response_model=SessionOut, status_code=status.HTTP_201_CREATED)
-async def create_session(body: SessionIn, db: DB, user: User) -> SessionOut:
+async def create_session(body: SessionIn, db: DB, user: User, state: State) -> SessionOut:
     await manager.sweep()
     cal = nse_calendar()
     bounds = cal.session_bounds_utc(body.date)
     if bounds is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"{body.date} is not a trading day")
     start, end = bounds
+    # Never mix providers in one replay day (demo bars next to real ones): use the
+    # active provider only, like /market/candles does.
+    provider = state.provider.info.code
     bars = await fetch_candles(
-        db, body.instrument_id, Timeframe.M1, start, end + timedelta(minutes=1)
+        db, body.instrument_id, Timeframe.M1, start, end + timedelta(minutes=1), provider
     )
     if not bars:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "no 1-minute candles stored for that day")
@@ -103,7 +106,7 @@ async def create_session(body: SessionIn, db: DB, user: User) -> SessionOut:
             underlying_symbol=ins.underlying_symbol,
         )
         warm = await fetch_candles(
-            db, body.instrument_id, Timeframe.M1, start - timedelta(days=10), start
+            db, body.instrument_id, Timeframe.M1, start - timedelta(days=10), start, provider
         )
     try:
         sess = manager.add(

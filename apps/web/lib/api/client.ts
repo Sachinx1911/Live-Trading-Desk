@@ -129,9 +129,11 @@ export async function api<T>(
     let code = "http_error";
     let message = res.statusText || `HTTP ${res.status}`;
     try {
-      const err = (await res.json()) as ApiError;
+      const err = (await res.json()) as ApiError & { detail?: unknown };
       code = err.error?.code ?? code;
-      message = err.error?.message ?? message;
+      // FastAPI HTTPException bodies are {detail: string | [...]}; ours are {error: {...}}.
+      const detail = typeof err.detail === "string" ? err.detail : Array.isArray(err.detail) ? err.detail.map((d) => (d as { msg?: string }).msg ?? String(d)).join("; ") : undefined;
+      message = err.error?.message ?? detail ?? message;
     } catch {
       /* non-JSON error body */
     }

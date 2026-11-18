@@ -26,6 +26,8 @@ import type {
   StrategyIn,
   StrategyVersion,
   TransitionIn,
+  StrategyApproval,
+  VersionReadiness,
   ValidationReport,
   VersionIn,
 } from "./generated";
@@ -304,7 +306,26 @@ export function useTransitionVersion() {
   return useMutation({
     mutationFn: ({ versionId, ...body }: TransitionIn & { versionId: number }) =>
       api<StrategyVersion>(`/strategies/versions/${versionId}/transition`, { method: "POST", body: JSON.stringify(body) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["strategies"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["approval"] });
+    },
+  });
+}
+
+export function useVersionReadiness(versionId: number | null) {
+  return useQuery({
+    queryKey: ["approval", "readiness", versionId],
+    queryFn: () => api<VersionReadiness>(`/strategies/versions/${versionId}/readiness`),
+    enabled: versionId != null,
+  });
+}
+
+export function useVersionApprovals(versionId: number | null) {
+  return useQuery({
+    queryKey: ["approval", "log", versionId],
+    queryFn: () => api<StrategyApproval[]>(`/strategies/versions/${versionId}/approvals`),
+    enabled: versionId != null,
   });
 }
 

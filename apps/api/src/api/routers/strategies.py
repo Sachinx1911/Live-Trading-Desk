@@ -16,14 +16,27 @@ from sqlalchemy import func, select
 
 from api.audit import audit
 from api.deps import DB, User
-from core.db.models import Strategy, StrategyApproval, StrategyVersion
+from core.db.models import (
+    BacktestJob,
+    BacktestResult,
+    Strategy,
+    StrategyActivation,
+    StrategyApproval,
+    StrategyVersion,
+)
+from core.db.models import (
+    User as UserRow,
+)
 from core.db.models._enums import (
+    ActivationStatus,
     CreatedBy,
     Decision,
+    JobStatus,
     StrategyCategory,
     StrategyOrigin,
     StrategyVersionStatus,
 )
+from core.models.enums import TradingMode
 from core.time import utcnow
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
@@ -111,6 +124,49 @@ class TransitionIn(BaseModel):
     to_status: StrategyVersionStatus
     note: str | None = None
     evidence: dict[str, Any] = {}
+
+
+class ApprovalOut(BaseModel):
+    id: int
+    version_id: int
+    user_email: str
+    from_status: StrategyVersionStatus
+    to_status: StrategyVersionStatus
+    decision: Decision
+    note: str | None
+    evidence: dict[str, Any]
+    ts: datetime
+
+
+class BacktestEvidence(BaseModel):
+    job_id: int
+    instrument_id: int
+    timeframe: str
+    start_at: datetime
+    end_at: datetime
+    finished_at: datetime | None
+    trades: int | None
+    total_return_pct: float | None
+    max_drawdown_pct: float | None
+    win_rate_pct: float | None
+    profit_factor: float | None
+    sharpe: float | None
+
+
+class ReadinessOut(BaseModel):
+    """Evidence the approval workflow shows before a user moves a version forward.
+
+    Nothing here is computed by an LLM; it is a read of what already happened."""
+
+    version_id: int
+    status: StrategyVersionStatus
+    allowed: list[StrategyVersionStatus]
+    backtests_succeeded: int
+    backtests: list[BacktestEvidence]
+    paper_activations: int
+    paper_active: int
+    live_activations: int
+    blockers: dict[str, list[str]]
 
 
 def _validate(dsl: dict[str, Any], target: str = "draft") -> ValidationOut:
@@ -329,6 +385,22 @@ async def transition_version(version_id: int, body: TransitionIn, db: DB, user: 
         )
     if body.to_status == StrategyVersionStatus.APPROVED_LIVE and not user.has_role("owner"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "only the owner can approve for live")
+    readiness = await _readiness(db, v)
+    blockers = readiness.blockers.get(body.to_status.value, [])
+    if blockers:
+        raise HTTPException(status.HTTP_409_CONFLICT, "; ".join(blockers))
+    if body.to_status in (StrategyVersionStatus.REJECTED, StrategyVersionStatus.RETIRED) and not (
+        body.note and body.note.strip()
+    ):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "a reason note is required")
+    if body.to_status == StrategyVersionStatus.APPROVED_LIVE and not (
+        body.note and body.note.strip()
+    ):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "an approval note is required")
+    evidence = dict(body.evidence)
+    evidence.setdefault("backtest_job_ids", [b.job_id for b in readiness.backtests])
+    evidence.setdefault("paper_activations", readiness.paper_activations)
+    body.evidence = evidence
     frm = v.status
     v.status = body.to_status
     if frm == StrategyVersionStatus.DRAFT:
@@ -360,3 +432,104 @@ async def transition_version(version_id: int, body: TransitionIn, db: DB, user: 
     )
     await db.commit()
     return _vout(v)
+
+
+async def _readiness(db: DB, v: StrategyVersion) -> ReadinessOut:
+    res = await db.execute(
+        select(BacktestJob, BacktestResult)
+        .outerjoin(BacktestResult, BacktestResult.job_id == BacktestJob.id)
+        .where(
+            BacktestJob.strategy_version_id == v.id,
+            BacktestJob.status == JobStatus.SUCCEEDED,
+        )
+        .order_by(BacktestJob.id.desc())
+        .limit(20)
+    )
+    backtests: list[BacktestEvidence] = []
+    for job, result in res.all():
+        m: dict[str, Any] = result.metrics if result is not None else {}
+
+        def num(key: str, m: dict[str, Any] = m) -> float | None:
+            val = m.get(key)
+            return float(val) if isinstance(val, int | float) else None
+
+        trades = m.get("total_trades")
+        backtests.append(
+            BacktestEvidence(
+                job_id=job.id,
+                instrument_id=job.instrument_id,
+                timeframe=str(job.timeframe),
+                start_at=job.start_at,
+                end_at=job.end_at,
+                finished_at=getattr(job, "finished_at", None),
+                trades=int(trades) if isinstance(trades, int | float) else None,
+                total_return_pct=num("total_return_pct"),
+                max_drawdown_pct=num("max_drawdown_pct"),
+                win_rate_pct=num("win_rate_pct"),
+                profit_factor=num("profit_factor"),
+                sharpe=num("sharpe"),
+            )
+        )
+    acts = (
+        await db.execute(
+            select(StrategyActivation.trading_mode, StrategyActivation.status).where(
+                StrategyActivation.version_id == v.id
+            )
+        )
+    ).all()
+    paper = [a for a in acts if a.trading_mode == TradingMode.PAPER]
+    live = [a for a in acts if a.trading_mode == TradingMode.LIVE]
+    paper_active = sum(1 for a in paper if a.status == ActivationStatus.ACTIVE)
+    blockers: dict[str, list[str]] = {}
+    if not backtests:
+        blockers[StrategyVersionStatus.BACKTESTED.value] = [
+            "at least one succeeded backtest of this version is required"
+        ]
+    if not paper:
+        blockers[StrategyVersionStatus.APPROVED_LIVE.value] = [
+            "the version must have run on a paper account before live approval"
+        ]
+    reachable = {t.value for t in TRANSITIONS[v.status]}
+    allowed = [t for t in TRANSITIONS[v.status] if t.value not in blockers]
+    # Blocked targets stay listed with their reasons so the UI can explain them.
+    return ReadinessOut(
+        version_id=v.id,
+        status=v.status,
+        allowed=allowed,
+        backtests_succeeded=len(backtests),
+        backtests=backtests,
+        paper_activations=len(paper),
+        paper_active=paper_active,
+        live_activations=len(live),
+        blockers={k: r for k, r in blockers.items() if k in reachable},
+    )
+
+
+@router.get("/versions/{version_id}/readiness", response_model=ReadinessOut)
+async def version_readiness(version_id: int, db: DB, user: User) -> ReadinessOut:
+    return await _readiness(db, await _owned_version(db, user, version_id))
+
+
+@router.get("/versions/{version_id}/approvals", response_model=list[ApprovalOut])
+async def version_approvals(version_id: int, db: DB, user: User) -> list[ApprovalOut]:
+    v = await _owned_version(db, user, version_id)
+    res = await db.execute(
+        select(StrategyApproval, UserRow.email)
+        .join(UserRow, UserRow.id == StrategyApproval.user_id)
+        .where(StrategyApproval.version_id == v.id)
+        .order_by(StrategyApproval.ts.asc())
+    )
+    return [
+        ApprovalOut(
+            id=a.id,
+            version_id=a.version_id,
+            user_email=email,
+            from_status=a.from_status,
+            to_status=a.to_status,
+            decision=a.decision,
+            note=a.note,
+            evidence=a.evidence,
+            ts=a.ts,
+        )
+        for a, email in res.all()
+    ]

@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowRightLeft, BarChart3, Pencil, Play, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Pencil, Play, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { EmptyState, PanelCard } from "@/components/design";
+import { ApprovalPanel } from "@/components/strategies/ApprovalPanel";
 import { DslEditor } from "@/components/strategies/DslEditor";
 import { DslViewer } from "@/components/strategies/DslViewer";
 import { ValidationReportView } from "@/components/strategies/ValidationReportView";
@@ -12,23 +13,10 @@ import { RunStrategySheet } from "@/components/trading/RunStrategySheet";
 import { StatusChip } from "@/components/trading/StatusChip";
 import { usePaperAccount } from "@/components/trading/usePaperAccount";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiRequestError } from "@/lib/api/client";
-import type { StrategyVersionStatus } from "@/lib/api/generated";
-import { useCreateVersion, useEditVersion, useStrategy, useStrategyVersion, useStrategyVersions, useTransitionVersion } from "@/lib/api/trading";
+import { useCreateVersion, useEditVersion, useStrategy, useStrategyVersion, useStrategyVersions } from "@/lib/api/trading";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-const TRANSITIONS: Record<StrategyVersionStatus, StrategyVersionStatus[]> = {
-  draft: ["backtested", "rejected"],
-  backtested: ["validated", "paper", "rejected"],
-  validated: ["paper", "rejected"],
-  paper: ["approved_live", "retired"],
-  approved_live: ["retired"],
-  retired: [],
-  rejected: [],
-};
 
 const EMPTY_DSL = {
   dsl_schema_version: "1.0",
@@ -44,38 +32,6 @@ const EMPTY_DSL = {
   target: null,
   position_sizing: { method: "fixed_lots", lots: 1 },
 };
-
-function TransitionBox({ versionId, status }: { versionId: number; status: StrategyVersionStatus }) {
-  const tr = useTransitionVersion();
-  const [to, setTo] = useState<StrategyVersionStatus | "">("");
-  const [note, setNote] = useState("");
-  const targets = TRANSITIONS[status];
-  const err = tr.error instanceof ApiRequestError ? tr.error.message : null;
-  if (targets.length === 0) return <p className="text-[11px] text-text-3">Terminal status.</p>;
-  return (
-    <form
-      className="flex flex-wrap items-center gap-2 text-xs"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        if (!to) return;
-        await tr.mutateAsync({ versionId, to_status: to, note: note || null });
-        setTo("");
-        setNote("");
-      }}
-    >
-      <ArrowRightLeft className="size-3.5 text-text-3" />
-      <select value={to} onChange={(e) => setTo(e.target.value as StrategyVersionStatus)} className="h-7 border border-border bg-raised px-2 text-xs" aria-label="Transition to">
-        <option value="">Move to…</option>
-        {targets.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
-      </select>
-      <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (evidence, reason)" className="h-7 w-64 text-xs" />
-      <Button type="submit" size="xs" variant={to === "approved_live" ? "destructive" : "outline"} disabled={!to || tr.isPending}>
-        {to === "approved_live" ? "Approve for LIVE (owner)" : "Apply"}
-      </Button>
-      {err && <span className="text-down">{err}</span>}
-    </form>
-  );
-}
 
 export default function StrategyDetailPage() {
   const params = useParams<{ id: string }>();
@@ -164,7 +120,7 @@ export default function StrategyDetailPage() {
                 <span className="text-ai">Original description ({version.source_language ?? "?"}):</span> {version.source_text}
               </div>
             )}
-            <TransitionBox versionId={version.id} status={version.status} />
+            <ApprovalPanel versionId={version.id} status={version.status} />
           </div>
         ) : (
           <EmptyState title="Select a version" />
