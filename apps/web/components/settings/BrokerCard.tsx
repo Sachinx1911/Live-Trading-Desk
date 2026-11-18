@@ -49,7 +49,7 @@ function CopyButton({ value }: { value: string }) {
         }
       }}
     >
-      {done ? <Check className="text-pnl-positive" /> : <Copy />}
+      {done ? <Check className="text-up" /> : <Copy />}
     </Button>
   );
 }
@@ -82,14 +82,14 @@ function CredentialsForm({ code, status }: { code: BrokerCode; status: BrokerSes
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3 border-t border-border-subtle pt-3">
-      <div className="rounded-sm border border-border-subtle bg-panel-raised p-2 text-[11px] text-text-secondary">
+    <form onSubmit={onSubmit} className="flex flex-col gap-3 border-t border-border pt-3">
+      <div className="border border-border bg-raised p-2 text-[11px] text-text-2">
         <p className="mb-1">
           Register this redirect URI in your {DISPLAY[code].name} developer app, then paste the
           app&apos;s API key and secret below. Secrets are encrypted at rest and never shown again.
         </p>
         <div className="flex items-center gap-1">
-          <code className="tabular flex-1 truncate font-mono text-[11px] text-text-primary">
+          <code className="tabular flex-1 truncate font-mono text-[11px] text-text-1">
             {redirectUri}
           </code>
           <CopyButton value={redirectUri} />
@@ -136,12 +136,12 @@ function CredentialsForm({ code, status }: { code: BrokerCode; status: BrokerSes
           {upsert.isPending ? "Saving…" : "Save credentials"}
         </Button>
         {saved && (
-          <span className="text-xs text-pnl-positive" role="status">
+          <span className="text-xs text-up" role="status">
             Saved. Secrets cleared from this form.
           </span>
         )}
         {upsert.isError && (
-          <span className="text-xs text-pnl-negative" role="alert">
+          <span className="text-xs text-down" role="alert">
             {errorText(upsert.error)}
           </span>
         )}
@@ -176,20 +176,20 @@ export function BrokerCard({ status }: { status: BrokerSessionStatus }) {
     >
       <dl className="grid grid-cols-3 gap-2 text-[11px]">
         <div>
-          <dt className="text-text-muted">Credentials</dt>
-          <dd className={cn("font-medium", status.configured ? "text-text-primary" : "text-state-disconnected")}>
+          <dt className="text-text-3">Credentials</dt>
+          <dd className={cn("font-medium", status.configured ? "text-text-1" : "text-state-disconnected")}>
             {status.configured ? "Configured" : "Not configured"}
           </dd>
         </div>
         <div>
-          <dt className="text-text-muted">Token issued</dt>
-          <dd className="tabular text-text-primary">
+          <dt className="text-text-3">Token issued</dt>
+          <dd className="tabular text-text-1">
             {status.issued_at ? formatDateTime(status.issued_at) : "—"}
           </dd>
         </div>
         <div>
-          <dt className="text-text-muted">Last checked</dt>
-          <dd className="tabular text-text-primary">
+          <dt className="text-text-3">Last checked</dt>
+          <dd className="tabular text-text-1">
             {status.last_checked_at ? formatDateTime(status.last_checked_at) : "—"}
           </dd>
         </div>
@@ -225,13 +225,13 @@ export function BrokerCard({ status }: { status: BrokerSessionStatus }) {
           href={meta.portal}
           target="_blank"
           rel="noreferrer"
-          className="ml-auto inline-flex items-center gap-1 text-[11px] text-cyan-accent hover:underline"
+          className="ml-auto inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
         >
           Developer portal <ExternalLink className="size-3" />
         </a>
       </div>
       {(loginUrl.isError || revoke.isError) && (
-        <p className="text-xs text-pnl-negative" role="alert">
+        <p className="text-xs text-down" role="alert">
           {errorText(loginUrl.error ?? revoke.error)}
         </p>
       )}

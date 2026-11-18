@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 type Tone = "ok" | "warn" | "bad" | "muted" | "info" | "ai";
 
 const TONES: Record<Tone, string> = {
-  ok: "border-pnl-positive/40 bg-pnl-positive/10 text-pnl-positive",
-  warn: "border-state-delayed/40 bg-state-delayed/10 text-state-delayed",
-  bad: "border-pnl-negative/40 bg-pnl-negative/10 text-pnl-negative",
-  muted: "border-border-subtle bg-panel-raised text-text-secondary",
+  ok: "border-up/40 bg-up/10 text-up",
+  warn: "border-warn/40 bg-warn/10 text-warn",
+  bad: "border-down/40 bg-down/10 text-down",
+  muted: "border-border bg-raised text-text-2",
   info: "border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan",
   ai: "border-ai/40 bg-ai/10 text-ai",
 };
@@ -55,7 +55,7 @@ export function StatusChip({ value, tone, className }: { value: string; tone?: T
 
 export function SideText({ side }: { side: "buy" | "sell" }) {
   return (
-    <span className={cn("font-semibold uppercase", side === "buy" ? "text-pnl-positive" : "text-pnl-negative")}>
+    <span className={cn("font-semibold uppercase", side === "buy" ? "text-up" : "text-down")}>
       {side}
     </span>
   );

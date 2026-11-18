@@ -19,7 +19,7 @@ function Positions({ accountId }: { accountId: number }) {
         title="Positions"
         bodyClassName="overflow-x-auto p-0"
         actions={
-          <label className="flex items-center gap-1 text-[11px] text-text-secondary">
+          <label className="flex items-center gap-1 text-[11px] text-text-2">
             <input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} /> include closed
           </label>
         }

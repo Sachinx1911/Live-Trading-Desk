@@ -3,7 +3,16 @@
 import * as React from "react"
 import { cn } from "cn"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+/*
+ * Tables per the TradingView screener measurements (§5): 50px bold header, 41px rows
+ * (`dense` → 34px), cells `0 12px` (first `0 12px 0 20px`), 1px #1e1e1e row lines, hover
+ * #1a1a1a, no zebra. Numeric cells opt in with `className="text-right tabular"`.
+ */
+function Table({
+  className,
+  dense = false,
+  ...props
+}: React.ComponentProps<"table"> & { dense?: boolean }) {
   return (
     <div
       data-slot="table-container"
@@ -11,7 +20,8 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        data-dense={dense ? "" : undefined}
+        className={cn("group/table w-full caption-bottom text-[14px]", className)}
         {...props}
       />
     </div>
@@ -22,7 +32,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b [&_tr]:border-border [&_tr]:hover:bg-transparent", className)}
       {...props}
     />
   )
@@ -43,7 +53,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        "border-t border-border font-medium [&>tr]:last:border-b-0",
         className
       )}
       {...props}
@@ -56,7 +66,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        "h-[var(--h-row)] border-b border-border-row transition-colors hover:bg-row-hover has-aria-expanded:bg-row-hover data-[state=selected]:bg-selected group-data-[dense]/table:h-[var(--h-row-dense)]",
         className
       )}
       {...props}
@@ -69,7 +79,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        "h-[var(--h-th)] px-3 text-left align-middle text-[13px] font-bold whitespace-nowrap text-text-2 first:pl-5 group-data-[dense]/table:h-9 [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -82,7 +92,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-3 py-0 align-middle whitespace-nowrap first:pl-5 [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

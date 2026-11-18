@@ -51,7 +51,7 @@ function TransitionBox({ versionId, status }: { versionId: number; status: Strat
   const [note, setNote] = useState("");
   const targets = TRANSITIONS[status];
   const err = tr.error instanceof ApiRequestError ? tr.error.message : null;
-  if (targets.length === 0) return <p className="text-[11px] text-text-muted">Terminal status.</p>;
+  if (targets.length === 0) return <p className="text-[11px] text-text-3">Terminal status.</p>;
   return (
     <form
       className="flex flex-wrap items-center gap-2 text-xs"
@@ -63,8 +63,8 @@ function TransitionBox({ versionId, status }: { versionId: number; status: Strat
         setNote("");
       }}
     >
-      <ArrowRightLeft className="size-3.5 text-text-muted" />
-      <select value={to} onChange={(e) => setTo(e.target.value as StrategyVersionStatus)} className="h-7 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs" aria-label="Transition to">
+      <ArrowRightLeft className="size-3.5 text-text-3" />
+      <select value={to} onChange={(e) => setTo(e.target.value as StrategyVersionStatus)} className="h-7 border border-border bg-raised px-2 text-xs" aria-label="Transition to">
         <option value="">Move to…</option>
         {targets.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
       </select>
@@ -72,7 +72,7 @@ function TransitionBox({ versionId, status }: { versionId: number; status: Strat
       <Button type="submit" size="xs" variant={to === "approved_live" ? "destructive" : "outline"} disabled={!to || tr.isPending}>
         {to === "approved_live" ? "Approve for LIVE (owner)" : "Apply"}
       </Button>
-      {err && <span className="text-pnl-negative">{err}</span>}
+      {err && <span className="text-down">{err}</span>}
     </form>
   );
 }
@@ -108,14 +108,14 @@ export default function StrategyDetailPage() {
                 <button
                   type="button"
                   onClick={() => { setSelected(v.id); setEditing(false); }}
-                  className={cn("flex w-full flex-col gap-0.5 border-b border-border-subtle/60 px-3 py-2 text-left hover:bg-panel-raised/60", selId === v.id && "bg-panel-raised")}
+                  className={cn("flex w-full flex-col gap-0.5 border-b border-border/60 px-3 py-2 text-left hover:bg-raised/60", selId === v.id && "bg-raised")}
                 >
                   <span className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-text-primary">v{v.version_no}</span>
+                    <span className="font-semibold text-text-1">v{v.version_no}</span>
                     <StatusChip value={v.status} />
                   </span>
-                  <span className="text-[11px] text-text-muted">{formatDateTime(v.created_at)} · {v.created_by}{v.parent_version_id ? ` · from #${v.parent_version_id}` : ""}</span>
-                  {v.change_summary && <span className="text-[11px] text-text-secondary">{v.change_summary}</span>}
+                  <span className="text-[11px] text-text-3">{formatDateTime(v.created_at)} · {v.created_by}{v.parent_version_id ? ` · from #${v.parent_version_id}` : ""}</span>
+                  {v.change_summary && <span className="text-[11px] text-text-2">{v.change_summary}</span>}
                 </button>
               </li>
             ))}
@@ -136,7 +136,7 @@ export default function StrategyDetailPage() {
               {accountId != null && ["draft", "backtested", "validated", "paper"].includes(version.status) && (
                 <RunStrategySheet accountId={accountId} presetStrategyId={strategy.id} trigger={<Button size="xs" variant="outline"><Play /> Run on paper</Button>} />
               )}
-              <Link href={`/backtesting?strategy=${strategy.id}`} className="inline-flex h-6 items-center gap-1 rounded-sm border border-border-subtle px-2 text-[11px] text-accent-cyan hover:bg-panel-raised"><BarChart3 className="size-3" /> Backtest</Link>
+              <Link href={`/backtesting?strategy=${strategy.id}`} className="inline-flex h-6 items-center gap-1 rounded-sm border border-border px-2 text-[11px] text-accent-cyan hover:bg-raised"><BarChart3 className="size-3" /> Backtest</Link>
               <Button size="xs" variant="outline" onClick={() => setEditing(true)}><Pencil /> Edit as new version</Button>
             </>
           ) : undefined
@@ -159,7 +159,7 @@ export default function StrategyDetailPage() {
             <ValidationReportView report={version.validation} />
             <DslViewer dsl={version.dsl} />
             {version.source_text && (
-              <div className="rounded-sm border border-ai/30 bg-ai/5 p-2 text-[11px] text-text-secondary">
+              <div className="rounded-sm border border-ai/30 bg-ai/5 p-2 text-[11px] text-text-2">
                 <span className="text-ai">Original description ({version.source_language ?? "?"}):</span> {version.source_text}
               </div>
             )}

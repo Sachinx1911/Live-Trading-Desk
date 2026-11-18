@@ -84,25 +84,25 @@ function Row({ item, selected, onSelect, onRemove }: { item: WatchItem; selected
   return (
     <li
       className={cn(
-        "group flex cursor-pointer items-center gap-2 border-b border-border-subtle px-2 py-1.5 last:border-0 hover:bg-panel-raised",
-        selected && "bg-panel-raised",
+        "group flex h-[var(--h-row-dense)] cursor-pointer items-center gap-2 border-b border-border-row px-3 last:border-0 hover:bg-row-hover",
+        selected && "bg-selected",
         quote?.is_demo && "demo-stripes",
       )}
       onClick={onSelect}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-medium text-text-primary">{item.label}</p>
-        <p className="truncate text-[10px] uppercase text-text-muted">{item.segment}</p>
+        <p className="truncate text-[14px] leading-4 font-semibold text-text-1">{item.label}</p>
+        <p className="truncate text-[11px] leading-3 text-text-3">{item.name ?? item.segment}</p>
       </div>
       <div className="flex flex-col items-end">
         {ltp == null ? (
           <Dash className="text-sm" />
         ) : (
-          <span className={cn("tabular text-sm", freshness === "stale" && "text-text-muted")}>
+          <span className={cn("tabular text-[14px] leading-4 text-text-1", freshness === "stale" && "text-text-2")}>
             {item.segment === "index" ? formatNumber(ltp, 2) : `₹${formatNumber(ltp, 2)}`}
           </span>
         )}
-        <Pct value={chg} className="text-[11px]" />
+        <Pct value={chg} className="text-[12px] leading-3" />
       </div>
       <DataStateBadge state={freshness} className="shrink-0" />
       <button
@@ -112,7 +112,7 @@ function Row({ item, selected, onSelect, onRemove }: { item: WatchItem; selected
           e.stopPropagation();
           onRemove();
         }}
-        className="invisible text-text-muted hover:text-text-primary group-hover:visible"
+        className="invisible text-text-3 hover:text-text-1 group-hover:visible"
       >
         <X className="size-3.5" />
       </button>
@@ -129,14 +129,14 @@ export function Watchlist({ selectedId, onSelect, className }: { selectedId: num
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
   return (
-    <PanelCard title="Watchlist" className={className} bodyClassName="flex flex-col gap-2 p-2">
+    <PanelCard title="Watchlist" className={className} bodyClassName="flex flex-col gap-2 p-0 pt-2 [&>div:first-child]:px-3">
       <InstrumentSearch onPick={add} />
       {items === null ? (
-        <p className="px-2 text-[11px] text-text-muted">Resolving instruments…</p>
+        <p className="px-2 text-[11px] text-text-3">Resolving instruments…</p>
       ) : items.length === 0 ? (
-        <p className="px-2 text-[11px] text-text-muted">No instruments. Search above, or run the collector to sync the instrument master.</p>
+        <p className="px-2 text-[11px] text-text-3">No instruments. Search above, or run the collector to sync the instrument master.</p>
       ) : (
-        <ul className="-mx-2 flex flex-col">
+        <ul className="flex flex-col">
           {items.map((it) => (
             <Row key={it.instrument_id} item={it} selected={it.instrument_id === selectedId} onSelect={() => onSelect(it)} onRemove={() => remove(it.instrument_id)} />
           ))}

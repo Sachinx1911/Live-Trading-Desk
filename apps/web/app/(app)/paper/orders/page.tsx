@@ -15,7 +15,7 @@ function Orders({ accountId }: { accountId: number }) {
       subtitle="Every order the simulator accepted, with its state transitions"
       bodyClassName="overflow-x-auto p-0"
       actions={
-        <label className="flex items-center gap-1 text-[11px] text-text-secondary">
+        <label className="flex items-center gap-1 text-[11px] text-text-2">
           <input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} /> open only
         </label>
       }

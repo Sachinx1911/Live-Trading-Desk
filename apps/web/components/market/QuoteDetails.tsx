@@ -7,8 +7,8 @@ import { num, useLiveQuote } from "@/lib/ws/useMarket";
 function Cell({ label, value, digits = 2 }: { label: string; value: number | null; digits?: number }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-wide text-text-muted">{label}</span>
-      {value == null ? <Dash className="text-sm" /> : <span className="tabular text-sm text-text-primary">{formatNumber(value, digits)}</span>}
+      <span className="text-[10px] uppercase tracking-wide text-text-3">{label}</span>
+      {value == null ? <Dash className="text-sm" /> : <span className="tabular text-sm text-text-1">{formatNumber(value, digits)}</span>}
     </div>
   );
 }

@@ -36,7 +36,7 @@ export function CreateAccountForm({ onDone, compact = false }: { onDone?: (id: n
       <Button type="submit" size="sm" disabled={create.isPending}>
         <Plus /> Create
       </Button>
-      {err && <p className="text-[11px] text-pnl-negative">{err}</p>}
+      {err && <p className="text-[11px] text-down">{err}</p>}
     </form>
   );
 }
@@ -51,7 +51,7 @@ export function AccountPicker() {
         aria-label="Paper account"
         value={accountId ?? ""}
         onChange={(e) => select(Number(e.target.value))}
-        className="h-7 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs text-text-primary"
+        className="h-7 border border-border bg-raised px-2 text-xs text-text-1"
       >
         {accounts.map((a) => (
           <option key={a.id} value={a.id}>

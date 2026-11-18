@@ -55,12 +55,12 @@ export default function ReportsPage() {
         }
       >
         <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <div><p className="text-[10px] uppercase text-text-muted">Trades</p><p className="tabular text-lg font-semibold">{formatNumber(trades.length)}</p></div>
-          <div><p className="text-[10px] uppercase text-text-muted">Win rate</p><p className="tabular text-lg font-semibold">{trades.length ? `${((wins / trades.length) * 100).toFixed(1)}%` : "—"}</p></div>
-          <div><p className="text-[10px] uppercase text-text-muted">Net P&L</p><Money value={trades.length ? total : null} signed className="text-lg font-semibold" /></div>
-          <div><p className="text-[10px] uppercase text-text-muted">Expectancy / trade</p><Money value={trades.length ? total / trades.length : null} signed className="text-lg font-semibold" /></div>
+          <div><p className="text-[10px] uppercase text-text-3">Trades</p><p className="tabular text-lg font-semibold">{formatNumber(trades.length)}</p></div>
+          <div><p className="text-[10px] uppercase text-text-3">Win rate</p><p className="tabular text-lg font-semibold">{trades.length ? `${((wins / trades.length) * 100).toFixed(1)}%` : "—"}</p></div>
+          <div><p className="text-[10px] uppercase text-text-3">Net P&L</p><Money value={trades.length ? total : null} signed className="text-lg font-semibold" /></div>
+          <div><p className="text-[10px] uppercase text-text-3">Expectancy / trade</p><Money value={trades.length ? total / trades.length : null} signed className="text-lg font-semibold" /></div>
         </div>
-        <div className="overflow-x-auto rounded-sm border border-border-subtle">
+        <div className="overflow-x-auto rounded-sm border border-border">
           <TradesTable trades={trades} isPending={isPending} />
         </div>
       </PanelCard>
@@ -69,10 +69,10 @@ export default function ReportsPage() {
           <EmptyState title="No closed trades in range" className="m-3" />
         ) : (
           <table className="w-full text-xs">
-            <thead className="text-[10px] uppercase tracking-wide text-text-muted"><tr className="border-b border-border-subtle"><th className="px-3 py-1.5 text-left font-medium">Day</th><th className="px-3 py-1.5 text-right font-medium">Trades</th><th className="px-3 py-1.5 text-right font-medium">Wins</th><th className="px-3 py-1.5 text-right font-medium">Fees</th><th className="px-3 py-1.5 text-right font-medium">Net</th></tr></thead>
+            <thead className="text-[10px] uppercase tracking-wide text-text-3"><tr className="border-b border-border"><th className="px-3 py-1.5 text-left font-medium">Day</th><th className="px-3 py-1.5 text-right font-medium">Trades</th><th className="px-3 py-1.5 text-right font-medium">Wins</th><th className="px-3 py-1.5 text-right font-medium">Fees</th><th className="px-3 py-1.5 text-right font-medium">Net</th></tr></thead>
             <tbody>
               {daily.map(([d, r]) => (
-                <tr key={d} className="border-b border-border-subtle/60"><td className="px-3 py-1 tabular">{d}</td><td className="px-3 py-1 text-right tabular">{r.trades}</td><td className="px-3 py-1 text-right tabular">{r.wins}</td><td className="px-3 py-1 text-right"><Money value={r.fees} muted /></td><td className="px-3 py-1 text-right"><Money value={r.pnl} signed /></td></tr>
+                <tr key={d} className="border-b border-border/60"><td className="px-3 py-1 tabular">{d}</td><td className="px-3 py-1 text-right tabular">{r.trades}</td><td className="px-3 py-1 text-right tabular">{r.wins}</td><td className="px-3 py-1 text-right"><Money value={r.fees} muted /></td><td className="px-3 py-1 text-right"><Money value={r.pnl} signed /></td></tr>
               ))}
             </tbody>
           </table>

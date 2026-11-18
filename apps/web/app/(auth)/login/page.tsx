@@ -39,18 +39,15 @@ function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="username"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <Label htmlFor="email" className="text-[13px] text-text-2">
+          Email
+        </Label>
+        <Input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="text-[13px] text-text-2">
+          Password
+        </Label>
         <Input
           id="password"
           type="password"
@@ -61,11 +58,11 @@ function LoginForm() {
         />
       </div>
       {message && (
-        <p role="alert" className="text-xs text-pnl-negative">
+        <p role="alert" className="text-[13px] text-down">
           {message}
         </p>
       )}
-      <Button type="submit" disabled={login.isPending} className="mt-1">
+      <Button type="submit" variant="primary" size="lg" disabled={login.isPending} className="mt-1 w-full">
         {login.isPending ? "Signing in…" : "Sign in"}
       </Button>
     </form>
@@ -74,23 +71,19 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-app p-6">
-      <div className="w-full max-w-sm rounded-md border border-border-subtle bg-panel p-6">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-sm bg-cyan-accent/15 font-mono text-xs font-bold text-cyan-accent">
-            TP
-          </span>
+    <div className="flex min-h-dvh items-center justify-center bg-pane p-6">
+      <div className="glass w-full max-w-[360px] rounded-[var(--r-lg)] p-7">
+        <div className="mb-6 flex items-center gap-3">
+          <span className="flex size-8 items-center justify-center rounded-[var(--r-sm)] bg-accent text-[13px] font-bold text-white">TP</span>
           <div>
-            <h1 className="text-sm font-semibold text-text-primary">Trading Platform</h1>
-            <p className="text-[11px] text-text-muted">Sign in to your terminal</p>
+            <h1 className="text-[16px] font-semibold text-text-1">Trading Platform</h1>
+            <p className="text-[12px] text-text-3">Sign in to your terminal</p>
           </div>
         </div>
         <Suspense>
           <LoginForm />
         </Suspense>
-        <p className="mt-6 text-[11px] text-text-muted">
-          No public sign-up. Accounts are created by the operator CLI.
-        </p>
+        <p className="mt-6 text-[12px] text-text-3">No public sign-up. Accounts are created by the operator CLI.</p>
       </div>
     </div>
   );

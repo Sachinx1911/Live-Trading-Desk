@@ -1,10 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { KeyRound, LogOut, Server, User as UserIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { DataStateBadge } from "@/components/design";
+import { KeyRound, LogOut, Search, Server, User as UserIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { InstrumentSearch } from "@/components/market/InstrumentSearch";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,56 +39,123 @@ function Clock() {
       clearInterval(id);
     };
   }, []);
-  return <span className="tabular font-mono text-xs text-text-secondary">{now ? formatTime(now) : "--:--:-- IST"}</span>;
+  return <span className="tabular text-[12px] text-text-3">{now ? formatTime(now) : "--:--:-- IST"}</span>;
 }
 
-function SessionIndicator() {
+/** 28px pill with a coloured dot, the TradingView status idiom. */
+function Pill({
+  dot,
+  children,
+  className,
+  href,
+  title,
+}: {
+  dot?: "up" | "down" | "warn" | "ai" | "muted";
+  children: React.ReactNode;
+  className?: string;
+  href?: string;
+  title?: string;
+}) {
+  const dotClass =
+    dot === "up" ? "bg-up" : dot === "down" ? "bg-down" : dot === "warn" ? "bg-warn" : dot === "ai" ? "bg-ai" : "bg-text-3";
+  const inner = (
+    <span
+      className={cn("inline-flex h-7 items-center gap-2 rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-2", href && "hover:bg-[#3a3a3a]", className)}
+      title={title}
+    >
+      {dot && <span className={cn("size-1.5 shrink-0 rounded-full", dotClass)} aria-hidden />}
+      {children}
+    </span>
+  );
+  return href ? <Link href={href}>{inner}</Link> : inner;
+}
+
+function SessionPill() {
   const session = useRealtimeStore((s) => s.session);
   const wsState = useRealtimeStore((s) => s.wsState);
   const connected = wsState === "connected" && session.asOf !== null;
+  const open = connected && session.state === "open";
   return (
-    <div className="flex items-center gap-2 rounded-sm border border-border-subtle bg-panel px-2 py-1">
-      <span className="text-[11px] font-semibold text-text-primary">{session.exchange}</span>
-      <span className={cn("text-[11px]", connected ? "text-text-secondary" : "text-text-muted")}>
-        {connected ? SESSION_LABEL[session.state] : "Disconnected"}
-      </span>
+    <Pill dot={!connected ? "down" : open ? "up" : "muted"}>
+      <span className="font-semibold text-text-1">{session.exchange}</span>
+      <span>{connected ? SESSION_LABEL[session.state] : "Disconnected"}</span>
       <Clock />
-    </div>
+    </Pill>
   );
 }
 
-function ProviderChip() {
+function ProviderPill() {
   const { data, isError, isPending } = useProviders();
-  if (isPending) return <DataStateBadge state="disconnected" detail="checking…" />;
-  if (isError || !data || data.length === 0) {
-    return <DataStateBadge state="disconnected" detail="no provider" />;
-  }
+  if (isPending) return <Pill dot="muted">Provider…</Pill>;
+  if (isError || !data || data.length === 0) return <Pill dot="down">No provider</Pill>;
   const primary = data[0];
-  const state = primary.is_demo
-    ? "demo"
-    : primary.state === "connected"
-      ? "live"
-      : "disconnected";
-  return <DataStateBadge state={state} detail={primary.display_name} />;
+  const state = primary.is_demo ? "demo" : primary.state === "connected" ? "live" : "disconnected";
+  return (
+    <Pill dot={state === "live" ? "up" : state === "demo" ? "ai" : "down"} href="/market/providers" title="Data providers">
+      <Server className="size-3.5 text-text-3" aria-hidden />
+      {primary.display_name}
+      {state === "demo" && <span className="text-[11px] uppercase text-ai">demo</span>}
+    </Pill>
+  );
 }
 
-function BrokerChip() {
+function BrokerPill() {
   const { data } = useBrokers();
   const upstox = data?.find((b) => b.broker === "upstox");
   if (!upstox || !upstox.configured) return null;
   const valid = upstox.status === "valid";
   return (
-    <Link
-      href="/settings/brokers"
-      className="flex items-center gap-1.5"
-      aria-label={valid ? "Broker session valid" : "Broker login required"}
-    >
-      <KeyRound className="size-3.5 text-text-muted" aria-hidden />
-      <DataStateBadge
-        state={valid ? "live" : "disconnected"}
-        detail={valid ? "Upstox session" : "Login required"}
-      />
-    </Link>
+    <Pill dot={valid ? "up" : "down"} href="/settings/brokers" title={valid ? "Broker session valid" : "Broker login required"}>
+      <KeyRound className="size-3.5 text-text-3" aria-hidden />
+      {valid ? "Upstox session" : "Login required"}
+    </Pill>
+  );
+}
+
+/** Symbol search pill: expands into the instrument search and jumps to the market page. */
+function SymbolSearch() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      {open ? (
+        <div className="w-72">
+          <InstrumentSearch
+            placeholder="Symbol search…"
+            onPick={(i) => {
+              setOpen(false);
+              router.push(`/market?instrument=${i.instrument_id}`);
+            }}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex h-7 w-56 items-center gap-2 rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-3 hover:bg-[#3a3a3a] hover:text-text-2"
+          aria-label="Symbol search"
+        >
+          <Search className="size-3.5" aria-hidden />
+          <span className="truncate">Search symbol</span>
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -97,37 +165,33 @@ export function TopBar() {
   const me = useMe();
 
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border-subtle bg-panel px-4">
+    <header className="flex h-[var(--h-toolbar)] shrink-0 items-center justify-between gap-4 border-b border-border bg-pane px-3">
       <div className="flex min-w-0 items-center gap-3">
-        <h1 className="truncate text-sm font-semibold text-text-primary">{item?.label ?? "Trading Platform"}</h1>
-        {item?.phase && (
-          <span className="rounded-sm border border-border-subtle px-1.5 text-[10px] text-text-muted">
-            Ships in Phase {item.phase}
-          </span>
-        )}
+        <Link href="/dashboard" className="flex items-center gap-2" aria-label="Dashboard">
+          <span className="flex size-6 items-center justify-center rounded-[var(--r-sm)] bg-accent text-[11px] font-bold text-white">TP</span>
+        </Link>
+        <h1 className="truncate text-[14px] font-semibold text-text-1">{item?.label ?? "Trading Platform"}</h1>
+        <SymbolSearch />
       </div>
-      <div className="flex items-center gap-3">
-        <SessionIndicator />
-        <div className="flex items-center gap-1.5">
-          <Server className="size-3.5 text-text-muted" aria-hidden />
-          <ProviderChip />
-        </div>
-        <BrokerChip />
+      <div className="flex items-center gap-2">
+        <SessionPill />
+        <ProviderPill />
+        <BrokerPill />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="sm" className="gap-2 text-text-secondary">
+              <Button variant="ghost" size="sm" className="gap-2 text-text-2">
                 <UserIcon className="size-4" />
-                <span className="max-w-32 truncate text-xs">{me.data?.email ?? "Account"}</span>
+                <span className="max-w-32 truncate text-[13px]">{me.data?.email ?? "Account"}</span>
               </Button>
             }
           />
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="truncate text-xs">
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel className="truncate">
               {me.data ? `${me.data.email} · ${me.data.roles.join(", ")}` : "Not signed in"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-xs">
+            <DropdownMenuItem onClick={logout}>
               <LogOut className="size-3.5" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

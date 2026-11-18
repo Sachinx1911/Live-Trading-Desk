@@ -29,7 +29,7 @@ export interface CurveSeries {
   area?: boolean;
 }
 
-const PALETTE = ["#22d3ee", "#a78bfa", "#22c55e", "#f59e0b", "#ef4444", "#60a5fa"];
+const PALETTE = ["#2962ff", "#a78bfa", "#089981", "#ff9800", "#f23645", "#5b9cf6"];
 
 /** Line/area chart for equity and drawdown curves. Times are shifted to IST like CandleChart. */
 export function CurveChart({
@@ -55,11 +55,20 @@ export function CurveChart({
     if (!el || !hasData) return;
     const chart = createChart(el, {
       height,
-      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#8b95ad", fontSize: 11 },
-      grid: { vertLines: { color: "rgba(255,255,255,0.04)" }, horzLines: { color: "rgba(255,255,255,0.04)" } },
-      rightPriceScale: { borderColor: "rgba(255,255,255,0.08)" },
-      timeScale: { borderColor: "rgba(255,255,255,0.08)", timeVisible: true, secondsVisible: false },
-      crosshair: { mode: 0 },
+      layout: {
+        background: { type: ColorType.Solid, color: "#000000" },
+        textColor: "#b8b8b8",
+        fontSize: 12,
+        fontFamily: "-apple-system, system-ui, Segoe UI, Roboto, sans-serif",
+      },
+      grid: { vertLines: { visible: false }, horzLines: { color: "rgba(255,255,255,0.04)" } },
+      rightPriceScale: { borderColor: "#303030" },
+      timeScale: { borderColor: "#303030", timeVisible: true, secondsVisible: false },
+      crosshair: {
+        mode: 0,
+        vertLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
+        horzLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
+      },
       localization: priceFormat === "percent" ? { priceFormatter: (p: number) => `${p.toFixed(2)}%` } : undefined,
     });
     chartRef.current = chart;
@@ -92,16 +101,16 @@ export function CurveChart({
   return (
     <div className={cn("w-full", className)}>
       {series.length > 1 && (
-        <div className="flex flex-wrap gap-3 px-2 pt-2 text-[11px]">
+        <div className="flex flex-wrap gap-3 bg-pane px-3 pt-2 text-[12px]">
           {series.map((s, idx) => (
-            <span key={s.id} className="flex items-center gap-1 text-text-secondary">
+            <span key={s.id} className="flex items-center gap-1 text-text-2">
               <span className="inline-block size-2 rounded-sm" style={{ background: s.color ?? PALETTE[idx % PALETTE.length] }} />
               {s.label ?? s.id}
             </span>
           ))}
         </div>
       )}
-      <div ref={ref} className="w-full" />
+      <div ref={ref} className="w-full bg-pane" />
     </div>
   );
 }

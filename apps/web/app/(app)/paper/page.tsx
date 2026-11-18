@@ -40,7 +40,7 @@ function ResetBox({ accountId }: { accountId: number }) {
       <Input type="number" placeholder="new capital (optional)" value={cap} onChange={(e) => setCap(e.target.value)} className="h-7 w-44 text-xs" />
       <Button type="submit" size="xs" variant="destructive" disabled={reset.isPending}>Confirm reset</Button>
       <Button type="button" size="xs" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-      {err && <span className="text-pnl-negative">{err}</span>}
+      {err && <span className="text-down">{err}</span>}
     </form>
   );
 }

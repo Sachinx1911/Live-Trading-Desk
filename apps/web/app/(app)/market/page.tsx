@@ -1,21 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { CandleChart } from "@/components/market/CandleChart";
+import { instrumentLabel } from "@/components/market/InstrumentSearch";
 import { QuoteDetails } from "@/components/market/QuoteDetails";
 import { Watchlist, type WatchItem } from "@/components/market/Watchlist";
-import type { Timeframe } from "@/lib/api/generated";
+import { api } from "@/lib/api/client";
+import type { Instrument, Timeframe } from "@/lib/api/generated";
 
-export default function MarketPage() {
+function MarketContent() {
+  const params = useSearchParams();
+  const wanted = params.get("instrument");
   const [selected, setSelected] = useState<WatchItem | null>(null);
   const [tf, setTf] = useState<Timeframe>("5m");
+
+  // Top-bar symbol search lands here with ?instrument=<id>: select it without adding to the list.
+  useEffect(() => {
+    if (!wanted) return;
+    const id = Number(wanted);
+    if (!Number.isFinite(id) || selected?.instrument_id === id) return;
+    let alive = true;
+    void api<Instrument>(`/instruments/${id}`)
+      .then((i) => {
+        if (alive) setSelected({ instrument_id: i.instrument_id, symbol: i.symbol, segment: i.segment, name: i.name, label: instrumentLabel(i) });
+      })
+      .catch(() => {
+        /* unknown id: the page keeps its current selection */
+      });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wanted]);
+
   return (
-    <div className="grid grid-cols-12 gap-3">
-      <Watchlist selectedId={selected?.instrument_id ?? null} onSelect={setSelected} className="col-span-12 xl:col-span-3" />
-      <div className="col-span-12 flex flex-col gap-3 xl:col-span-9">
-        <CandleChart instrumentId={selected?.instrument_id ?? null} symbol={selected?.label} timeframe={tf} onTimeframe={setTf} height={420} />
+    <div className="grid grid-cols-12 gap-px bg-border">
+      <Watchlist selectedId={selected?.instrument_id ?? null} onSelect={setSelected} className="col-span-12 border-0 xl:col-span-3" />
+      <div className="col-span-12 flex flex-col gap-px bg-border xl:col-span-9">
+        <CandleChart
+          instrumentId={selected?.instrument_id ?? null}
+          symbol={selected?.label}
+          timeframe={tf}
+          onTimeframe={setTf}
+          height={440}
+          className="border-0"
+        />
         <QuoteDetails instrumentId={selected?.instrument_id ?? null} symbol={selected?.label} />
       </div>
     </div>
+  );
+}
+
+export default function MarketPage() {
+  return (
+    <Suspense>
+      <MarketContent />
+    </Suspense>
   );
 }

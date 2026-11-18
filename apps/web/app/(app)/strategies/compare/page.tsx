@@ -46,7 +46,7 @@ export default function ComparePage() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {ids.map((id) => (
-              <span key={id} className="inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-panel-raised px-2 py-1 text-xs">
+              <span key={id} className="inline-flex items-center gap-1 border border-border bg-raised px-2 py-1 text-xs">
                 <Link href={`/backtesting/${id}`} className="hover:text-accent-cyan">#{id}</Link>
                 <Button size="xs" variant="ghost" onClick={() => remove(id)} aria-label="Remove"><X /></Button>
               </span>
@@ -61,21 +61,21 @@ export default function ComparePage() {
           </PanelCard>
           <PanelCard title="Metrics side by side" bodyClassName="p-0 overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-                <tr className="border-b border-border-subtle">
+              <thead className="text-[10px] uppercase tracking-wide text-text-3">
+                <tr className="border-b border-border">
                   <th className="px-2 py-1.5 text-left font-medium">Metric</th>
                   {loaded.map((r) => <th key={r.id} className="px-2 py-1.5 text-right font-medium">#{r.id}{r.data?.job.label ? ` · ${r.data.job.label}` : ""}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {METRIC_COLUMNS.map((m) => (
-                  <tr key={m.key} className="border-b border-border-subtle/60">
-                    <td className="px-2 py-1.5 text-text-secondary">{m.label}</td>
-                    {loaded.map((r) => <td key={r.id} className="px-2 py-1.5 text-right">{r.data ? <MetricValue kind={m.kind} value={r.data.metrics[m.key]} signed={m.signed} /> : <span className="text-pnl-negative">no result</span>}</td>)}
+                  <tr key={m.key} className="border-b border-border/60">
+                    <td className="px-2 py-1.5 text-text-2">{m.label}</td>
+                    {loaded.map((r) => <td key={r.id} className="px-2 py-1.5 text-right">{r.data ? <MetricValue kind={m.kind} value={r.data.metrics[m.key]} signed={m.signed} /> : <span className="text-down">no result</span>}</td>)}
                   </tr>
                 ))}
-                <tr><td className="px-2 py-1.5 text-text-secondary">Config hash</td>{loaded.map((r) => <td key={r.id} className="px-2 py-1.5 text-right font-mono text-[10px] text-text-muted">{r.data?.job.config_hash.slice(0, 10) ?? "—"}</td>)}</tr>
-                <tr><td className="px-2 py-1.5 text-text-secondary">Data hash</td>{loaded.map((r) => <td key={r.id} className="px-2 py-1.5 text-right font-mono text-[10px] text-text-muted">{r.data?.data_hash?.slice(0, 10) ?? "—"}</td>)}</tr>
+                <tr><td className="px-2 py-1.5 text-text-2">Config hash</td>{loaded.map((r) => <td key={r.id} className="px-2 py-1.5 text-right font-mono text-[10px] text-text-3">{r.data?.job.config_hash.slice(0, 10) ?? "—"}</td>)}</tr>
+                <tr><td className="px-2 py-1.5 text-text-2">Data hash</td>{loaded.map((r) => <td key={r.id} className="px-2 py-1.5 text-right font-mono text-[10px] text-text-3">{r.data?.data_hash?.slice(0, 10) ?? "—"}</td>)}</tr>
               </tbody>
             </table>
           </PanelCard>

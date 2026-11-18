@@ -13,21 +13,21 @@ function Row({ p }: { p: PaperPosition }) {
   const avg = num(p.avg_price);
   const unreal = p.closed_at ? null : last != null && avg != null ? (last - avg) * p.quantity : num(p.unrealized_pnl);
   return (
-    <tr className="border-b border-border-subtle/60">
-      <td className="px-3 py-1.5 text-text-primary">{p.symbol ?? `#${p.instrument_id}`}</td>
-      <td className="px-3 py-1.5 uppercase text-text-secondary">{p.product}</td>
-      <td className={`px-3 py-1.5 text-right tabular font-semibold ${p.quantity > 0 ? "text-pnl-positive" : p.quantity < 0 ? "text-pnl-negative" : "text-text-muted"}`}>
+    <tr className="border-b border-border/60">
+      <td className="px-3 py-1.5 text-text-1">{p.symbol ?? `#${p.instrument_id}`}</td>
+      <td className="px-3 py-1.5 uppercase text-text-2">{p.product}</td>
+      <td className={`px-3 py-1.5 text-right tabular font-semibold ${p.quantity > 0 ? "text-up" : p.quantity < 0 ? "text-down" : "text-text-3"}`}>
         {p.quantity > 0 ? "+" : ""}{formatNumber(p.quantity)}
       </td>
-      <td className="px-3 py-1.5 text-right tabular text-text-primary">{avg != null ? formatNumber(avg, 2) : <Dash />}</td>
-      <td className="px-3 py-1.5 text-right tabular text-text-primary">
+      <td className="px-3 py-1.5 text-right tabular text-text-1">{avg != null ? formatNumber(avg, 2) : <Dash />}</td>
+      <td className="px-3 py-1.5 text-right tabular text-text-1">
         {last != null ? formatNumber(last, 2) : <Dash />}
         {live != null && <span className="ml-1 text-[10px] text-state-demo">{quote?.is_demo ? "demo" : "live"}</span>}
       </td>
       <td className="px-3 py-1.5 text-right"><Money value={unreal} signed /></td>
       <td className="px-3 py-1.5 text-right"><Money value={num(p.realized_pnl)} signed /></td>
-      <td className="px-3 py-1.5 tabular text-text-secondary">{formatDateTime(p.opened_at)}</td>
-      <td className="px-3 py-1.5 tabular text-text-secondary">{p.closed_at ? formatDateTime(p.closed_at) : <span className="text-pnl-positive">open</span>}</td>
+      <td className="px-3 py-1.5 tabular text-text-2">{formatDateTime(p.opened_at)}</td>
+      <td className="px-3 py-1.5 tabular text-text-2">{p.closed_at ? formatDateTime(p.closed_at) : <span className="text-up">open</span>}</td>
     </tr>
   );
 }
@@ -37,8 +37,8 @@ export function PositionsTable({ positions, isPending }: { positions: PaperPosit
   if (!positions || positions.length === 0) return <EmptyState title="No positions" description="Positions open when a paper order fills." className="m-3" />;
   return (
     <table className="w-full text-xs">
-      <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-        <tr className="border-b border-border-subtle">
+      <thead className="text-[10px] uppercase tracking-wide text-text-3">
+        <tr className="border-b border-border">
           <th className="px-3 py-1.5 text-left font-medium">Symbol</th>
           <th className="px-3 py-1.5 text-left font-medium">Product</th>
           <th className="px-3 py-1.5 text-right font-medium">Qty</th>

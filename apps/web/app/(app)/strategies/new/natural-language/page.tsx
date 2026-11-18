@@ -35,7 +35,7 @@ function errorText(err: unknown): string | null {
 }
 
 const selectClass =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm text-text-primary outline-none focus-visible:border-ring dark:bg-input/30";
+  "h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm text-text-1 outline-none focus-visible:border-ring dark:bg-input/30";
 
 export default function Page() {
   const router = useRouter();
@@ -129,18 +129,18 @@ export default function Page() {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder={EXAMPLE_MR}
-              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm text-text-primary outline-none placeholder:text-muted-foreground focus-visible:border-ring dark:bg-input/30"
+              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm text-text-1 outline-none placeholder:text-muted-foreground focus-visible:border-ring dark:bg-input/30"
             />
-            <button type="button" onClick={() => setForm({ ...form, description: EXAMPLE_MR })} className="self-start text-[11px] text-text-muted hover:text-text-secondary">
+            <button type="button" onClick={() => setForm({ ...form, description: EXAMPLE_MR })} className="self-start text-[11px] text-text-3 hover:text-text-2">
               Use the example from the master prompt
             </button>
           </div>
-          {err && <p role="alert" className="text-xs text-pnl-negative">{err}</p>}
+          {err && <p role="alert" className="text-xs text-down">{err}</p>}
           <div className="flex items-center gap-2">
             <Button type="submit" disabled={busy || form.description.trim().length < 10}>
               <Wand2 className="mr-1 size-3.5" /> {generate.isPending ? "Drafting…" : "Draft strategy"}
             </Button>
-            <span className="text-[11px] text-text-muted">One AI call. Every call is logged in ai_calls with its token cost.</span>
+            <span className="text-[11px] text-text-3">One AI call. Every call is logged in ai_calls with its token cost.</span>
           </div>
         </form>
       </PanelCard>
@@ -155,7 +155,7 @@ export default function Page() {
               <Section title="Entry conditions" rows={draft.entry_conditions} empty="None extracted." />
               <Section title="Exit conditions" rows={draft.exit_conditions} empty="Not stated." />
               <div>
-                <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Risk management</h4>
+                <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-2">Risk management</h4>
                 <ul className="grid gap-1 md:grid-cols-3">
                   <Kv k="Stop loss" v={draft.risk_management.stop_loss} />
                   <Kv k="Target" v={draft.risk_management.target} />
@@ -164,30 +164,30 @@ export default function Page() {
               </div>
               {draft.unsupported.length > 0 && (
                 <div>
-                  <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-pnl-negative">Not in the indicator library</h4>
-                  {draft.unsupported.map((u, i) => <p key={i} className="text-text-secondary">“{u}” — nothing was substituted for it.</p>)}
+                  <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-down">Not in the indicator library</h4>
+                  {draft.unsupported.map((u, i) => <p key={i} className="text-text-2">“{u}” — nothing was substituted for it.</p>)}
                 </div>
               )}
               {draft.defaults_applied.length > 0 && (
                 <div>
-                  <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Defaults applied (not from your text)</h4>
-                  {draft.defaults_applied.map((d, i) => <p key={i} className="flex items-start gap-1 text-text-secondary"><AlertTriangle className="mt-0.5 size-3 shrink-0 text-state-delayed" /> {d}</p>)}
+                  <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-2">Defaults applied (not from your text)</h4>
+                  {draft.defaults_applied.map((d, i) => <p key={i} className="flex items-start gap-1 text-text-2"><AlertTriangle className="mt-0.5 size-3 shrink-0 text-warn" /> {d}</p>)}
                 </div>
               )}
               {draft.changes.length > 0 && (
                 <div>
-                  <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Changed by your last answers</h4>
-                  {draft.changes.map((c, i) => <p key={i} className="font-mono text-[11px] text-text-secondary">{c}</p>)}
+                  <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-2">Changed by your last answers</h4>
+                  {draft.changes.map((c, i) => <p key={i} className="font-mono text-[11px] text-text-2">{c}</p>)}
                 </div>
               )}
               <div>
-                <p className={draft.validation.valid ? "flex items-center gap-1 text-pnl-positive" : "flex items-center gap-1 text-pnl-negative"}>
+                <p className={draft.validation.valid ? "flex items-center gap-1 text-up" : "flex items-center gap-1 text-down"}>
                   {draft.validation.valid ? <CheckCircle2 className="size-3.5" /> : <XCircle className="size-3.5" />}
                   {draft.validation.valid ? "DSL valid as a draft" : `${draft.validation.errors.length} error(s)`}
                 </p>
-                {draft.validation.errors.map((e, i) => <p key={`e${i}`} className="flex items-start gap-1 text-pnl-negative"><XCircle className="mt-0.5 size-3 shrink-0" /> {e}</p>)}
-                {draft.validation.warnings.map((w, i) => <p key={`w${i}`} className="flex items-start gap-1 text-state-delayed"><AlertTriangle className="mt-0.5 size-3 shrink-0" /> {w}</p>)}
-                {draft.missing_information.map((m, i) => <p key={`m${i}`} className="flex items-start gap-1 text-text-secondary"><HelpCircle className="mt-0.5 size-3 shrink-0" /> missing: {m}</p>)}
+                {draft.validation.errors.map((e, i) => <p key={`e${i}`} className="flex items-start gap-1 text-down"><XCircle className="mt-0.5 size-3 shrink-0" /> {e}</p>)}
+                {draft.validation.warnings.map((w, i) => <p key={`w${i}`} className="flex items-start gap-1 text-warn"><AlertTriangle className="mt-0.5 size-3 shrink-0" /> {w}</p>)}
+                {draft.missing_information.map((m, i) => <p key={`m${i}`} className="flex items-start gap-1 text-text-2"><HelpCircle className="mt-0.5 size-3 shrink-0" /> missing: {m}</p>)}
               </div>
             </div>
           </PanelCard>
@@ -195,15 +195,15 @@ export default function Page() {
           <div className="flex flex-col gap-3">
             <PanelCard title="Clarification questions" subtitle={draft.clarification_questions.length ? "Answer what you can; the draft updates only those fields." : "Nothing left to ask."}>
               {draft.status !== "draft" ? (
-                <p className="text-xs text-text-muted">This draft was saved as a strategy version{draft.strategy_version_id ? ` (#${draft.strategy_version_id})` : ""}.</p>
+                <p className="text-xs text-text-3">This draft was saved as a strategy version{draft.strategy_version_id ? ` (#${draft.strategy_version_id})` : ""}.</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {draft.clarification_questions.map((q) => (
                     <div key={q.id} className="flex flex-col gap-1">
                       <Label htmlFor={q.id} className="text-xs leading-snug">
-                        <span className="mr-1 font-mono text-[10px] text-text-muted">{q.id} · {q.field}</span>
-                        <span className="block text-text-primary">{q.question_local}</span>
-                        {q.question_local !== q.question_en && <span className="block text-[11px] text-text-muted">{q.question_en}</span>}
+                        <span className="mr-1 font-mono text-[10px] text-text-3">{q.id} · {q.field}</span>
+                        <span className="block text-text-1">{q.question_local}</span>
+                        {q.question_local !== q.question_en && <span className="block text-[11px] text-text-3">{q.question_en}</span>}
                       </Label>
                       <Input id={q.id} value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} placeholder="Your answer, in any of the three languages" />
                     </div>
@@ -217,7 +217,7 @@ export default function Page() {
                     <Button type="button" disabled={busy || !draft.validation.valid} onClick={onSave} title={draft.validation.valid ? "Creates a strategy with this DSL as its first draft version" : "Fix the errors first"}>
                       Save as draft strategy <ArrowRight className="ml-1 size-3.5" />
                     </Button>
-                    <span className="text-[11px] text-text-muted">Saving never activates anything; the version starts in draft.</span>
+                    <span className="text-[11px] text-text-3">Saving never activates anything; the version starts in draft.</span>
                   </div>
                 </div>
               )}
@@ -235,15 +235,15 @@ export default function Page() {
 function Section({ title, rows, empty }: { title: string; rows: { original_phrase: string; rule: string }[]; empty: string }) {
   return (
     <div>
-      <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{title}</h4>
+      <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-2">{title}</h4>
       {rows.length === 0 ? (
-        <p className="text-text-muted">{empty}</p>
+        <p className="text-text-3">{empty}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {rows.map((r, i) => (
-            <li key={i} className="rounded-sm border border-border-subtle/60 px-2 py-1">
-              <p className="font-mono text-[11px] text-text-primary">{r.rule}</p>
-              <p className="text-[11px] text-text-muted">“{r.original_phrase}”</p>
+            <li key={i} className="rounded-sm border border-border/60 px-2 py-1">
+              <p className="font-mono text-[11px] text-text-1">{r.rule}</p>
+              <p className="text-[11px] text-text-3">“{r.original_phrase}”</p>
             </li>
           ))}
         </ul>
@@ -254,9 +254,9 @@ function Section({ title, rows, empty }: { title: string; rows: { original_phras
 
 function Kv({ k, v }: { k: string; v: string | null }) {
   return (
-    <li className="rounded-sm border border-border-subtle/60 px-2 py-1">
-      <p className="text-[10px] uppercase tracking-wide text-text-muted">{k}</p>
-      <p className={v ? "text-text-primary" : "text-text-muted"}>{v ?? "not stated"}</p>
+    <li className="rounded-sm border border-border/60 px-2 py-1">
+      <p className="text-[10px] uppercase tracking-wide text-text-3">{k}</p>
+      <p className={v ? "text-text-1" : "text-text-3"}>{v ?? "not stated"}</p>
     </li>
   );
 }

@@ -11,7 +11,7 @@ import { num } from "@/lib/ws/useMarket";
 
 function N({ v, d = 2, signed = false }: { v: number | null; d?: number; signed?: boolean }) {
   if (v == null) return <Dash />;
-  const cls = signed ? (v > 0 ? "text-pnl-positive" : v < 0 ? "text-pnl-negative" : "") : "";
+  const cls = signed ? (v > 0 ? "text-up" : v < 0 ? "text-down" : "") : "";
   return <span className={cn("tabular", cls)}>{signed && v > 0 ? "+" : ""}{formatNumber(v, d)}</span>;
 }
 
@@ -58,20 +58,20 @@ export function OptionChainTable({ underlyingId, expiry, symbol }: { underlyingI
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-              <tr className="border-b border-border-subtle">
+            <thead className="text-[10px] uppercase tracking-wide text-text-3">
+              <tr className="border-b border-border">
                 {SIDE_COLS.map((c) => (
                   <th key={`ce-${c.key}`} className="px-2 py-1.5 text-right font-medium">{c.label}</th>
                 ))}
-                <th className="bg-panel-raised px-3 py-1.5 text-center font-semibold text-text-secondary">Strike</th>
+                <th className="bg-raised px-3 py-1.5 text-center font-semibold text-text-2">Strike</th>
                 {[...SIDE_COLS].reverse().map((c) => (
                   <th key={`pe-${c.key}`} className="px-2 py-1.5 text-right font-medium">{c.label}</th>
                 ))}
               </tr>
-              <tr className="border-b border-border-subtle text-[10px]">
-                <th colSpan={SIDE_COLS.length} className="py-0.5 text-center text-pnl-positive">CALLS</th>
+              <tr className="border-b border-border text-[10px]">
+                <th colSpan={SIDE_COLS.length} className="py-0.5 text-center text-up">CALLS</th>
                 <th />
-                <th colSpan={SIDE_COLS.length} className="py-0.5 text-center text-pnl-negative">PUTS</th>
+                <th colSpan={SIDE_COLS.length} className="py-0.5 text-center text-down">PUTS</th>
               </tr>
             </thead>
             <tbody>
@@ -79,17 +79,17 @@ export function OptionChainTable({ underlyingId, expiry, symbol }: { underlyingI
                 const { ce, pe } = byStrike.get(s)!;
                 const isAtm = s === atm;
                 return (
-                  <tr key={s} className={cn("border-b border-border-subtle/60", isAtm && "bg-cyan-dim/30")}>
+                  <tr key={s} className={cn("border-b border-border/60", isAtm && "bg-accent-soft")}>
                     {SIDE_COLS.map((c) => (
-                      <td key={`ce-${c.key}`} className={cn("px-2 py-1 text-right", spot != null && s < spot && "bg-panel-raised/40")}>
+                      <td key={`ce-${c.key}`} className={cn("px-2 py-1 text-right", spot != null && s < spot && "bg-raised/40")}>
                         <N v={num(ce?.[c.key] as string | number | null | undefined)} d={c.d} signed={c.signed} />
                       </td>
                     ))}
-                    <td className={cn("bg-panel-raised px-3 py-1 text-center font-semibold tabular", isAtm ? "text-cyan-accent" : "text-text-primary")}>
+                    <td className={cn("bg-raised px-3 py-1 text-center font-semibold tabular", isAtm ? "text-accent" : "text-text-1")}>
                       {formatNumber(s, 0)}
                     </td>
                     {[...SIDE_COLS].reverse().map((c) => (
-                      <td key={`pe-${c.key}`} className={cn("px-2 py-1 text-right", spot != null && s > spot && "bg-panel-raised/40")}>
+                      <td key={`pe-${c.key}`} className={cn("px-2 py-1 text-right", spot != null && s > spot && "bg-raised/40")}>
                         <N v={num(pe?.[c.key] as string | number | null | undefined)} d={c.d} signed={c.signed} />
                       </td>
                     ))}

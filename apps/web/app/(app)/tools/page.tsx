@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { blackScholes, charges, type CalcProduct, type CalcSegment } from "@/lib/calculators";
 import { formatNumber } from "@/lib/format";
 
-const SEL = "h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs";
+const SEL = "h-8 border border-border bg-raised px-2 text-xs";
 
 function Field({ id, label, value, onChange, step = "any" }: { id: string; label: string; value: string; onChange: (v: string) => void; step?: string }) {
   return (
@@ -59,12 +59,12 @@ function ChargesCalculator() {
         <table className="text-xs">
           <tbody>
             {lines.map(([k, v]) => (
-              <tr key={k} className="border-b border-border-subtle/60"><td className="py-1 pr-4 text-text-secondary">{k}</td><td className="py-1 text-right"><Money value={v} muted /></td></tr>
+              <tr key={k} className="border-b border-border/60"><td className="py-1 pr-4 text-text-2">{k}</td><td className="py-1 text-right"><Money value={v} muted /></td></tr>
             ))}
-            <tr className="border-b border-border-subtle"><td className="py-1 pr-4 font-semibold">Total charges</td><td className="py-1 text-right font-semibold"><Money value={r.total.total} /></td></tr>
-            <tr><td className="py-1 pr-4 text-text-secondary">Gross P&L</td><td className="py-1 text-right"><Money value={r.gross} signed /></td></tr>
-            <tr><td className="py-1 pr-4 text-text-secondary">Net P&L</td><td className="py-1 text-right"><Money value={r.net} signed /></td></tr>
-            <tr><td className="py-1 pr-4 text-text-secondary">Break-even move</td><td className="py-1 text-right tabular">{formatNumber(r.breakevenPoints, 2)} pts</td></tr>
+            <tr className="border-b border-border"><td className="py-1 pr-4 font-semibold">Total charges</td><td className="py-1 text-right font-semibold"><Money value={r.total.total} /></td></tr>
+            <tr><td className="py-1 pr-4 text-text-2">Gross P&L</td><td className="py-1 text-right"><Money value={r.gross} signed /></td></tr>
+            <tr><td className="py-1 pr-4 text-text-2">Net P&L</td><td className="py-1 text-right"><Money value={r.net} signed /></td></tr>
+            <tr><td className="py-1 pr-4 text-text-2">Break-even move</td><td className="py-1 text-right tabular">{formatNumber(r.breakevenPoints, 2)} pts</td></tr>
           </tbody>
         </table>
       </div>
@@ -98,10 +98,10 @@ function GreeksCalculator() {
           <Field id="g-rate" label="Rate (%)" value={rate} onChange={setRate} />
         </div>
         <table className="text-xs">
-          <thead className="text-[10px] uppercase tracking-wide text-text-muted"><tr><th className="text-left font-medium"></th><th className="text-right font-medium">CE</th><th className="text-right font-medium">PE</th></tr></thead>
+          <thead className="text-[10px] uppercase tracking-wide text-text-3"><tr><th className="text-left font-medium"></th><th className="text-right font-medium">CE</th><th className="text-right font-medium">PE</th></tr></thead>
           <tbody>
             {rows.map(([k, f]) => (
-              <tr key={k} className="border-b border-border-subtle/60"><td className="py-1 pr-4 text-text-secondary">{k}</td><td className="py-1 text-right tabular">{ce ? f(ce) : "—"}</td><td className="py-1 text-right tabular">{pe ? f(pe) : "—"}</td></tr>
+              <tr key={k} className="border-b border-border/60"><td className="py-1 pr-4 text-text-2">{k}</td><td className="py-1 text-right tabular">{ce ? f(ce) : "—"}</td><td className="py-1 text-right tabular">{pe ? f(pe) : "—"}</td></tr>
             ))}
           </tbody>
         </table>

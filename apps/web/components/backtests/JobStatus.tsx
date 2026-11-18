@@ -20,7 +20,7 @@ export function JobStatusChip({ status }: { status: JobStatus }) {
 export function ProgressBar({ pct, className }: { pct: number; className?: string }) {
   const p = Math.max(0, Math.min(100, pct));
   return (
-    <div className={cn("h-1.5 w-full overflow-hidden rounded-sm bg-panel-raised", className)} role="progressbar" aria-valuenow={p} aria-valuemin={0} aria-valuemax={100}>
+    <div className={cn("h-1.5 w-full overflow-hidden rounded-sm bg-raised", className)} role="progressbar" aria-valuenow={p} aria-valuemin={0} aria-valuemax={100}>
       <div className="h-full bg-accent-cyan transition-[width]" style={{ width: `${p}%` }} />
     </div>
   );

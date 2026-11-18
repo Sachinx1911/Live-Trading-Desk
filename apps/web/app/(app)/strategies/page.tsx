@@ -40,13 +40,13 @@ function CreateForm({ onDone }: { onDone: (id: number) => void }) {
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="st-cat">Category</Label>
-        <select id="st-cat" value={category} onChange={(e) => setCategory(e.target.value as StrategyCategory)} className="h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs">
+        <select id="st-cat" value={category} onChange={(e) => setCategory(e.target.value as StrategyCategory)} className="h-8 border border-border bg-raised px-2 text-xs">
           {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace("_", " ")}</option>)}
         </select>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="st-origin">Origin</Label>
-        <select id="st-origin" value={origin} onChange={(e) => setOrigin(e.target.value as StrategyOrigin)} className="h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs">
+        <select id="st-origin" value={origin} onChange={(e) => setOrigin(e.target.value as StrategyOrigin)} className="h-8 border border-border bg-raised px-2 text-xs">
           {ORIGINS.map((o) => <option key={o} value={o}>{o.replace("_", " ")}</option>)}
         </select>
       </div>
@@ -60,8 +60,8 @@ function CreateForm({ onDone }: { onDone: (id: number) => void }) {
       </div>
       <div className="flex items-center gap-2 md:col-span-2">
         <Button type="submit" size="sm" disabled={create.isPending}><Plus /> Create strategy</Button>
-        <span className="text-[11px] text-text-muted">Then add a version by pasting a DSL document (examples: ema_rsi_nifty, banknifty_vwap_reversion, nifty50_daily_breakout).</span>
-        {err && <span className="text-[11px] text-pnl-negative">{err}</span>}
+        <span className="text-[11px] text-text-3">Then add a version by pasting a DSL document (examples: ema_rsi_nifty, banknifty_vwap_reversion, nifty50_daily_breakout).</span>
+        {err && <span className="text-[11px] text-down">{err}</span>}
       </div>
     </form>
   );
@@ -79,13 +79,13 @@ export default function StrategiesPage() {
         subtitle="Versions are immutable once they leave draft; every change is a new version."
         actions={
           <>
-            <label className="flex items-center gap-1 text-[11px] text-text-secondary"><input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} /> show archived</label>
+            <label className="flex items-center gap-1 text-[11px] text-text-2"><input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} /> show archived</label>
             <Link href="/strategies/new/natural-language" className="text-[11px] text-ai"><Wand2 className="mr-1 inline size-3" />NL builder</Link>
             <Button size="sm" onClick={() => setCreating((v) => !v)}><Plus /> New strategy</Button>
           </>
         }
       >
-        {creating && <div className="mb-3 rounded-sm border border-border-subtle p-3"><CreateForm onDone={() => setCreating(false)} /></div>}
+        {creating && <div className="mb-3 rounded-sm border border-border p-3"><CreateForm onDone={() => setCreating(false)} /></div>}
         {isPending ? (
           <Skeleton className="h-32" />
         ) : isError ? (
@@ -95,16 +95,16 @@ export default function StrategiesPage() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {data.map((s) => (
-              <div key={s.id} className="flex flex-col gap-2 rounded-md border border-border-subtle bg-panel-raised p-3">
+              <div key={s.id} className="flex flex-col gap-2 border border-border bg-raised p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <Link href={`/strategies/${s.id}`} className="text-sm font-semibold text-text-primary hover:text-accent-cyan">{s.name}</Link>
+                  <Link href={`/strategies/${s.id}`} className="text-sm font-semibold text-text-1 hover:text-accent-cyan">{s.name}</Link>
                   {s.latest_version ? <StatusChip value={s.latest_version.status} /> : <StatusChip value="no version" tone="muted" />}
                 </div>
-                <p className="text-[11px] text-text-secondary">{s.category.replace("_", " ")} · {s.origin.replace("_", " ")} · created {formatDateTime(s.created_at)}</p>
-                {s.description && <p className="text-xs text-text-secondary">{s.description}</p>}
-                {s.tags.length > 0 && <p className="text-[11px] text-text-muted">{s.tags.map((t) => `#${t}`).join(" ")}</p>}
+                <p className="text-[11px] text-text-2">{s.category.replace("_", " ")} · {s.origin.replace("_", " ")} · created {formatDateTime(s.created_at)}</p>
+                {s.description && <p className="text-xs text-text-2">{s.description}</p>}
+                {s.tags.length > 0 && <p className="text-[11px] text-text-3">{s.tags.map((t) => `#${t}`).join(" ")}</p>}
                 <div className="mt-auto flex items-center justify-between pt-1 text-[11px]">
-                  <span className="text-text-muted">{s.latest_version ? `v${s.latest_version.version_no} · ${s.latest_version.dsl_schema_version}` : "—"}</span>
+                  <span className="text-text-3">{s.latest_version ? `v${s.latest_version.version_no} · ${s.latest_version.dsl_schema_version}` : "—"}</span>
                   {!s.is_archived && (
                     <Button size="xs" variant="ghost" onClick={() => archive.mutate(s.id)} aria-label="Archive"><Archive /> archive</Button>
                   )}

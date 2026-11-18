@@ -38,7 +38,7 @@ export default function BacktestDetailPage() {
   const equity = useMemo(() => normaliseCurve(res?.equity_curve, ["equity", "value", "y"]), [res]);
   const drawdown = useMemo(() => normaliseCurve(res?.drawdown_curve, ["drawdown", "dd", "value", "y"]), [res]);
   const eqSeries = useMemo(() => [{ id: "equity", label: "Equity", points: equity, area: true }], [equity]);
-  const ddSeries = useMemo(() => [{ id: "dd", label: "Drawdown", points: drawdown, area: true, color: "#ef4444" }], [drawdown]);
+  const ddSeries = useMemo(() => [{ id: "dd", label: "Drawdown", points: drawdown, area: true, color: "#f23645" }], [drawdown]);
 
   if (isPending) return <Skeleton className="h-64" />;
   if (!job) return <EmptyState title="Backtest not found" />;
@@ -73,26 +73,26 @@ export default function BacktestDetailPage() {
         }
       >
         {job.status === "running" && (
-          <div className="flex items-center gap-3 text-xs text-text-secondary">
+          <div className="flex items-center gap-3 text-xs text-text-2">
             <RefreshCw className="size-3 animate-spin" /> running · {job.progress_pct.toFixed(0)}%
             <ProgressBar pct={job.progress_pct} className="max-w-md" />
           </div>
         )}
-        {job.status === "queued" && <p className="text-xs text-text-secondary">Queued. The worker picks it up next; make sure <code>make worker</code> is running.</p>}
-        {job.error && <p className="text-xs text-pnl-negative">{job.error}</p>}
+        {job.status === "queued" && <p className="text-xs text-text-2">Queued. The worker picks it up next; make sure <code>make worker</code> is running.</p>}
+        {job.error && <p className="text-xs text-down">{job.error}</p>}
         {res?.warnings?.length ? (
-          <ul className="mt-2 list-disc pl-5 text-[11px] text-state-delayed">{res.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+          <ul className="mt-2 list-disc pl-5 text-[11px] text-warn">{res.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
         ) : null}
-        {res?.elapsed_s != null && <p className="mt-1 text-[11px] text-text-muted">computed in {res.elapsed_s.toFixed(1)} s · config {job.config_hash.slice(0, 12)} · data {res.data_hash?.slice(0, 12) ?? "—"}</p>}
+        {res?.elapsed_s != null && <p className="mt-1 text-[11px] text-text-3">computed in {res.elapsed_s.toFixed(1)} s · config {job.config_hash.slice(0, 12)} · data {res.data_hash?.slice(0, 12) ?? "—"}</p>}
       </PanelCard>
 
       {!done ? null : resErr || !res ? (
         <EmptyState title="Results not available yet" description="The job finished but no result row was found." />
       ) : (
         <>
-          <div className="flex gap-1 border-b border-border-subtle">
+          <div className="flex gap-1 border-b border-border">
             {tabs.map((t) => (
-              <button key={t.key} type="button" onClick={() => setTab(t.key)} className={cn("px-3 py-1.5 text-xs", tab === t.key ? "border-b-2 border-accent-cyan text-accent-cyan" : "text-text-muted hover:text-text-secondary")}>
+              <button key={t.key} type="button" onClick={() => setTab(t.key)} className={cn("px-3 py-1.5 text-xs", tab === t.key ? "border-b-2 border-accent-cyan text-accent-cyan" : "text-text-3 hover:text-text-2")}>
                 {t.label}
               </button>
             ))}
@@ -104,7 +104,7 @@ export default function BacktestDetailPage() {
               <div className="grid grid-cols-12 gap-3">
                 <PanelCard title="Equity curve" className="col-span-12 xl:col-span-8" bodyClassName="p-0">
                   <CurveChart series={eqSeries} height={280} emptyTitle="No equity curve" />
-                  <div className="border-t border-border-subtle">
+                  <div className="border-t border-border">
                     <CurveChart series={ddSeries} height={140} emptyTitle="No drawdown curve" />
                   </div>
                 </PanelCard>
@@ -134,7 +134,7 @@ export default function BacktestDetailPage() {
 
           {tab === "assumptions" && (
             <PanelCard title="Assumptions frozen with this result">
-              <pre className="overflow-x-auto font-mono text-[11px] leading-snug text-text-primary">{JSON.stringify({ assumptions: res.assumptions, engine_stats: res.engine_stats, config: job.config }, null, 2)}</pre>
+              <pre className="overflow-x-auto font-mono text-[11px] leading-snug text-text-1">{JSON.stringify({ assumptions: res.assumptions, engine_stats: res.engine_stats, config: job.config }, null, 2)}</pre>
             </PanelCard>
           )}
         </>

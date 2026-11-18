@@ -48,10 +48,10 @@ export function DslEditor({
         value={text}
         onChange={(e) => setText(e.target.value)}
         spellCheck={false}
-        className="min-h-96 w-full rounded-sm border border-border-subtle bg-panel-raised p-2 font-mono text-[11px] leading-snug text-text-primary"
+        className="min-h-96 w-full border border-border bg-raised p-2 font-mono text-[11px] leading-snug text-text-1"
         aria-label="Strategy DSL JSON"
       />
-      {parseError && <p className="text-[11px] text-pnl-negative">JSON: {parseError}</p>}
+      {parseError && <p className="text-[11px] text-down">JSON: {parseError}</p>}
       <ValidationReportView report={report} />
       <div className="flex flex-wrap items-center gap-2">
         <Button
@@ -84,9 +84,9 @@ export function DslEditor({
         >
           <Save /> {saveLabel}
         </Button>
-        {saveError && <span className="text-[11px] text-pnl-negative">{saveError}</span>}
+        {saveError && <span className="text-[11px] text-down">{saveError}</span>}
       </div>
-      <p className="text-[11px] text-text-muted">
+      <p className="text-[11px] text-text-3">
         Examples available server-side as `strategy.dsl.examples`: {EXAMPLE_NAMES.join(", ")}. Paste a document here; the natural-language and visual builders ship in Phase 5.
       </p>
     </div>

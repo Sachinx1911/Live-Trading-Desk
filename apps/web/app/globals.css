@@ -3,77 +3,142 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Design tokens (docs/architecture/06-ui-page-map.md §1). Dark only.
- * Components never use raw hex values; they use these variables or the Tailwind
- * colour utilities mapped below (bg-panel, text-muted, text-pnl-positive, ...).
+ * Design tokens — TradingView-measured dark theme
+ * (docs/architecture/09-design-reference-tradingview.md). Dark only.
+ * Components never use raw hex values; they use these variables or the Tailwind colour
+ * utilities mapped below. The legacy utility names (bg-panel, text-text-muted, text-cyan-accent,
+ * text-pnl-positive, …) are kept and remapped so every screen follows the new palette.
  */
 :root {
-  --bg-app: #0b1020;
-  --bg-panel: #0a0d16;
-  --bg-panel-raised: #0f1526;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-strong: #2a3550;
-  --text-primary: #e6eaf2;
-  --text-secondary: #8b95ad;
-  --text-muted: #55607a;
-  --accent-cyan: #22d3ee;
-  --accent-cyan-dim: #0e7490;
-  --accent-ai: #a78bfa;
+  /* surfaces */
+  --bg-app: #222222; /* chrome: page background, top bar fallbacks */
+  --bg-pane: #000000; /* content panes, charts, rails */
+  --bg-raised: #303030; /* pills, selected rows, raised controls */
+  --bg-hover: #2a2a2a;
+  --bg-selected: #303030;
+  --bg-row-hover: #1a1a1a;
+  --border: #303030;
+  --border-row: #1e1e1e;
+  --border-strong: #464646;
+
+  /* text */
+  --text-1: #dbdbdb;
+  --text-2: #b8b8b8;
+  --text-3: #8c8c8c;
+  --text-disabled: #555555;
+
+  /* accents */
+  --accent: #2962ff;
+  --accent-hover: #1e53e5;
+  --accent-soft: #132042;
+  --ai: #a78bfa;
+  --ai-soft: #2b2140;
+  --up: #22ab94;
+  --up-candle: #089981;
+  --up-soft: #10443b;
+  --down: #f23645;
+  --down-soft: #4d191d;
+  --warn: #ff9800;
+  --warn-soft: #593a1b;
+
+  /* radii & heights */
+  --r-pill: 14px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 20px;
+  --h-toolbar: 38px;
+  --h-control: 28px;
+  --h-chip: 34px;
+  --h-row: 41px;
+  --h-row-dense: 34px;
+  --h-th: 50px;
+
+  /* legacy aliases (still referenced by components) */
+  --bg-panel: var(--bg-pane);
+  --bg-panel-raised: var(--bg-raised);
+  --border-subtle: var(--border);
+  --text-primary: var(--text-1);
+  --text-secondary: var(--text-2);
+  --text-muted: var(--text-3);
+  --accent-cyan: var(--accent);
+  --accent-cyan-dim: var(--accent-hover);
+  --accent-ai: var(--ai);
   --accent-ai-dim: #5b21b6;
-  --pnl-positive: #22c55e;
-  --pnl-negative: #ef4444;
-  --state-live: #22c55e;
-  --state-delayed: #f59e0b;
-  --state-stale: #f59e0b;
-  --state-disconnected: #ef4444;
-  --state-demo: #a78bfa;
-  --state-historical: #8b95ad;
-  --mode-paper: #38bdf8;
-  --mode-live: #fb7185;
+  --pnl-positive: var(--up);
+  --pnl-negative: var(--down);
+  --state-live: var(--up);
+  --state-delayed: var(--warn);
+  --state-stale: var(--text-3);
+  --state-disconnected: var(--down);
+  --state-demo: var(--ai);
+  --state-historical: var(--text-3);
+  --mode-paper: var(--accent);
+  --mode-live: var(--down);
 
   /* shadcn variables mapped onto the tokens */
   --background: var(--bg-app);
-  --foreground: var(--text-primary);
-  --card: var(--bg-panel);
-  --card-foreground: var(--text-primary);
-  --popover: var(--bg-panel-raised);
-  --popover-foreground: var(--text-primary);
-  --primary: var(--accent-cyan);
-  --primary-foreground: #06141a;
-  --secondary: var(--bg-panel-raised);
-  --secondary-foreground: var(--text-primary);
-  --muted: var(--bg-panel-raised);
-  --muted-foreground: var(--text-secondary);
-  --accent: rgba(34, 211, 238, 0.1);
-  --accent-foreground: var(--text-primary);
-  --destructive: var(--pnl-negative);
-  --border: var(--border-subtle);
-  --input: var(--border-strong);
-  --ring: var(--accent-cyan);
-  --chart-1: var(--accent-cyan);
-  --chart-2: var(--accent-ai);
-  --chart-3: var(--pnl-positive);
-  --chart-4: var(--pnl-negative);
-  --chart-5: var(--state-delayed);
-  --radius: 0.375rem;
-  --sidebar: var(--bg-panel);
-  --sidebar-foreground: var(--text-secondary);
-  --sidebar-primary: var(--accent-cyan);
-  --sidebar-primary-foreground: #06141a;
-  --sidebar-accent: rgba(34, 211, 238, 0.08);
-  --sidebar-accent-foreground: var(--text-primary);
-  --sidebar-border: var(--border-subtle);
-  --sidebar-ring: var(--accent-cyan);
+  --foreground: var(--text-1);
+  --card: var(--bg-pane);
+  --card-foreground: var(--text-1);
+  --popover: #1a1a1a;
+  --popover-foreground: var(--text-1);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-raised);
+  --secondary-foreground: var(--text-1);
+  --muted: var(--bg-raised);
+  --muted-foreground: var(--text-2);
+  --accent-foreground: var(--text-1);
+  --destructive: var(--down);
+  --input: var(--border);
+  --ring: var(--accent);
+  --chart-1: var(--accent);
+  --chart-2: var(--ai);
+  --chart-3: var(--up);
+  --chart-4: var(--down);
+  --chart-5: var(--warn);
+  --radius: 0.5rem;
+  --sidebar: var(--bg-pane);
+  --sidebar-foreground: var(--text-3);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--bg-raised);
+  --sidebar-accent-foreground: var(--text-1);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--accent);
   color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    -apple-system, system-ui, "Segoe UI", Roboto, var(--font-inter), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --font-heading: var(--font-sans);
 
+  /* new names */
+  --color-pane: var(--bg-pane);
+  --color-raised: var(--bg-raised);
+  --color-hover: var(--bg-hover);
+  --color-row-hover: var(--bg-row-hover);
+  --color-border-row: var(--border-row);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-disabled: var(--text-disabled);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-ai-soft: var(--ai-soft);
+  --color-up: var(--up);
+  --color-up-candle: var(--up-candle);
+  --color-up-soft: var(--up-soft);
+  --color-down: var(--down);
+  --color-down-soft: var(--down-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  /* legacy names */
   --color-app: var(--bg-app);
   --color-panel: var(--bg-panel);
   --color-panel-raised: var(--bg-panel-raised);
@@ -126,13 +191,14 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
+  --radius-2xl: var(--r-lg);
+  --radius-3xl: var(--r-lg);
+  --radius-4xl: 9999px;
+  --radius-pill: var(--r-pill);
 }
 
 @utility tabular {
@@ -140,12 +206,31 @@
   font-feature-settings: "tnum" 1;
 }
 
+/* Demo data striping: a quiet 4% white diagonal, no colour. */
 @utility demo-stripes {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgba(167, 139, 250, 0.18) 0 6px,
-    rgba(167, 139, 250, 0.05) 6px 12px
+    rgba(255, 255, 255, 0.04) 0 6px,
+    rgba(255, 255, 255, 0) 6px 12px
   );
+}
+
+/* Glass surface for dialogs, sheets and popovers (§6a). */
+@utility glass {
+  background: rgba(19, 19, 19, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 0 0 1px rgba(140, 140, 140, 0.1),
+    0 0 2px rgba(0, 0, 0, 1),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* 28px pill control (§5). */
+@utility pill {
+  height: var(--h-control);
+  border-radius: var(--r-pill);
+  padding-inline: 11px;
 }
 
 @layer base {
@@ -156,10 +241,20 @@
     @apply h-full font-sans antialiased;
   }
   body {
-    @apply min-h-full bg-background text-foreground text-[13px] leading-5;
+    @apply min-h-full bg-background text-foreground text-[14px] leading-5;
+    font-variant-numeric: tabular-nums;
   }
   ::selection {
-    background: rgba(34, 211, 238, 0.25);
+    background: rgba(41, 98, 255, 0.35);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--bg-raised);
+    border: 2px solid var(--bg-pane);
+    border-radius: 6px;
   }
   @media (prefers-reduced-motion: reduce) {
     .animate-pulse {

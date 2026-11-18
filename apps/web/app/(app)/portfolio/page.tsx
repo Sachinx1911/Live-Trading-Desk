@@ -15,7 +15,7 @@ export default function PortfolioPage() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">Portfolio <ModeTag mode="paper" /></h2>
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-2">Portfolio <ModeTag mode="paper" /></h2>
         <AccountPicker />
       </div>
       {account ? <KpiTiles account={account} /> : isPending ? null : <EmptyState title="No paper account" description="Create one on the Paper Trading page." />}

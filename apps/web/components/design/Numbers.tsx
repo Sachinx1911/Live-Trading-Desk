@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  */
 
 function pnlClass(v: number | null | undefined, muted?: boolean) {
-  if (muted || v == null || v === 0) return "text-text-secondary";
-  return v > 0 ? "text-pnl-positive" : "text-pnl-negative";
+  if (muted || v == null || v === 0) return "text-text-2";
+  return v > 0 ? "text-up" : "text-down";
 }
 
 export function Money({
@@ -26,10 +26,10 @@ export function Money({
   muted?: boolean;
   className?: string;
 }) {
-  if (value == null) return <span className={cn("tabular text-text-muted", className)}>—</span>;
+  if (value == null) return <span className={cn("tabular text-text-3", className)}>—</span>;
   const text = signed ? formatSignedMoney(value, currency) : formatMoney(value, { currency, whole });
   return (
-    <span className={cn("tabular", signed ? pnlClass(value, muted) : muted && "text-text-secondary", className)}>
+    <span className={cn("tabular", signed ? pnlClass(value, muted) : muted && "text-text-2", className)}>
       {text}
     </span>
   );
@@ -48,7 +48,7 @@ export function Pct({
   muted?: boolean;
   className?: string;
 }) {
-  if (value == null) return <span className={cn("tabular text-text-muted", className)}>—</span>;
+  if (value == null) return <span className={cn("tabular text-text-3", className)}>—</span>;
   return (
     <span className={cn("tabular", signed ? pnlClass(value, muted) : "", className)}>
       {formatPct(value, digits, signed)}
@@ -57,5 +57,5 @@ export function Pct({
 }
 
 export function Dash({ className }: { className?: string }) {
-  return <span className={cn("tabular text-text-muted", className)}>—</span>;
+  return <span className={cn("tabular text-text-3", className)}>—</span>;
 }

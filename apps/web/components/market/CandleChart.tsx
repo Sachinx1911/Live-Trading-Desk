@@ -36,7 +36,7 @@ function toBar(c: Candle): CandlestickData<Time> {
 
 function toVol(c: Candle): HistogramData<Time> {
   const up = Number(c.close) >= Number(c.open);
-  return { time: toTime(c.ts), value: c.volume, color: up ? "rgba(34,197,94,0.35)" : "rgba(239,68,68,0.35)" };
+  return { time: toTime(c.ts), value: c.volume, color: up ? "rgba(8,153,129,0.45)" : "rgba(242,54,69,0.45)" };
 }
 
 export function CandleChart({
@@ -63,6 +63,19 @@ export function CandleChart({
   const lastBarRef = useRef<CandlestickData<Time> | null>(null);
 
   const candles = useMemo(() => data?.candles ?? [], [data]);
+  // Legend: last stored bar, with the live last price folded into the close (render-safe state).
+  const legend = useMemo(() => {
+    const last = candles[candles.length - 1];
+    if (!last) return null;
+    const bar = { open: Number(last.open), high: Number(last.high), low: Number(last.low), close: Number(last.close) };
+    const ltp = quote && quote.instrument_id === instrumentId ? num(quote.ltp) : null;
+    if (ltp != null) {
+      bar.close = ltp;
+      bar.high = Math.max(bar.high, ltp);
+      bar.low = Math.min(bar.low, ltp);
+    }
+    return bar;
+  }, [candles, quote, instrumentId]);
 
   // Create chart once.
   useEffect(() => {
@@ -70,18 +83,30 @@ export function CandleChart({
     if (!el) return;
     const chart = createChart(el, {
       height,
-      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#8b95ad", fontSize: 11 },
-      grid: { vertLines: { color: "rgba(255,255,255,0.04)" }, horzLines: { color: "rgba(255,255,255,0.04)" } },
-      rightPriceScale: { borderColor: "rgba(255,255,255,0.08)" },
-      timeScale: { borderColor: "rgba(255,255,255,0.08)", timeVisible: true, secondsVisible: false },
-      crosshair: { mode: 0 },
+      layout: {
+        background: { type: ColorType.Solid, color: "#000000" },
+        textColor: "#b8b8b8",
+        fontSize: 12,
+        fontFamily: "-apple-system, system-ui, Segoe UI, Roboto, sans-serif",
+      },
+      grid: { vertLines: { visible: false }, horzLines: { color: "rgba(255,255,255,0.04)" } },
+      rightPriceScale: { borderColor: "#303030" },
+      timeScale: { borderColor: "#303030", timeVisible: true, secondsVisible: false },
+      crosshair: {
+        mode: 0,
+        vertLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
+        horzLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
+      },
     });
     const candle = chart.addSeries(CandlestickSeries, {
-      upColor: "#22c55e",
-      downColor: "#ef4444",
-      wickUpColor: "#22c55e",
-      wickDownColor: "#ef4444",
+      upColor: "#089981",
+      downColor: "#f23645",
+      wickUpColor: "#089981",
+      wickDownColor: "#f23645",
       borderVisible: false,
+      priceLineColor: "#b8b8b8",
+      priceLineWidth: 1,
+      lastValueVisible: true,
     });
     const vol = chart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceScaleId: "" });
     vol.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
@@ -153,15 +178,15 @@ export function CandleChart({
       actions={
         <div className="flex items-center gap-2">
           {onTimeframe && (
-            <div className="flex rounded-sm border border-border-subtle">
+            <div className="flex items-center gap-0.5">
               {TIMEFRAMES.map((tf) => (
                 <button
                   key={tf}
                   type="button"
                   onClick={() => onTimeframe(tf)}
                   className={cn(
-                    "px-2 py-0.5 text-[11px] font-medium",
-                    tf === timeframe ? "bg-panel-raised text-cyan-accent" : "text-text-muted hover:text-text-secondary",
+                    "h-6 rounded-[var(--r-pill)] px-2.5 text-[12px] transition-colors",
+                    tf === timeframe ? "bg-raised text-text-1" : "text-text-3 hover:bg-hover hover:text-text-2",
                   )}
                 >
                   {tf}
@@ -182,7 +207,21 @@ export function CandleChart({
       ) : candles.length === 0 ? (
         <EmptyState title="No data yet" description="No candles stored for this instrument and timeframe. The collector builds 1-minute bars while the feed runs." className="m-3" />
       ) : null}
-      <div ref={containerRef} className={cn("w-full", (instrumentId == null || isPending || candles.length === 0) && "hidden")} />
+      <div className={cn("relative", (instrumentId == null || isPending || candles.length === 0) && "hidden")}>
+        {symbol && (
+          <div className="pointer-events-none absolute top-2 left-3 z-10 flex items-baseline gap-2 opacity-60">
+            <span className="text-[16px] text-text-1">{symbol}</span>
+            <span className="text-[13px] text-text-2">{timeframe}</span>
+            {legend && (
+              <span className="tabular text-[13px] text-text-2">
+                O {legend.open.toFixed(2)} H {legend.high.toFixed(2)} L {legend.low.toFixed(2)} C{" "}
+                <span className={legend.close >= legend.open ? "text-up" : "text-down"}>{legend.close.toFixed(2)}</span>
+              </span>
+            )}
+          </div>
+        )}
+        <div ref={containerRef} className="w-full" />
+      </div>
     </PanelCard>
   );
 }

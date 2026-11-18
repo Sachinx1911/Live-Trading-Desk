@@ -18,7 +18,7 @@ import { ApiRequestError } from "@/lib/api/client";
 import type { Instrument, Objective, OptimizationKind, StrategyVersion } from "@/lib/api/generated";
 import { formatDateTime } from "@/lib/format";
 
-const SEL = "h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs";
+const SEL = "h-8 border border-border bg-raised px-2 text-xs";
 const HINTS = ["indicators.ema9.params.period", "indicators.ema21.params.period", "indicators.rsi14.params.period", "stop_loss.value", "target.value", "position_sizing.lots"];
 
 interface Row {
@@ -85,7 +85,7 @@ export default function OptimizePage() {
           <div className="flex flex-col gap-1.5">
             <Label>Instrument</Label>
             {instrument ? (
-              <div className="flex items-center justify-between rounded-sm border border-border-subtle bg-panel-raised px-2 py-1.5 text-xs">
+              <div className="flex items-center justify-between border border-border bg-raised px-2 py-1.5 text-xs">
                 <span>{instrumentLabel(instrument)}</span>
                 <Button type="button" size="xs" variant="ghost" onClick={() => setInstrument(null)}>change</Button>
               </div>
@@ -116,7 +116,7 @@ export default function OptimizePage() {
             <div className="flex flex-col gap-1.5"><Label htmlFor="o-max">Max runs</Label><Input id="o-max" type="number" min={1} max={2000} value={maxRuns} onChange={(e) => setMaxRuns(e.target.value)} className="h-8 text-xs tabular" /></div>
           </div>
           {kind === "walk_forward" && (
-            <div className="grid grid-cols-3 gap-2 rounded-sm border border-border-subtle p-2">
+            <div className="grid grid-cols-3 gap-2 rounded-sm border border-border p-2">
               <div className="flex flex-col gap-1.5"><Label htmlFor="o-train">Train days</Label><Input id="o-train" type="number" value={train} onChange={(e) => setTrain(e.target.value)} className="h-8 text-xs tabular" /></div>
               <div className="flex flex-col gap-1.5"><Label htmlFor="o-test">Test days</Label><Input id="o-test" type="number" value={test} onChange={(e) => setTest(e.target.value)} className="h-8 text-xs tabular" /></div>
               <div className="flex flex-col gap-1.5"><Label htmlFor="o-step">Step days</Label><Input id="o-step" type="number" value={step} onChange={(e) => setStep(e.target.value)} className="h-8 text-xs tabular" /></div>
@@ -125,7 +125,7 @@ export default function OptimizePage() {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <Label>Parameter space</Label>
-              <span className="text-[11px] text-text-muted">{size.toLocaleString("en-IN")} combination(s)</span>
+              <span className="text-[11px] text-text-3">{size.toLocaleString("en-IN")} combination(s)</span>
             </div>
             {rows.map((r, i) => (
               <div key={i} className="flex items-center gap-1">
@@ -136,9 +136,9 @@ export default function OptimizePage() {
             ))}
             <datalist id="param-hints">{HINTS.map((h) => <option key={h} value={h} />)}</datalist>
             <Button type="button" size="xs" variant="ghost" onClick={() => setRows([...rows, { path: "", values: "" }])}><Plus /> add parameter</Button>
-            <p className="text-[11px] text-text-muted">Paths point into the DSL: indicators.&lt;id&gt;.params.&lt;name&gt;, stop_loss.value, target.value, position_sizing.lots.</p>
+            <p className="text-[11px] text-text-3">Paths point into the DSL: indicators.&lt;id&gt;.params.&lt;name&gt;, stop_loss.value, target.value, position_sizing.lots.</p>
           </div>
-          {err && <p className="text-[11px] text-pnl-negative">{err}</p>}
+          {err && <p className="text-[11px] text-down">{err}</p>}
           <Button type="submit" disabled={!version || !instrument || rows.length === 0 || create.isPending}><Play /> Run {kind.replace("_", "-")}</Button>
         </form>
       </PanelCard>
@@ -148,8 +148,8 @@ export default function OptimizePage() {
           <EmptyState title="No optimisation jobs yet" className="m-3" />
         ) : (
           <table className="w-full text-xs">
-            <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-              <tr className="border-b border-border-subtle">
+            <thead className="text-[10px] uppercase tracking-wide text-text-3">
+              <tr className="border-b border-border">
                 <th className="px-2 py-1.5 text-left font-medium">Job</th>
                 <th className="px-2 py-1.5 text-left font-medium">Kind</th>
                 <th className="px-2 py-1.5 text-left font-medium">Objective</th>
@@ -160,13 +160,13 @@ export default function OptimizePage() {
             </thead>
             <tbody>
               {jobs.map((j) => (
-                <tr key={j.id} className="border-b border-border-subtle/60">
-                  <td className="px-2 py-1.5"><Link href={`/backtesting/optimize/${j.id}`} className="text-text-primary hover:text-accent-cyan">#{j.id} · v#{j.strategy_version_id} · #{j.instrument_id}</Link></td>
-                  <td className="px-2 py-1.5 text-text-secondary">{j.kind.replace("_", " ")}</td>
-                  <td className="px-2 py-1.5 text-text-secondary">{j.objective}</td>
-                  <td className="px-2 py-1.5 font-mono text-[10px] text-text-secondary">{Object.keys(j.param_space).join(", ")}</td>
+                <tr key={j.id} className="border-b border-border/60">
+                  <td className="px-2 py-1.5"><Link href={`/backtesting/optimize/${j.id}`} className="text-text-1 hover:text-accent-cyan">#{j.id} · v#{j.strategy_version_id} · #{j.instrument_id}</Link></td>
+                  <td className="px-2 py-1.5 text-text-2">{j.kind.replace("_", " ")}</td>
+                  <td className="px-2 py-1.5 text-text-2">{j.objective}</td>
+                  <td className="px-2 py-1.5 font-mono text-[10px] text-text-2">{Object.keys(j.param_space).join(", ")}</td>
                   <td className="px-2 py-1.5"><div className="flex flex-col gap-1"><JobStatusChip status={j.status} />{j.status === "running" && <ProgressBar pct={j.progress_pct} className="w-24" />}</div></td>
-                  <td className="px-2 py-1.5 tabular text-text-secondary">{formatDateTime(j.queued_at)}</td>
+                  <td className="px-2 py-1.5 tabular text-text-2">{formatDateTime(j.queued_at)}</td>
                 </tr>
               ))}
             </tbody>

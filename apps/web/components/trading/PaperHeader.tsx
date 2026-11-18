@@ -27,7 +27,7 @@ export function PaperHeader({ children }: { children: (accountId: number) => Rea
               href={t.href}
               className={cn(
                 "rounded-sm px-2 py-1 text-xs",
-                pathname === t.href ? "bg-panel-raised text-text-primary" : "text-text-secondary hover:text-text-primary",
+                pathname === t.href ? "bg-raised text-text-1" : "text-text-2 hover:text-text-1",
               )}
             >
               {t.label}

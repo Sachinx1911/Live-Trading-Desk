@@ -43,16 +43,17 @@ export function MetricValue({ kind, value, signed }: { kind: Kind; value: unknow
   if (kind === "pct") return <Pct value={n} signed={!!signed} />;
   if (kind === "money") return <Money value={n} signed={!!signed} muted={!signed} />;
   if (kind === "count") return <span className="tabular">{formatNumber(n)}</span>;
-  return <span className={cn("tabular", signed && (n > 0 ? "text-pnl-positive" : n < 0 ? "text-pnl-negative" : ""))}>{formatNumber(n, 2)}</span>;
+  return <span className={cn("tabular", signed && (n > 0 ? "text-up" : n < 0 ? "text-down" : ""))}>{formatNumber(n, 2)}</span>;
 }
 
+/* Flat black tiles separated by 1px hairlines (gap-px on a #303030 backdrop). */
 export function MetricsGrid({ metrics, compact = false }: { metrics: BacktestMetrics; compact?: boolean }) {
   return (
-    <div className={cn("grid gap-2", compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-4 xl:grid-cols-6")}>
+    <div className={cn("grid gap-px border border-border bg-border", compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-4 xl:grid-cols-6")}>
       {SPEC.map((m) => (
-        <div key={m.key} className="rounded-sm border border-border-subtle bg-panel-raised px-2.5 py-2">
-          <p className="text-[10px] uppercase tracking-wide text-text-muted">{m.label}</p>
-          <p className="mt-0.5 text-base font-semibold text-text-primary">
+        <div key={m.key} className="bg-pane px-3 py-2.5">
+          <p className="text-[11px] uppercase tracking-wide text-text-3">{m.label}</p>
+          <p className="mt-1 text-[18px] leading-6 font-semibold text-text-1">
             <MetricValue kind={m.kind} value={metrics[m.key]} signed={m.signed} />
           </p>
         </div>

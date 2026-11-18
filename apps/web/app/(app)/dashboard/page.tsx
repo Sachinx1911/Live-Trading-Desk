@@ -15,8 +15,8 @@ export default function DashboardPage() {
         <PanelCard title="Multi-market status">
           <ul className="text-xs">
             <li className="flex items-center justify-between py-1">
-              <span className="text-text-primary">NSE</span>
-              <span className="text-text-muted">Asia/Kolkata · 09:15–15:30</span>
+              <span className="text-text-1">NSE</span>
+              <span className="text-text-3">Asia/Kolkata · 09:15–15:30</span>
             </li>
           </ul>
         </PanelCard>

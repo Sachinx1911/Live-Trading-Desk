@@ -29,7 +29,7 @@ export function RunStrategySheet({ accountId, presetStrategyId, trigger }: { acc
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger render={(trigger as React.ReactElement) ?? <Button size="sm"><Play /> Run a strategy</Button>} />
-      <SheetContent side="right" className="w-[420px] bg-panel">
+      <SheetContent side="right" className="w-[420px] bg-pane">
         <SheetHeader>
           <SheetTitle>Run a strategy on paper</SheetTitle>
           <SheetDescription>Pick a strategy version and an instrument. The trader process starts it within ~10 s. Virtual money only.</SheetDescription>
@@ -52,7 +52,7 @@ export function RunStrategySheet({ accountId, presetStrategyId, trigger }: { acc
                 setStrategyId(e.target.value ? Number(e.target.value) : null);
                 setVersionId(null);
               }}
-              className="h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs"
+              className="h-8 border border-border bg-raised px-2 text-xs"
             >
               <option value="">Select…</option>
               {strategies?.map((s) => (
@@ -68,7 +68,7 @@ export function RunStrategySheet({ accountId, presetStrategyId, trigger }: { acc
               id="rs-version"
               value={chosenVersion ?? ""}
               onChange={(e) => setVersionId(Number(e.target.value))}
-              className="h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs"
+              className="h-8 border border-border bg-raised px-2 text-xs"
               disabled={!strategyId}
             >
               {eligible.length === 0 && <option value="">No paper-eligible version</option>}
@@ -84,7 +84,7 @@ export function RunStrategySheet({ accountId, presetStrategyId, trigger }: { acc
           <div className="flex flex-col gap-1.5">
             <Label>Instrument</Label>
             {instrument ? (
-              <div className="flex items-center justify-between rounded-sm border border-border-subtle bg-panel-raised px-2 py-1.5 text-xs">
+              <div className="flex items-center justify-between border border-border bg-raised px-2 py-1.5 text-xs">
                 <span>{instrumentLabel(instrument)} · lot {instrument.lot_size}</span>
                 <Button type="button" size="xs" variant="ghost" onClick={() => setInstrument(null)}>
                   change
@@ -94,7 +94,7 @@ export function RunStrategySheet({ accountId, presetStrategyId, trigger }: { acc
               <InstrumentSearch onPick={setInstrument} placeholder="Search NIFTY, BANKNIFTY, future…" />
             )}
           </div>
-          {err && <p className="text-[11px] text-pnl-negative">{err}</p>}
+          {err && <p className="text-[11px] text-down">{err}</p>}
           <Button type="submit" disabled={!chosenVersion || !instrument || activate.isPending}>
             <Play /> Activate on paper
           </Button>

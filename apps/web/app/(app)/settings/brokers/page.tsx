@@ -36,8 +36,8 @@ function LoginBanner() {
       className={cn(
         "rounded-sm border px-3 py-2 text-xs",
         ok
-          ? "border-pnl-positive/40 bg-pnl-positive/10 text-pnl-positive"
-          : "border-pnl-negative/40 bg-pnl-negative/10 text-pnl-negative",
+          ? "border-up/40 bg-up/10 text-up"
+          : "border-down/40 bg-down/10 text-down",
       )}
     >
       {ok
@@ -57,7 +57,7 @@ function BrokersContent() {
       <Suspense fallback={null}>
         <LoginBanner />
       </Suspense>
-      <PanelCard title="Daily login" bodyClassName="text-xs text-text-secondary">
+      <PanelCard title="Daily login" bodyClassName="text-xs text-text-2">
         Broker access tokens expire every day at about 03:30 IST and cannot be renewed
         automatically (broker rule). Log in before 09:00 IST on each trading day; a reminder is sent
         at 08:15 IST when the session is not valid. An expired session shows as Disconnected

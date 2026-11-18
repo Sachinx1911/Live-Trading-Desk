@@ -12,7 +12,7 @@ import { ApiRequestError } from "@/lib/api/client";
 import type { FillMode, Instrument, SlippageModel, StrategyVersion, Timeframe } from "@/lib/api/generated";
 import { StrategyVersionPicker } from "./StrategyVersionPicker";
 
-const SEL = "h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs";
+const SEL = "h-8 border border-border bg-raised px-2 text-xs";
 const TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "30m", "1h", "1d"];
 
 export function isoDay(d: Date): string {
@@ -65,7 +65,7 @@ export function BacktestForm({ presetVersionId, presetStrategyId }: { presetVers
       <div className="flex flex-col gap-1.5">
         <Label>Instrument</Label>
         {instrument ? (
-          <div className="flex items-center justify-between rounded-sm border border-border-subtle bg-panel-raised px-2 py-1.5 text-xs">
+          <div className="flex items-center justify-between border border-border bg-raised px-2 py-1.5 text-xs">
             <span>{instrumentLabel(instrument)} · lot {instrument.lot_size}</span>
             <Button type="button" size="xs" variant="ghost" onClick={() => setInstrument(null)}>change</Button>
           </div>
@@ -120,11 +120,11 @@ export function BacktestForm({ presetVersionId, presetStrategyId }: { presetVers
         <Label htmlFor="bt-label">Label (optional)</Label>
         <Input id="bt-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. EMA 9/21 · 1y · spread-aware" className="h-8 text-xs" />
       </div>
-      {err && <p className="text-[11px] text-pnl-negative">{err}</p>}
+      {err && <p className="text-[11px] text-down">{err}</p>}
       <Button type="submit" disabled={!chosenVersionId || !instrument || create.isPending}>
         <Play /> Run backtest
       </Button>
-      <p className="text-[11px] text-text-muted">Runs in the worker on stored 1-minute candles. Same engine, risk rules and simulator as paper trading.</p>
+      <p className="text-[11px] text-text-3">Runs in the worker on stored 1-minute candles. Same engine, risk rules and simulator as paper trading.</p>
     </form>
   );
 }

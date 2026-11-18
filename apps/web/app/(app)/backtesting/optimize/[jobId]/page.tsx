@@ -54,10 +54,10 @@ export default function OptimizationDetailPage() {
         }
       >
         {job.status === "running" && <ProgressBar pct={job.progress_pct} className="max-w-md" />}
-        {job.error && <p className="text-xs text-pnl-negative">{job.error}</p>}
-        <p className="mt-1 font-mono text-[11px] text-text-muted">{Object.entries(job.param_space).map(([k, v]) => `${k} ∈ {${v.join(", ")}}`).join("  ·  ")}</p>
+        {job.error && <p className="text-xs text-down">{job.error}</p>}
+        <p className="mt-1 font-mono text-[11px] text-text-3">{Object.entries(job.param_space).map(([k, v]) => `${k} ∈ {${v.join(", ")}}`).join("  ·  ")}</p>
         {allFlags.length > 0 && (
-          <div role="alert" className="mt-2 rounded-sm border border-state-delayed/40 bg-state-delayed/10 px-3 py-2 text-xs text-state-delayed">
+          <div role="alert" className="mt-2 rounded-sm border border-warn/40 bg-warn/10 px-3 py-2 text-xs text-warn">
             Overfitting flags: {allFlags.join("; ")}
           </div>
         )}
@@ -83,8 +83,8 @@ export default function OptimizationDetailPage() {
           <EmptyState title="No results rows" className="m-3" />
         ) : (
           <table className="w-full text-xs">
-            <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-              <tr className="border-b border-border-subtle">
+            <thead className="text-[10px] uppercase tracking-wide text-text-3">
+              <tr className="border-b border-border">
                 <th className="px-2 py-1.5 text-right font-medium">#</th>
                 {wf && <th className="px-2 py-1.5 text-left font-medium">Window</th>}
                 {wf && <th className="px-2 py-1.5 text-left font-medium">Set</th>}
@@ -94,10 +94,10 @@ export default function OptimizationDetailPage() {
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className={cn("border-b border-border-subtle/60", r.rank === 1 && !wf && "bg-accent-cyan/5")}>
-                  <td className="px-2 py-1.5 text-right tabular text-text-secondary">{r.rank}</td>
-                  {wf && <td className="px-2 py-1.5 font-mono text-[10px] text-text-secondary">{r.window ? `${String(r.window.train_start ?? r.window.start ?? "").slice(0, 10)} → ${String(r.window.test_end ?? r.window.end ?? "").slice(0, 10)}` : "—"}</td>}
-                  {wf && <td className="px-2 py-1.5"><span className={cn("rounded-sm border px-1 text-[10px] uppercase", r.is_oos ? "border-accent-cyan/40 text-accent-cyan" : "border-border-subtle text-text-muted")}>{r.is_oos ? "OOS" : "IS"}</span></td>}
+                <tr key={i} className={cn("border-b border-border/60", r.rank === 1 && !wf && "bg-accent-cyan/5")}>
+                  <td className="px-2 py-1.5 text-right tabular text-text-2">{r.rank}</td>
+                  {wf && <td className="px-2 py-1.5 font-mono text-[10px] text-text-2">{r.window ? `${String(r.window.train_start ?? r.window.start ?? "").slice(0, 10)} → ${String(r.window.test_end ?? r.window.end ?? "").slice(0, 10)}` : "—"}</td>}
+                  {wf && <td className="px-2 py-1.5"><span className={cn("rounded-sm border px-1 text-[10px] uppercase", r.is_oos ? "border-accent-cyan/40 text-accent-cyan" : "border-border text-text-3")}>{r.is_oos ? "OOS" : "IS"}</span></td>}
                   {expanded ? paramKeys.map((k) => <td key={k} className="px-2 py-1.5 text-right font-mono tabular">{r.params[k] == null ? "—" : String(r.params[k])}</td>) : <td className="px-2 py-1.5 font-mono text-[10px]">{Object.entries(r.params).map(([k, v]) => `${k.split(".").slice(-1)[0]}=${String(v)}`).join(" ")}</td>}
                   {metricCols.map((m) => <td key={m.key} className="px-2 py-1.5 text-right"><MetricValue kind={m.kind} value={r.metrics[m.key]} signed={m.signed} /></td>)}
                 </tr>

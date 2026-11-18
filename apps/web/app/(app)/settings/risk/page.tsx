@@ -65,11 +65,11 @@ function LimitsForm({ accountId, data }: { accountId: number; data: RiskLimitsRe
       }}
     >
       {locked && (
-        <div className="flex items-center gap-2 rounded-sm border border-state-delayed/40 bg-state-delayed/10 px-3 py-2 text-xs text-state-delayed">
+        <div className="flex items-center gap-2 rounded-sm border border-warn/40 bg-warn/10 px-3 py-2 text-xs text-warn">
           <Lock className="size-3.5" /> {data.edit_lock_reason ?? "Editing locked"}
         </div>
       )}
-      <p className="text-[11px] text-text-muted">
+      <p className="text-[11px] text-text-3">
         {data.is_default ? "Using platform defaults (not saved yet)." : `Version ${data.version}, effective ${data.effective_from ? formatDateTime(data.effective_from) : "—"}.`} Limits change outside market hours only, by design.
       </p>
       <fieldset disabled={locked} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -78,7 +78,7 @@ function LimitsForm({ accountId, data }: { accountId: number; data: RiskLimitsRe
             <Label htmlFor={`rl-${f.key}`}>{f.label}</Label>
             <div className="flex items-center gap-2">
               <Input id={`rl-${f.key}`} type="number" step={f.step ?? 1} min={0} value={String(form[f.key])} onChange={(e) => set(f.key, Number(e.target.value) as never)} className="h-8 text-xs tabular" />
-              <span className="shrink-0 text-[11px] text-text-muted">{f.unit}</span>
+              <span className="shrink-0 text-[11px] text-text-3">{f.unit}</span>
             </div>
           </div>
         ))}
@@ -91,7 +91,7 @@ function LimitsForm({ accountId, data }: { accountId: number; data: RiskLimitsRe
         <div className="flex flex-col gap-2 text-xs">
           <Label>Products allowed</Label>
           {PRODUCTS.map((p) => (
-            <label key={p} className="flex items-center gap-2 text-text-secondary">
+            <label key={p} className="flex items-center gap-2 text-text-2">
               <input
                 type="checkbox"
                 checked={form.allowed_products.includes(p)}
@@ -103,17 +103,17 @@ function LimitsForm({ accountId, data }: { accountId: number; data: RiskLimitsRe
         </div>
         <div className="flex flex-col gap-2 text-xs">
           <Label>Toggles</Label>
-          <label className="flex items-center gap-2 text-text-secondary"><input type="checkbox" checked={form.allow_short} onChange={(e) => set("allow_short", e.target.checked)} /> allow short entries</label>
-          <label className="flex items-center gap-2 text-text-secondary"><input type="checkbox" checked={form.event_block} onChange={(e) => set("event_block", e.target.checked)} /> block entries on high-impact event days</label>
-          <label className="flex items-center gap-2 text-text-secondary"><input type="checkbox" checked={form.freeze_quantity_check} onChange={(e) => set("freeze_quantity_check", e.target.checked)} /> enforce exchange freeze quantity</label>
+          <label className="flex items-center gap-2 text-text-2"><input type="checkbox" checked={form.allow_short} onChange={(e) => set("allow_short", e.target.checked)} /> allow short entries</label>
+          <label className="flex items-center gap-2 text-text-2"><input type="checkbox" checked={form.event_block} onChange={(e) => set("event_block", e.target.checked)} /> block entries on high-impact event days</label>
+          <label className="flex items-center gap-2 text-text-2"><input type="checkbox" checked={form.freeze_quantity_check} onChange={(e) => set("freeze_quantity_check", e.target.checked)} /> enforce exchange freeze quantity</label>
         </div>
       </fieldset>
       <div className="flex items-center gap-3">
         <Button type="submit" size="sm" disabled={locked || save.isPending}>
           <Save /> Save as new version
         </Button>
-        {saved && <span className="text-[11px] text-pnl-positive">Saved.</span>}
-        {err && <span className="text-[11px] text-pnl-negative">{err}</span>}
+        {saved && <span className="text-[11px] text-up">Saved.</span>}
+        {err && <span className="text-[11px] text-down">{err}</span>}
       </div>
     </form>
   );

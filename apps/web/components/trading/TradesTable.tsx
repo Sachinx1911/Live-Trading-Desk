@@ -12,8 +12,8 @@ export function TradesTable({ trades, isPending, showAccount }: { trades: PaperT
   if (!trades || trades.length === 0) return <EmptyState title="No closed trades yet" description="A trade is recorded when a position returns to flat." className="m-3" />;
   return (
     <table className="w-full text-xs">
-      <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-        <tr className="border-b border-border-subtle">
+      <thead className="text-[10px] uppercase tracking-wide text-text-3">
+        <tr className="border-b border-border">
           {showAccount && <th className="px-3 py-1.5 text-left font-medium">Account</th>}
           <th className="px-3 py-1.5 text-left font-medium">Symbol</th>
           <th className="px-3 py-1.5 text-left font-medium">Side</th>
@@ -31,20 +31,20 @@ export function TradesTable({ trades, isPending, showAccount }: { trades: PaperT
       </thead>
       <tbody>
         {trades.map((t) => (
-          <tr key={t.id} className="border-b border-border-subtle/60">
-            {showAccount && <td className="px-3 py-1.5 text-text-secondary">{showAccount(t)}</td>}
-            <td className="px-3 py-1.5 text-text-primary">{t.symbol ?? `#${t.instrument_id}`}</td>
+          <tr key={t.id} className="border-b border-border/60">
+            {showAccount && <td className="px-3 py-1.5 text-text-2">{showAccount(t)}</td>}
+            <td className="px-3 py-1.5 text-text-1">{t.symbol ?? `#${t.instrument_id}`}</td>
             <td className="px-3 py-1.5"><SideText side={t.side} /></td>
             <td className="px-3 py-1.5 text-right tabular">{formatNumber(t.quantity)}</td>
-            <td className="px-3 py-1.5 tabular text-text-secondary">{formatDateTime(t.entry_at)}</td>
+            <td className="px-3 py-1.5 tabular text-text-2">{formatDateTime(t.entry_at)}</td>
             <td className="px-3 py-1.5 text-right tabular">{formatNumber(Number(t.entry_price), 2)}</td>
-            <td className="px-3 py-1.5 tabular text-text-secondary">{formatDateTime(t.exit_at)}</td>
+            <td className="px-3 py-1.5 tabular text-text-2">{formatDateTime(t.exit_at)}</td>
             <td className="px-3 py-1.5 text-right tabular">{formatNumber(Number(t.exit_price), 2)}</td>
             <td className="px-3 py-1.5 text-right"><Money value={num(t.gross_pnl)} signed muted /></td>
             <td className="px-3 py-1.5 text-right"><Money value={num(t.costs)} muted /></td>
             <td className="px-3 py-1.5 text-right"><Money value={num(t.net_pnl)} signed /></td>
-            <td className="px-3 py-1.5 text-right tabular text-text-secondary">{t.bars_held ?? <Dash />}</td>
-            <td className="max-w-72 truncate px-3 py-1.5 text-text-secondary" title={`${t.entry_reason ?? ""} → ${t.exit_reason ?? ""}`}>
+            <td className="px-3 py-1.5 text-right tabular text-text-2">{t.bars_held ?? <Dash />}</td>
+            <td className="max-w-72 truncate px-3 py-1.5 text-text-2" title={`${t.entry_reason ?? ""} → ${t.exit_reason ?? ""}`}>
               {t.entry_reason ?? "—"} → {t.exit_reason ?? "—"}
             </td>
           </tr>

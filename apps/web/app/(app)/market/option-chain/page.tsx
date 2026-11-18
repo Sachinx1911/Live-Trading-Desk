@@ -43,7 +43,7 @@ export default function OptionChainPage() {
   return (
     <div className="flex flex-col gap-3">
       <PanelCard bodyClassName="flex flex-wrap items-center gap-3 p-2">
-        <div className="flex rounded-sm border border-border-subtle">
+        <div className="flex rounded-sm border border-border">
           {UNDERLYINGS.map((u) => (
             <button
               key={u}
@@ -52,18 +52,18 @@ export default function OptionChainPage() {
                 setSymbol(u);
                 setExpiry(undefined);
               }}
-              className={cn("px-3 py-1 text-xs font-medium", u === symbol ? "bg-panel-raised text-cyan-accent" : "text-text-muted hover:text-text-secondary")}
+              className={cn("px-3 py-1 text-xs font-medium", u === symbol ? "bg-raised text-accent" : "text-text-3 hover:text-text-2")}
             >
               {u}
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-xs text-text-secondary">
+        <label className="flex items-center gap-2 text-xs text-text-2">
           Expiry
           <select
             value={effectiveExpiry ?? ""}
             onChange={(e) => setExpiry(e.target.value || undefined)}
-            className="h-7 rounded-sm border border-border-subtle bg-panel px-2 text-xs text-text-primary"
+            className="h-7 border border-border bg-pane px-2 text-xs text-text-1"
             disabled={!expiries.data?.length}
           >
             {!expiries.data?.length && <option value="">No expiries known</option>}
@@ -74,7 +74,7 @@ export default function OptionChainPage() {
             ))}
           </select>
         </label>
-        {id == null && <span className="text-[11px] text-text-muted">{symbol} not found in the instrument master yet.</span>}
+        {id == null && <span className="text-[11px] text-text-3">{symbol} not found in the instrument master yet.</span>}
       </PanelCard>
       <OptionChainTable underlyingId={id} expiry={effectiveExpiry ? `${effectiveExpiry}T15:30:00+05:30` : undefined} symbol={symbol} />
     </div>

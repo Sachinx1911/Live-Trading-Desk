@@ -11,22 +11,22 @@ const ALERTS: { when: string; what: string; level: string }[] = [
 export default function Page() {
   return (
     <div className="flex flex-col gap-3">
-      <PanelCard title="Telegram" subtitle="Configured on the server" bodyClassName="text-xs text-text-secondary">
+      <PanelCard title="Telegram" subtitle="Configured on the server" bodyClassName="text-xs text-text-2">
         <p>
           Alerts are sent by the worker through a Telegram bot configured with{" "}
-          <code className="font-mono text-text-primary">TELEGRAM_BOT_TOKEN</code> and{" "}
-          <code className="font-mono text-text-primary">TELEGRAM_CHAT_ID</code> in the server&apos;s{" "}
-          <code className="font-mono text-text-primary">.env</code>. Tokens are never entered here.
+          <code className="font-mono text-text-1">TELEGRAM_BOT_TOKEN</code> and{" "}
+          <code className="font-mono text-text-1">TELEGRAM_CHAT_ID</code> in the server&apos;s{" "}
+          <code className="font-mono text-text-1">.env</code>. Tokens are never entered here.
         </p>
-        <p className="mt-2 text-text-muted">
+        <p className="mt-2 text-text-3">
           Status unknown from the browser: the API does not yet report whether Telegram is
           configured. When it is not, alerts are written to the server log instead.
         </p>
       </PanelCard>
       <PanelCard title="Alert types" bodyClassName="p-0">
         <table className="w-full text-xs">
-          <thead className="text-[11px] uppercase tracking-wide text-text-muted">
-            <tr className="border-b border-border-subtle">
+          <thead className="text-[11px] uppercase tracking-wide text-text-3">
+            <tr className="border-b border-border">
               <th className="px-3 py-2 text-left font-medium">When</th>
               <th className="px-3 py-2 text-left font-medium">Alert</th>
               <th className="px-3 py-2 text-left font-medium">Level</th>
@@ -34,16 +34,16 @@ export default function Page() {
           </thead>
           <tbody>
             {ALERTS.map((a) => (
-              <tr key={a.what} className="border-b border-border-subtle last:border-0">
-                <td className="px-3 py-2 text-text-secondary">{a.when}</td>
-                <td className="px-3 py-2 text-text-primary">{a.what}</td>
-                <td className="px-3 py-2 font-mono text-[11px] uppercase text-text-muted">{a.level}</td>
+              <tr key={a.what} className="border-b border-border last:border-0">
+                <td className="px-3 py-2 text-text-2">{a.when}</td>
+                <td className="px-3 py-2 text-text-1">{a.what}</td>
+                <td className="px-3 py-2 font-mono text-[11px] uppercase text-text-3">{a.level}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </PanelCard>
-      <PanelCard title="In-app" bodyClassName="text-xs text-text-secondary">
+      <PanelCard title="In-app" bodyClassName="text-xs text-text-2">
         The same conditions show in the top bar: provider state, broker session and market
         session chips. Nothing is marked Live unless a connected provider is streaming.
       </PanelCard>

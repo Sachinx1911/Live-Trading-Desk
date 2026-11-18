@@ -101,6 +101,12 @@ import-linter, web lint/typecheck/build clean.
 - [ ] Paper-vs-backtest cross-check report over a recorded live session (needs a real feed day)
 - [ ] Deterministic regime per day persisted for the dashboard tile (detector exists; storage in Phase 6)
 
+## Design system · TradingView reference (2026-11-18)
+
+- [x] Reverse-engineered reference recorded in `docs/architecture/09-design-reference-tradingview.md`
+- [x] Web restyled to it: #000 panes + #222 chrome + #303030 dividers, #2962ff accent (purple only for AI), system 14px type with tabular numerals, 52px icon rail (expands to 220px), 38px top bar with symbol-search pill, 28px pill buttons/tabs, 34px chips, 50px/41px/34px table rows, glass dialogs, grid-less #000 charts with #089981/#f23645 candles and 45% volume, 360px glass login
+- [ ] Light theme (owner decided: not now); hover/transition tokens still measured by eye, not from TradingView
+
 ## Phase 5 · Strategy intelligence
 
 Started 2026-11-18. The LLM boundary from ADR-009 exists and is tested without network

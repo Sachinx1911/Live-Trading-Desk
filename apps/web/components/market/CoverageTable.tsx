@@ -17,8 +17,8 @@ export function CoverageTable({ instrumentId }: { instrumentId?: number }) {
         <EmptyState title="No candles stored yet" description="Run the collector or a backfill job." className="m-3" />
       ) : (
         <table className="w-full text-xs">
-          <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-            <tr className="border-b border-border-subtle">
+          <thead className="text-[10px] uppercase tracking-wide text-text-3">
+            <tr className="border-b border-border">
               <th className="px-3 py-1.5 text-left font-medium">Instrument</th>
               <th className="px-3 py-1.5 text-left font-medium">TF</th>
               <th className="px-3 py-1.5 text-left font-medium">Provider</th>
@@ -29,13 +29,13 @@ export function CoverageTable({ instrumentId }: { instrumentId?: number }) {
           </thead>
           <tbody>
             {data.map((r) => (
-              <tr key={`${r.instrument_id}-${r.timeframe}-${r.provider}`} className="border-b border-border-subtle/60 last:border-0">
-                <td className="px-3 py-1 tabular text-text-primary">#{r.instrument_id}</td>
-                <td className="px-3 py-1 text-text-secondary">{r.timeframe}</td>
-                <td className="px-3 py-1 text-text-secondary">{r.provider}</td>
-                <td className="px-3 py-1 tabular text-text-secondary">{r.first_ts ? formatDateTime(r.first_ts) : <Dash />}</td>
-                <td className="px-3 py-1 tabular text-text-secondary">{r.last_ts ? formatDateTime(r.last_ts) : <Dash />}</td>
-                <td className="px-3 py-1 text-right tabular text-text-primary">{formatNumber(r.rows)}</td>
+              <tr key={`${r.instrument_id}-${r.timeframe}-${r.provider}`} className="border-b border-border/60 last:border-0">
+                <td className="px-3 py-1 tabular text-text-1">#{r.instrument_id}</td>
+                <td className="px-3 py-1 text-text-2">{r.timeframe}</td>
+                <td className="px-3 py-1 text-text-2">{r.provider}</td>
+                <td className="px-3 py-1 tabular text-text-2">{r.first_ts ? formatDateTime(r.first_ts) : <Dash />}</td>
+                <td className="px-3 py-1 tabular text-text-2">{r.last_ts ? formatDateTime(r.last_ts) : <Dash />}</td>
+                <td className="px-3 py-1 text-right tabular text-text-1">{formatNumber(r.rows)}</td>
               </tr>
             ))}
           </tbody>

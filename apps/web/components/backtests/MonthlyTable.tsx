@@ -45,8 +45,8 @@ export function MonthlyTable({ table }: { table: unknown }) {
   const max = Math.max(1e-9, ...all.map((v) => Math.abs(v)));
   return (
     <table className="w-full text-xs">
-      <thead className="text-[10px] uppercase tracking-wide text-text-muted">
-        <tr className="border-b border-border-subtle">
+      <thead className="text-[10px] uppercase tracking-wide text-text-3">
+        <tr className="border-b border-border">
           <th className="px-2 py-1 text-left font-medium">Year</th>
           {MONTHS.map((m) => <th key={m} className="px-1 py-1 text-right font-medium">{m}</th>)}
           <th className="px-2 py-1 text-right font-medium">Total</th>
@@ -57,22 +57,22 @@ export function MonthlyTable({ table }: { table: unknown }) {
           const row = grid.get(y)!;
           const total = Array.from(row.values()).reduce((a, b) => a + b, 0);
           return (
-            <tr key={y} className="border-b border-border-subtle/60">
-              <td className="px-2 py-1 tabular text-text-secondary">{y}</td>
+            <tr key={y} className="border-b border-border/60">
+              <td className="px-2 py-1 tabular text-text-2">{y}</td>
               {MONTHS.map((_, i) => {
                 const v = row.get(i + 1);
                 const a = v == null ? 0 : Math.min(1, Math.abs(v) / max);
                 return (
                   <td
                     key={i}
-                    className={cn("px-1 py-1 text-right tabular", v == null ? "text-text-muted" : v > 0 ? "text-pnl-positive" : v < 0 ? "text-pnl-negative" : "text-text-secondary")}
+                    className={cn("px-1 py-1 text-right tabular", v == null ? "text-text-3" : v > 0 ? "text-up" : v < 0 ? "text-down" : "text-text-2")}
                     style={v == null ? undefined : { background: v > 0 ? `rgba(34,197,94,${0.08 + a * 0.3})` : v < 0 ? `rgba(239,68,68,${0.08 + a * 0.3})` : undefined }}
                   >
                     {v == null ? "—" : isPct ? `${v.toFixed(1)}%` : v.toFixed(0)}
                   </td>
                 );
               })}
-              <td className={cn("px-2 py-1 text-right font-semibold tabular", total > 0 ? "text-pnl-positive" : total < 0 ? "text-pnl-negative" : "")}>
+              <td className={cn("px-2 py-1 text-right font-semibold tabular", total > 0 ? "text-up" : total < 0 ? "text-down" : "")}>
                 {isPct ? `${total.toFixed(1)}%` : total.toFixed(0)}
               </td>
             </tr>

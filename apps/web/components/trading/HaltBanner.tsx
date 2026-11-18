@@ -12,18 +12,18 @@ export function HaltBanner({ accountId, activations }: { accountId: number | nul
   const lossHits = (activations ?? []).filter((a) => a.stop_reason?.toLowerCase().includes("loss limit"));
   if (active.length === 0 && lossHits.length === 0) return null;
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-pnl-negative/50 bg-pnl-negative/10 px-3 py-2 text-xs">
+    <div className="flex flex-col gap-1 rounded-md border border-down/50 bg-down/10 px-3 py-2 text-xs">
       {active.map((k) => (
-        <p key={k.scope} className="flex items-center gap-2 text-pnl-negative">
+        <p key={k.scope} className="flex items-center gap-2 text-down">
           <AlertOctagon className="size-3.5" /> Kill switch active ({k.scope})
-          {k.detail?.reason && <span className="text-text-secondary">— {k.detail.reason}</span>}
+          {k.detail?.reason && <span className="text-text-2">— {k.detail.reason}</span>}
           <Link href="/trading" className="ml-auto underline">
             Manage
           </Link>
         </p>
       ))}
       {lossHits.map((a) => (
-        <p key={a.id} className="flex items-center gap-2 text-state-delayed">
+        <p key={a.id} className="flex items-center gap-2 text-warn">
           <ShieldAlert className="size-3.5" /> {a.strategy_name} v{a.version_no} paused: {a.stop_reason}
         </p>
       ))}

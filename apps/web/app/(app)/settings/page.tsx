@@ -19,19 +19,19 @@ export default function Page() {
         <Link
           key={href}
           href={href}
-          className="flex items-start gap-3 rounded-md border border-border-subtle bg-panel p-3 transition-colors hover:border-border-strong hover:bg-panel-raised"
+          className="flex items-start gap-3 border border-border bg-pane p-3 transition-colors hover:border-border-strong hover:bg-raised"
         >
-          <Icon className="mt-0.5 size-4 shrink-0 text-cyan-accent" aria-hidden />
+          <Icon className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-text-primary">{label}</span>
+              <span className="text-sm font-medium text-text-1">{label}</span>
               {phase && (
-                <span className="rounded-sm border border-border-subtle px-1 text-[10px] text-text-muted">
+                <span className="rounded-sm border border-border px-1 text-[10px] text-text-3">
                   P{phase}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-text-muted">{desc}</p>
+            <p className="text-[11px] text-text-3">{desc}</p>
           </div>
         </Link>
       ))}

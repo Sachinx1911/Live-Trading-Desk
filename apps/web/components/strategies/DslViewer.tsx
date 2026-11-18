@@ -9,12 +9,12 @@ const SECTIONS = ["universe", "session", "indicators", "entry", "exit", "stop_lo
 function Section({ name, value }: { name: string; value: unknown }) {
   const [open, setOpen] = useState(name === "entry" || name === "indicators");
   return (
-    <div className="border-b border-border-subtle/60 last:border-0">
-      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-1 px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary">
+    <div className="border-b border-border/60 last:border-0">
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-1 px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wide text-text-2 hover:text-text-1">
         {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />} {name}
-        {value == null && <span className="ml-1 font-normal normal-case text-text-muted">(not set)</span>}
+        {value == null && <span className="ml-1 font-normal normal-case text-text-3">(not set)</span>}
       </button>
-      {open && value != null && <pre className="overflow-x-auto px-3 pb-2 font-mono text-[11px] leading-snug text-text-primary">{JSON.stringify(value, null, 2)}</pre>}
+      {open && value != null && <pre className="overflow-x-auto px-3 pb-2 font-mono text-[11px] leading-snug text-text-1">{JSON.stringify(value, null, 2)}</pre>}
     </div>
   );
 }
@@ -23,12 +23,12 @@ function Section({ name, value }: { name: string; value: unknown }) {
 export function DslViewer({ dsl, className }: { dsl: Record<string, unknown>; className?: string }) {
   const rest = Object.fromEntries(Object.entries(dsl).filter(([k]) => !SECTIONS.includes(k)));
   return (
-    <div className={cn("rounded-sm border border-border-subtle bg-panel-raised", className)}>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 border-b border-border-subtle px-2 py-1.5 text-[11px] text-text-secondary">
+    <div className={cn("border border-border bg-raised", className)}>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 border-b border-border px-2 py-1.5 text-[11px] text-text-2">
         {["name", "timeframe", "market", "direction", "dsl_schema_version", "origin", "language"].map((k) =>
           dsl[k] != null ? (
             <span key={k}>
-              <span className="text-text-muted">{k}:</span> <span className="text-text-primary">{String(dsl[k])}</span>
+              <span className="text-text-3">{k}:</span> <span className="text-text-1">{String(dsl[k])}</span>
             </span>
           ) : null,
         )}

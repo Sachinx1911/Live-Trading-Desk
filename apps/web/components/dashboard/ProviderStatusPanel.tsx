@@ -40,7 +40,7 @@ export function ProviderStatusPanel() {
       {isError && (
         <div className="flex flex-col gap-2">
           <DataStateBadge state="disconnected" detail="API unreachable" />
-          <p className="text-[11px] text-text-muted">{error instanceof Error ? error.message : "Request failed"}</p>
+          <p className="text-[11px] text-text-3">{error instanceof Error ? error.message : "Request failed"}</p>
         </div>
       )}
       {data && data.length === 0 && (
@@ -51,8 +51,8 @@ export function ProviderStatusPanel() {
           {data.map((p) => (
             <li key={p.code} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
               <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-text-primary">{p.display_name}</p>
-                <p className="truncate text-[11px] text-text-muted">
+                <p className="truncate text-xs font-medium text-text-1">{p.display_name}</p>
+                <p className="truncate text-[11px] text-text-3">
                   {STATE_TEXT[p.state]}
                   {p.last_message_at ? ` · last message ${formatAge(p.last_message_at)} ago` : " · no messages yet"}
                   {p.message ? ` · ${p.message}` : ""}
@@ -60,7 +60,7 @@ export function ProviderStatusPanel() {
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {p.latency_ms != null && (
-                  <span className="tabular text-[11px] text-text-secondary">{Math.round(p.latency_ms)} ms</span>
+                  <span className="tabular text-[11px] text-text-2">{Math.round(p.latency_ms)} ms</span>
                 )}
                 <DataStateBadge state={toFreshness(p)} />
               </div>

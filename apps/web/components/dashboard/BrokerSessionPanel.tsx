@@ -12,7 +12,7 @@ export function BrokerSessionPanel() {
   return (
     <PanelCard title="Broker session" actions={<Link href="/settings/brokers" className="text-[11px] text-accent-cyan">settings</Link>}>
       <div className="flex items-center justify-between">
-        <p className="text-xs text-text-secondary">
+        <p className="text-xs text-text-2">
           {!upstox || !upstox.configured ? "No broker configured" : valid ? `Upstox · ${upstox.client_code ?? ""}` : "Upstox · login required"}
         </p>
         {valid && upstox?.expires_at ? (

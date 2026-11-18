@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import type { StrategyVersion } from "@/lib/api/generated";
 import { useStrategies, useStrategyVersions } from "@/lib/api/trading";
 
-const SEL = "h-8 rounded-sm border border-border-subtle bg-panel-raised px-2 text-xs";
+const SEL = "h-8 border border-border bg-raised px-2 text-xs";
 
 /** Strategy → version selector shared by the backtest and optimisation forms. */
 export function StrategyVersionPicker({

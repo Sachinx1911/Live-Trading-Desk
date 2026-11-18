@@ -17,12 +17,12 @@ export function KpiTiles({ account }: { account: PaperAccount }) {
       {tiles.map((t) => (
         <PanelCard key={t.label} title={t.label} actions={<DataStateBadge state="demo" detail="paper" />}>
           <Money value={t.value} signed={t.signed} className="text-xl font-semibold" />
-          {t.sub && <p className="mt-1 text-[11px] text-text-muted">{t.sub}</p>}
+          {t.sub && <p className="mt-1 text-[11px] text-text-3">{t.sub}</p>}
         </PanelCard>
       ))}
       <PanelCard title="Open positions">
-        <span className="tabular text-xl font-semibold text-text-primary">{account.open_positions}</span>
-        <p className="mt-1 text-[11px] text-text-muted">High-water mark <Money value={num(account.equity_hwm)} whole muted /></p>
+        <span className="tabular text-xl font-semibold text-text-1">{account.open_positions}</span>
+        <p className="mt-1 text-[11px] text-text-3">High-water mark <Money value={num(account.equity_hwm)} whole muted /></p>
       </PanelCard>
     </div>
   );

@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUiStore } from "@/components/layout/ui-store";
 
+/*
+ * Icon rail per the TradingView reference (§5): 52px black rail, 36px icon buttons, active
+ * item on a #303030 pill, groups separated by 1px lines. Expands to 220px with labels.
+ */
 function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolean; active: boolean }) {
   const Icon = item.icon;
   const link = (
@@ -15,20 +19,18 @@ function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolea
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex h-8 items-center gap-2.5 rounded-sm px-2 text-[13px] text-sidebar-foreground outline-none transition-colors",
-        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring/60",
-        active && "bg-sidebar-accent text-cyan-accent",
-        item.live && "text-mode-live/80 hover:text-mode-live",
-        item.live && active && "text-mode-live",
-        collapsed && "justify-center px-0",
+        "group flex h-9 items-center gap-3 rounded-[var(--r-sm)] text-[14px] outline-none transition-colors",
+        "text-text-3 hover:bg-hover hover:text-text-1 focus-visible:ring-1 focus-visible:ring-ring",
+        active && "bg-raised text-text-1",
+        item.live && !active && "text-down/70 hover:text-down",
+        item.live && active && "text-down",
+        collapsed ? "mx-2 size-9 justify-center" : "mx-2 px-2.5",
       )}
     >
-      <Icon className="size-4 shrink-0" aria-hidden />
+      <Icon className="size-[18px] shrink-0" aria-hidden />
       {!collapsed && <span className="truncate">{item.label}</span>}
       {!collapsed && item.phase && (
-        <span className="ml-auto rounded-sm border border-border-subtle px-1 text-[10px] tabular text-text-muted">
-          P{item.phase}
-        </span>
+        <span className="ml-auto rounded-full bg-app px-1.5 text-[10px] tabular text-text-3">P{item.phase}</span>
       )}
     </Link>
   );
@@ -36,7 +38,10 @@ function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolea
   return (
     <Tooltip>
       <TooltipTrigger render={link} />
-      <TooltipContent side="right">{item.label}</TooltipContent>
+      <TooltipContent side="right" className="flex items-center gap-2">
+        {item.label}
+        {item.phase && <span className="text-[10px] text-text-3">Phase {item.phase}</span>}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -49,31 +54,19 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-150",
-        collapsed ? "w-14" : "w-56",
+        "flex h-full shrink-0 flex-col border-r border-border bg-pane transition-[width] duration-150",
+        collapsed ? "w-[52px]" : "w-[220px]",
       )}
       aria-label="Primary navigation"
     >
-      <div className={cn("flex h-12 items-center border-b border-sidebar-border px-3", collapsed && "justify-center px-0")}>
-        <div className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-sm bg-cyan-accent/15 font-mono text-[11px] font-bold text-cyan-accent">
-            TP
-          </span>
-          {!collapsed && (
-            <span className="text-xs font-semibold tracking-wide text-text-primary">Trading Platform</span>
-          )}
-        </div>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-2 py-2">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label} className="mb-3">
-            {!collapsed ? (
-              <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+      <nav className="flex-1 overflow-y-auto py-2">
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={group.label}>
+            {gi > 0 && <div className="mx-3 my-1.5 border-t border-border" aria-hidden />}
+            {!collapsed && (
+              <p className="px-5 pt-1 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-text-3">
                 {group.label}
               </p>
-            ) : (
-              <div className="mx-2 mb-1 border-t border-sidebar-border" aria-hidden />
             )}
             <ul className="flex flex-col gap-0.5">
               {group.items.map((item) => (
@@ -93,7 +86,7 @@ export function Sidebar() {
       <button
         type="button"
         onClick={toggle}
-        className="flex h-10 items-center justify-center gap-2 border-t border-sidebar-border text-[11px] text-text-muted hover:text-text-primary"
+        className="flex h-9 items-center justify-center gap-2 border-t border-border text-[12px] text-text-3 hover:bg-hover hover:text-text-1"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? <ChevronsRight className="size-4" /> : <ChevronsLeft className="size-4" />}

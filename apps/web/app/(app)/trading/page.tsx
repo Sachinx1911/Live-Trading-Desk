@@ -17,16 +17,16 @@ export default function TradingPage() {
           {account ? (
             <div className="flex flex-col gap-2 text-xs">
               <div className="flex items-baseline justify-between">
-                <span className="text-text-secondary">{account.name}</span>
+                <span className="text-text-2">{account.name}</span>
                 <Money value={num(account.equity)} className="text-lg font-semibold" />
               </div>
-              <div className="flex justify-between text-text-secondary">
+              <div className="flex justify-between text-text-2">
                 <span>Running strategies</span>
-                <span className="tabular text-text-primary">{activations?.length ?? 0}</span>
+                <span className="tabular text-text-1">{activations?.length ?? 0}</span>
               </div>
-              <div className="flex justify-between text-text-secondary">
+              <div className="flex justify-between text-text-2">
                 <span>Open positions</span>
-                <span className="tabular text-text-primary">{account.open_positions}</span>
+                <span className="tabular text-text-1">{account.open_positions}</span>
               </div>
               <div className="flex gap-3 pt-1 text-accent-cyan">
                 <Link href="/paper">Overview</Link>
