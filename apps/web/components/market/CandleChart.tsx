@@ -19,6 +19,7 @@ import type { Candle, Timeframe } from "@/lib/api/generated";
 import { useCandles } from "@/lib/api/queries";
 import { marketSocket } from "@/lib/ws/market";
 import { num, useLiveQuote } from "@/lib/ws/useMarket";
+import { chartPalette, onThemeChange, withAlpha } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "1h", "1d"];
@@ -34,9 +35,30 @@ function toBar(c: Candle): CandlestickData<Time> {
   return { time: toTime(c.ts), open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close) };
 }
 
-function toVol(c: Candle): HistogramData<Time> {
+function toVol(c: Candle, pal: ReturnType<typeof chartPalette>): HistogramData<Time> {
   const up = Number(c.close) >= Number(c.open);
-  return { time: toTime(c.ts), value: c.volume, color: up ? "rgba(8,153,129,0.45)" : "rgba(242,54,69,0.45)" };
+  // 45% alpha of the candle colour (reference §6)
+  return { time: toTime(c.ts), value: c.volume, color: withAlpha(up ? pal.up : pal.down, 0.45) };
+}
+
+/** Theme-dependent chart options; applied at creation and on every theme change. */
+function themeOptions(pal: ReturnType<typeof chartPalette>) {
+  return {
+    layout: {
+      background: { type: ColorType.Solid, color: pal.bg },
+      textColor: pal.text,
+      fontSize: 12,
+      fontFamily: "-apple-system, system-ui, Segoe UI, Roboto, sans-serif",
+    },
+    grid: { vertLines: { visible: false }, horzLines: { color: pal.grid } },
+    rightPriceScale: { borderColor: pal.border },
+    timeScale: { borderColor: pal.border, timeVisible: true, secondsVisible: false },
+    crosshair: {
+      mode: 0,
+      vertLine: { color: pal.crosshair, labelBackgroundColor: pal.crosshairLabel },
+      horzLine: { color: pal.crosshair, labelBackgroundColor: pal.crosshairLabel },
+    },
+  } as const;
 }
 
 export function CandleChart({
@@ -61,6 +83,8 @@ export function CandleChart({
   const candleRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const volRef = useRef<ISeriesApi<"Histogram"> | null>(null);
   const lastBarRef = useRef<CandlestickData<Time> | null>(null);
+  const palRef = useRef(chartPalette());
+  const volDataRef = useRef<Candle[]>([]);
 
   const candles = useMemo(() => data?.candles ?? [], [data]);
   // Legend: last stored bar, with the live last price folded into the close (render-safe state).
@@ -81,30 +105,16 @@ export function CandleChart({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const chart = createChart(el, {
-      height,
-      layout: {
-        background: { type: ColorType.Solid, color: "#000000" },
-        textColor: "#b8b8b8",
-        fontSize: 12,
-        fontFamily: "-apple-system, system-ui, Segoe UI, Roboto, sans-serif",
-      },
-      grid: { vertLines: { visible: false }, horzLines: { color: "rgba(255,255,255,0.04)" } },
-      rightPriceScale: { borderColor: "#303030" },
-      timeScale: { borderColor: "#303030", timeVisible: true, secondsVisible: false },
-      crosshair: {
-        mode: 0,
-        vertLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
-        horzLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
-      },
-    });
+    const pal = chartPalette();
+    palRef.current = pal;
+    const chart = createChart(el, { height, ...themeOptions(pal) });
     const candle = chart.addSeries(CandlestickSeries, {
-      upColor: "#089981",
-      downColor: "#f23645",
-      wickUpColor: "#089981",
-      wickDownColor: "#f23645",
+      upColor: pal.up,
+      downColor: pal.down,
+      wickUpColor: pal.up,
+      wickDownColor: pal.down,
       borderVisible: false,
-      priceLineColor: "#b8b8b8",
+      priceLineColor: pal.priceLine,
       priceLineWidth: 1,
       lastValueVisible: true,
     });
@@ -115,7 +125,16 @@ export function CandleChart({
     volRef.current = vol;
     const ro = new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
     ro.observe(el);
+    // Re-skin on theme change: chart options, candle colours and the volume bars' colours.
+    const offTheme = onThemeChange(() => {
+      const next = chartPalette();
+      palRef.current = next;
+      chart.applyOptions(themeOptions(next));
+      candle.applyOptions({ upColor: next.up, downColor: next.down, wickUpColor: next.up, wickDownColor: next.down, priceLineColor: next.priceLine });
+      vol.setData(volDataRef.current.map((c) => toVol(c, next)));
+    });
     return () => {
+      offTheme();
       ro.disconnect();
       chart.remove();
       chartRef.current = null;
@@ -131,7 +150,8 @@ export function CandleChart({
     if (!c || !v) return;
     const bars = candles.map(toBar);
     c.setData(bars);
-    v.setData(candles.map(toVol));
+    volDataRef.current = candles;
+    v.setData(candles.map((cd) => toVol(cd, palRef.current)));
     lastBarRef.current = bars.length ? bars[bars.length - 1] : null;
     chartRef.current?.timeScale().fitContent();
   }, [candles]);
@@ -145,7 +165,8 @@ export function CandleChart({
       const last = lastBarRef.current;
       if (last && bar.time < last.time) return;
       candleRef.current?.update(bar);
-      volRef.current?.update(toVol(cd));
+      volRef.current?.update(toVol(cd, palRef.current));
+      volDataRef.current = [...volDataRef.current.filter((x) => x.ts !== cd.ts), cd];
       lastBarRef.current = bar;
     });
   }, [instrumentId, timeframe]);

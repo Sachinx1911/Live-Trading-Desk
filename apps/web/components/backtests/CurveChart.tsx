@@ -13,6 +13,7 @@ import {
 import { useEffect, useRef } from "react";
 import { EmptyState } from "@/components/design";
 import type { Point } from "@/lib/backtest-utils";
+import { chartPalette, onThemeChange } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const IST_OFFSET_S = 5.5 * 3600;
@@ -30,6 +31,25 @@ export interface CurveSeries {
 }
 
 const PALETTE = ["#2962ff", "#a78bfa", "#089981", "#ff9800", "#f23645", "#5b9cf6"];
+
+function themeOptions(pal: ReturnType<typeof chartPalette>) {
+  return {
+    layout: {
+      background: { type: ColorType.Solid, color: pal.bg },
+      textColor: pal.text,
+      fontSize: 12,
+      fontFamily: "-apple-system, system-ui, Segoe UI, Roboto, sans-serif",
+    },
+    grid: { vertLines: { visible: false }, horzLines: { color: pal.grid } },
+    rightPriceScale: { borderColor: pal.border },
+    timeScale: { borderColor: pal.border, timeVisible: true, secondsVisible: false },
+    crosshair: {
+      mode: 0,
+      vertLine: { color: pal.crosshair, labelBackgroundColor: pal.crosshairLabel },
+      horzLine: { color: pal.crosshair, labelBackgroundColor: pal.crosshairLabel },
+    },
+  } as const;
+}
 
 /** Line/area chart for equity and drawdown curves. Times are shifted to IST like CandleChart. */
 export function CurveChart({
@@ -55,22 +75,10 @@ export function CurveChart({
     if (!el || !hasData) return;
     const chart = createChart(el, {
       height,
-      layout: {
-        background: { type: ColorType.Solid, color: "#000000" },
-        textColor: "#b8b8b8",
-        fontSize: 12,
-        fontFamily: "-apple-system, system-ui, Segoe UI, Roboto, sans-serif",
-      },
-      grid: { vertLines: { visible: false }, horzLines: { color: "rgba(255,255,255,0.04)" } },
-      rightPriceScale: { borderColor: "#303030" },
-      timeScale: { borderColor: "#303030", timeVisible: true, secondsVisible: false },
-      crosshair: {
-        mode: 0,
-        vertLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
-        horzLine: { color: "#8c8c8c", labelBackgroundColor: "#303030" },
-      },
+      ...themeOptions(chartPalette()),
       localization: priceFormat === "percent" ? { priceFormatter: (p: number) => `${p.toFixed(2)}%` } : undefined,
     });
+    const offTheme = onThemeChange(() => chart.applyOptions(themeOptions(chartPalette())));
     chartRef.current = chart;
     seriesRef.current = series.map((s, idx) => {
       const color = s.color ?? PALETTE[idx % PALETTE.length];
@@ -90,6 +98,7 @@ export function CurveChart({
     const ro = new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
     ro.observe(el);
     return () => {
+      offTheme();
       ro.disconnect();
       chart.remove();
       chartRef.current = null;

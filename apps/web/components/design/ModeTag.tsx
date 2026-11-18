@@ -9,7 +9,7 @@ export function ModeTag({ mode, className }: { mode: TradingMode; className?: st
     <span
       className={cn(
         "inline-flex h-5 items-center rounded-full px-2 text-[11px] font-semibold uppercase tracking-wide",
-        live ? "bg-down-soft text-down" : "bg-accent-soft text-[#5b9cf6]",
+        live ? "bg-down-soft text-down" : "bg-accent-soft text-accent-text",
         className,
       )}
       aria-label={`${live ? "Live" : "Paper"} trading`}

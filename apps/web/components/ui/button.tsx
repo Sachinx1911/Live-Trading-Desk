@@ -15,11 +15,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-raised text-text-1 hover:bg-[#3a3a3a] aria-expanded:bg-[#3a3a3a]",
+        default: "bg-raised text-text-1 hover:bg-raised-hover aria-expanded:bg-raised-hover",
         primary: "bg-primary text-primary-foreground hover:bg-accent-hover",
         outline:
           "border-border bg-transparent text-text-1 hover:bg-hover aria-expanded:bg-hover",
-        secondary: "bg-raised text-text-1 hover:bg-[#3a3a3a] aria-expanded:bg-[#3a3a3a]",
+        secondary: "bg-raised text-text-1 hover:bg-raised-hover aria-expanded:bg-raised-hover",
         ghost: "text-text-2 hover:bg-hover hover:text-text-1 aria-expanded:bg-hover aria-expanded:text-text-1",
         destructive:
           "bg-down-soft text-down hover:bg-down hover:text-white focus-visible:ring-destructive",

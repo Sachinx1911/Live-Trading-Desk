@@ -21,7 +21,7 @@ function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolea
       className={cn(
         "group flex h-9 items-center gap-3 rounded-[var(--r-sm)] text-[14px] outline-none transition-colors",
         "text-text-3 hover:bg-hover hover:text-text-1 focus-visible:ring-1 focus-visible:ring-ring",
-        active && "bg-raised text-text-1",
+        active && "bg-selected text-on-selected",
         item.live && !active && "text-down/70 hover:text-down",
         item.live && active && "text-down",
         collapsed ? "mx-2 size-9 justify-center" : "mx-2 px-2.5",

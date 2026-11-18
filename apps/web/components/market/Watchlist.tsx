@@ -85,7 +85,7 @@ function Row({ item, selected, onSelect, onRemove }: { item: WatchItem; selected
     <li
       className={cn(
         "group flex h-[var(--h-row-dense)] cursor-pointer items-center gap-2 border-b border-border-row px-3 last:border-0 hover:bg-row-hover",
-        selected && "bg-selected",
+        selected && "bg-raised",
         quote?.is_demo && "demo-stripes",
       )}
       onClick={onSelect}

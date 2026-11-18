@@ -5,6 +5,7 @@ import Link from "next/link";
 import { KeyRound, LogOut, Search, Server, User as UserIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { ThemeMenuItems } from "@/components/layout/ThemeControl";
 import { InstrumentSearch } from "@/components/market/InstrumentSearch";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,7 +61,7 @@ function Pill({
     dot === "up" ? "bg-up" : dot === "down" ? "bg-down" : dot === "warn" ? "bg-warn" : dot === "ai" ? "bg-ai" : "bg-text-3";
   const inner = (
     <span
-      className={cn("inline-flex h-7 items-center gap-2 rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-2", href && "hover:bg-[#3a3a3a]", className)}
+      className={cn("inline-flex h-7 shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-2", href && "hover:bg-raised-hover", className)}
       title={title}
     >
       {dot && <span className={cn("size-1.5 shrink-0 rounded-full", dotClass)} aria-hidden />}
@@ -148,7 +149,7 @@ function SymbolSearch() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex h-7 w-56 items-center gap-2 rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-3 hover:bg-[#3a3a3a] hover:text-text-2"
+          className="inline-flex h-7 w-56 items-center gap-2 rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-3 hover:bg-raised-hover hover:text-text-2"
           aria-label="Symbol search"
         >
           <Search className="size-3.5" aria-hidden />
@@ -190,6 +191,8 @@ export function TopBar() {
             <DropdownMenuLabel className="truncate">
               {me.data ? `${me.data.email} · ${me.data.roles.join(", ")}` : "Not signed in"}
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ThemeMenuItems />
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
               <LogOut className="size-3.5" /> Sign out

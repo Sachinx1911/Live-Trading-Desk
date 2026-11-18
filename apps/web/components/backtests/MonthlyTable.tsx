@@ -66,7 +66,7 @@ export function MonthlyTable({ table }: { table: unknown }) {
                   <td
                     key={i}
                     className={cn("px-1 py-1 text-right tabular", v == null ? "text-text-3" : v > 0 ? "text-up" : v < 0 ? "text-down" : "text-text-2")}
-                    style={v == null ? undefined : { background: v > 0 ? `rgba(34,197,94,${0.08 + a * 0.3})` : v < 0 ? `rgba(239,68,68,${0.08 + a * 0.3})` : undefined }}
+                    style={v == null ? undefined : { background: v > 0 ? `color-mix(in srgb, var(--up) ${Math.round((0.08 + a * 0.3) * 100)}%, transparent)` : v < 0 ? `color-mix(in srgb, var(--down) ${Math.round((0.08 + a * 0.3) * 100)}%, transparent)` : undefined }}
                   >
                     {v == null ? "—" : isPct ? `${v.toFixed(1)}%` : v.toFixed(0)}
                   </td>

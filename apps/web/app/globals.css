@@ -3,8 +3,9 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Design tokens — TradingView-measured dark theme
- * (docs/architecture/09-design-reference-tradingview.md). Dark only.
+ * Design tokens — TradingView-measured themes
+ * (docs/architecture/09-design-reference-tradingview.md §2 dark, §3 light). Dark is the
+ * default on :root; `html[data-theme="light"]` overrides the surfaces/text/tints below.
  * Components never use raw hex values; they use these variables or the Tailwind colour
  * utilities mapped below. The legacy utility names (bg-panel, text-text-muted, text-cyan-accent,
  * text-pnl-positive, …) are kept and remapped so every screen follows the new palette.
@@ -40,6 +41,23 @@
   --down-soft: #4d191d;
   --warn: #ff9800;
   --warn-soft: #593a1b;
+  --text-on-selected: var(--text-1);
+  --bg-raised-hover: #3a3a3a;
+  --accent-text: #5b9cf6; /* accent as readable text on this surface */
+
+  /* overlays & chart */
+  --glass-bg: rgba(19, 19, 19, 0.85);
+  --glass-ring: rgba(140, 140, 140, 0.1);
+  --glass-shadow: 0 0 2px rgba(0, 0, 0, 1), 0 8px 32px rgba(0, 0, 0, 0.6);
+  --backdrop: rgba(26, 26, 26, 0.4);
+  --tooltip-bg: #303030;
+  --tooltip-fg: var(--text-1);
+  --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --chart-grid: rgba(255, 255, 255, 0.04);
+  --chart-crosshair: #8c8c8c;
+  --chart-text: #b8b8b8;
+  --demo-stripe: rgba(255, 255, 255, 0.04);
+  --selection: rgba(41, 98, 255, 0.35);
 
   /* radii & heights */
   --r-pill: 14px;
@@ -109,6 +127,57 @@
   color-scheme: dark;
 }
 
+/* Light theme (reference §3): white panes on an #ebebeb page, #f2f2f2 raised controls and
+   row lines, black text, TradingView's selected pill is dark on light. */
+html[data-theme="light"] {
+  --bg-app: #ebebeb;
+  --bg-pane: #ffffff;
+  --bg-raised: #f2f2f2;
+  --bg-raised-hover: #e6e6e6;
+  --bg-hover: #f5f5f5;
+  --bg-selected: #222222;
+  --bg-row-hover: #f9f9f9;
+  --border: #f2f2f2;
+  --border-row: #f2f2f2;
+  --border-strong: #dbdbdb;
+
+  --text-1: #000000;
+  --text-2: #464646;
+  --text-3: #707070;
+  --text-disabled: #b8b8b8;
+  --text-on-selected: #ffffff;
+
+  --accent: #2962ff;
+  --accent-hover: #1e53e5;
+  --accent-soft: #e3effd;
+  --accent-text: #1e53e5;
+  --ai: #7c3aed;
+  --ai-soft: #ede7f6;
+  --accent-ai-dim: #5e35b1;
+  --up: #089981;
+  --up-candle: #089981;
+  --up-soft: #daf2ee;
+  --down: #f23645;
+  --down-soft: #ffebec;
+  --warn: #e57e17;
+  --warn-soft: #fff3e0;
+
+  --popover: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-ring: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 0 2px rgba(0, 0, 0, 0.15), 0 8px 32px rgba(0, 0, 0, 0.18);
+  --backdrop: rgba(26, 26, 26, 0.4);
+  --tooltip-bg: #222222;
+  --tooltip-fg: #ffffff;
+  --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --chart-grid: rgba(0, 0, 0, 0.06);
+  --chart-crosshair: #9c9c9c;
+  --chart-text: #707070;
+  --demo-stripe: rgba(0, 0, 0, 0.04);
+  --selection: rgba(41, 98, 255, 0.25);
+  color-scheme: light;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -137,6 +206,13 @@
   --color-down-soft: var(--down-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+  --color-raised-hover: var(--bg-raised-hover);
+  --color-selected: var(--bg-selected);
+  --color-on-selected: var(--text-on-selected);
+  --color-accent-text: var(--accent-text);
+  --color-backdrop: var(--backdrop);
+  --color-tooltip: var(--tooltip-bg);
+  --color-tooltip-fg: var(--tooltip-fg);
 
   /* legacy names */
   --color-app: var(--bg-app);
@@ -206,24 +282,23 @@
   font-feature-settings: "tnum" 1;
 }
 
-/* Demo data striping: a quiet 4% white diagonal, no colour. */
+/* Demo data striping: a quiet 4% diagonal in the theme's contrast colour. */
 @utility demo-stripes {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgba(255, 255, 255, 0.04) 0 6px,
-    rgba(255, 255, 255, 0) 6px 12px
+    var(--demo-stripe) 0 6px,
+    transparent 6px 12px
   );
 }
 
-/* Glass surface for dialogs, sheets and popovers (§6a). */
+/* Glass surface for dialogs, sheets and popovers (§6a); surface/ring follow the theme. */
 @utility glass {
-  background: rgba(19, 19, 19, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow:
-    inset 0 0 0 1px rgba(140, 140, 140, 0.1),
-    0 0 2px rgba(0, 0, 0, 1),
-    0 8px 32px rgba(0, 0, 0, 0.6);
+    inset 0 0 0 1px var(--glass-ring),
+    var(--glass-shadow);
 }
 
 /* 28px pill control (§5). */
@@ -245,7 +320,7 @@
     font-variant-numeric: tabular-nums;
   }
   ::selection {
-    background: rgba(41, 98, 255, 0.35);
+    background: var(--selection);
   }
   ::-webkit-scrollbar {
     width: 10px;
