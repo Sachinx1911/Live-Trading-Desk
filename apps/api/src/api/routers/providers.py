@@ -17,6 +17,20 @@ async def list_providers(state: State, _: User) -> ProvidersResponse:
     """Status of every known provider. Only the active one is connected in Phase 1."""
     active = state.provider.info.code
     h = await state.provider.health()
+    # The collector owns the live feed; its health is the truth for the active provider.
+    raw = await state.redis.get("collector:health")
+    if raw:
+        from datetime import datetime
+
+        import orjson
+
+        ch = orjson.loads(raw)
+        if ch.get("provider") == active:
+            h.state = ConnectionState(ch.get("state", h.state.value))
+            if ch.get("last_message_at"):
+                h.last_message_at = datetime.fromisoformat(ch["last_message_at"])
+            h.latency_ms = ch.get("latency_ms", h.latency_ms)
+            h.reconnects_today = ch.get("reconnects_today", h.reconnects_today)
     rows = [
         ProviderStatus(
             code=active,
