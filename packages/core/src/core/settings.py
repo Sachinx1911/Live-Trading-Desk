@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     web_base_url: str = "http://localhost:3000"  # where to send the user after broker login
 
     collect_raw_ticks: bool = False
+    live_trading_enabled: bool = False  # hard switch; gateway refuses everything when False
+    paper_default_capital: int = 100_000  # ₹1,00,000 per master prompt, user-editable per account
     default_market_data_provider: Literal["fake", "upstox", "dhan"] = "fake"
 
     llm_provider: str = "openai"
