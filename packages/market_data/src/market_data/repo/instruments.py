@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.db.models import Contract, Exchange, InstrumentMapping
@@ -234,7 +234,14 @@ async def search(
         .join(Exchange, Exchange.id == InstrumentRow.exchange_id)
         .outerjoin(Contract, Contract.instrument_id == InstrumentRow.id)
         .where(or_(InstrumentRow.symbol.ilike(pattern), InstrumentRow.name.ilike(pattern)))
-        .order_by(InstrumentRow.symbol)
+        # Exact symbol first, then prefix matches, then shortest symbols: "NIFTY" must beat
+        # the thousands of BANKNIFTY/NIFTY option contracts that also contain the query.
+        .order_by(
+            (InstrumentRow.symbol == query.strip().upper()).desc(),
+            InstrumentRow.symbol.ilike(f"{query.strip()}%").desc(),
+            func.length(InstrumentRow.symbol),
+            InstrumentRow.symbol,
+        )
         .limit(limit)
     )
     if exchange:

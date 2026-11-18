@@ -99,6 +99,8 @@ async def candles(
         start_dt = (end_dt - span) if span else end_dt.replace(year=end_dt.year - 10)
     else:
         start_dt = ensure_utc(start)
+    # Never mix providers in one series: default to the active provider's rows.
+    provider = provider or state.provider.info.code
     rows = await fetch_candles(db, instrument_id, timeframe, start_dt, end_dt, provider)
     rows = rows[-limit:]
     src = rows[-1].provider_id if rows else (provider or state.provider.info.code)

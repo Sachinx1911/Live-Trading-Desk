@@ -28,6 +28,7 @@ from core.db.models import (
 from core.db.models._enums import JobStatus, OptimizationKind
 from core.logging import get_logger
 from core.models import Candle, Timeframe
+from core.settings import get_settings
 from core.time import utcnow
 from market_data.repo.candles import fetch_candles
 from market_data.repo.instruments import get_instrument
@@ -124,13 +125,29 @@ def _json(v: Any) -> Any:
 
 
 async def _load_candles(
-    db: AsyncSession, instrument_id: int, timeframe: Timeframe, start: datetime, end: datetime
+    db: AsyncSession,
+    instrument_id: int,
+    timeframe: Timeframe,
+    start: datetime,
+    end: datetime,
+    provider: str | None = None,
 ) -> tuple[list[Candle], Timeframe]:
-    """Prefer 1-minute bars (the engine resamples); fall back to the job timeframe."""
-    ones = await fetch_candles(db, instrument_id, Timeframe.M1, start, end)
-    if ones:
+    """Load ONE provider's series (mixing fake and real rows would corrupt every indicator).
+    Prefer 1-minute bars when they cover the whole range (the engine resamples); otherwise
+    use the job timeframe's own rows, which usually reach further back (Upstox: 5m from
+    2022, 1m only recent)."""
+    provider = provider or get_settings().default_market_data_provider
+    ones = await fetch_candles(db, instrument_id, Timeframe.M1, start, end, provider)
+    own = (
+        await fetch_candles(db, instrument_id, timeframe, start, end, provider)
+        if timeframe != Timeframe.M1
+        else []
+    )
+    if ones and (not own or ones[0].ts <= own[0].ts):
         return ones, Timeframe.M1
-    return await fetch_candles(db, instrument_id, timeframe, start, end), timeframe
+    if own:
+        return own, timeframe
+    return ones, Timeframe.M1
 
 
 async def _version_dsl(db: AsyncSession, version_id: int) -> dict[str, Any]:
