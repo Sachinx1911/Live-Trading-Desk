@@ -689,3 +689,81 @@ export interface OptimizationRow {
   window: Record<string, unknown> | null;
   is_oos: boolean;
 }
+
+// ---------------------------------------------------------------- NL strategy builder (Phase 5)
+export type NlLanguage = "mr" | "hi" | "en";
+export type NlQuestionField =
+  | "entry_conditions"
+  | "exit_conditions"
+  | "stop_loss"
+  | "target"
+  | "position_sizing"
+  | "session"
+  | "direction"
+  | "timeframe"
+  | "instrument"
+  | "other";
+
+export interface NlGenerateRequest {
+  language?: NlLanguage | null;
+  market?: string;
+  instrument: string;
+  timeframe: "1m" | "3m" | "5m" | "15m" | "30m" | "1h" | "1d" | "1w";
+  description: string;
+}
+
+export interface NlClarificationQuestion {
+  id: string;
+  field: NlQuestionField;
+  question_local: string;
+  question_en: string;
+}
+
+export interface NlConditionView {
+  original_phrase: string;
+  rule: string;
+}
+
+export interface NlThreadMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  ts: string;
+}
+
+export interface NlDraft {
+  draft_id: string;
+  status: "draft" | "saved" | "discarded";
+  strategy_name: string;
+  market: string;
+  instrument: string;
+  timeframe: string;
+  detected_language: NlLanguage;
+  direction: string;
+  entry_conditions: NlConditionView[];
+  exit_conditions: NlConditionView[];
+  risk_management: { stop_loss: string | null; target: string | null; position_sizing: string | null };
+  missing_information: string[];
+  clarification_questions: NlClarificationQuestion[];
+  unsupported: string[];
+  defaults_applied: string[];
+  validation: { valid: boolean; errors: string[]; warnings: string[] };
+  changes: string[];
+  dsl: Record<string, unknown>;
+  original_text: string;
+  ai_call_id: number | null;
+  ai_call_ids: number[];
+  thread: NlThreadMessage[];
+  strategy_version_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NlAnswerRequest {
+  answers: { question_id: string; answer: string }[];
+}
+
+export interface NlSaveRequest {
+  name?: string | null;
+  category?: StrategyCategory;
+  tags?: string[];
+}

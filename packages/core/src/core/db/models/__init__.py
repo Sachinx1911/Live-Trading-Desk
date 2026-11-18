@@ -15,7 +15,7 @@ from core.db.models import (
     strategy,
     trading,
 )
-from core.db.models.ai import AiCall
+from core.db.models.ai import AiCall, StrategyNlDraft
 from core.db.models.identity import ApiLog, AuditLog, RefreshSession, Role, User, UserRole
 from core.db.models.instruments import (
     Contract,
@@ -128,6 +128,7 @@ __all__ = [
     "StrategyActivation",
     "StrategyApproval",
     "StrategyCondition",
+    "StrategyNlDraft",
     "StrategyVersion",
     "TradingCalendar",
     "User",

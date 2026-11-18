@@ -18,6 +18,7 @@ from api.routers import (
     health,
     imports,
     market,
+    nl_builder,
     paper,
     providers,
     replay,
@@ -76,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(providers.router, prefix=API_PREFIX)
     app.include_router(brokers.router, prefix=API_PREFIX)
     app.include_router(market.router, prefix=API_PREFIX)
+    app.include_router(nl_builder.router, prefix=API_PREFIX)
     app.include_router(strategies.router, prefix=API_PREFIX)
     app.include_router(events.router, prefix=API_PREFIX)
     app.include_router(paper.router, prefix=API_PREFIX)

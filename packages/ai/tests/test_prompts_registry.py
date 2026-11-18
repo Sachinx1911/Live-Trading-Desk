@@ -16,7 +16,8 @@ def test_nl_builder_prompt_loads_with_version() -> None:
     assert "nl_builder" in prompt_names()
     p = load_prompt("nl_builder")
     assert p.name == "nl_builder" and p.version == "1"
-    assert "Never invent" in p.system and "missing_information" in p.system
+    assert "Never invent" in p.system and "original_phrase" in p.system
+    assert "clarification question" in p.system
 
 
 def test_prompt_front_matter_is_enforced() -> None:

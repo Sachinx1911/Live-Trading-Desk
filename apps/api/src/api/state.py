@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 
 from redis.asyncio import Redis
 
+from ai.llm import DailyTokenBudget, LLMProvider, build_provider
+from ai.repo import DbAiCallLogger
 from core.logging import get_logger
 from core.notify import Notifier, build_notifier
 from core.secrets import SecretBox
@@ -24,6 +26,9 @@ class AppState:
     notifier: Notifier
     secret_box: SecretBox | None
     broker_tokens: dict[str, str] = field(default_factory=dict)  # code -> decrypted token
+    llm: LLMProvider | None = None  # None = AI not configured; routes answer 503 honestly
+    ai_logger: DbAiCallLogger = field(default_factory=DbAiCallLogger)
+    ai_daily: DailyTokenBudget | None = None
 
     @classmethod
     def create(cls, settings: Settings) -> AppState:
@@ -40,6 +45,8 @@ class AppState:
             notifier=build_notifier(settings),
             secret_box=box,
         )
+        state.llm = build_provider(settings)
+        state.ai_daily = DailyTokenBudget(state.redis, settings.ai_daily_token_budget)
         if settings.default_market_data_provider == "upstox":
             from providers.upstox.provider import UpstoxMarketDataProvider
 

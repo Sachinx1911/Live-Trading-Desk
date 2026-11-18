@@ -80,7 +80,7 @@ export default function StrategiesPage() {
         actions={
           <>
             <label className="flex items-center gap-1 text-[11px] text-text-secondary"><input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} /> show archived</label>
-            <Link href="/strategies/new/natural-language" className="text-[11px] text-ai"><Wand2 className="mr-1 inline size-3" />NL builder (Phase 5)</Link>
+            <Link href="/strategies/new/natural-language" className="text-[11px] text-ai"><Wand2 className="mr-1 inline size-3" />NL builder</Link>
             <Button size="sm" onClick={() => setCreating((v) => !v)}><Plus /> New strategy</Button>
           </>
         }

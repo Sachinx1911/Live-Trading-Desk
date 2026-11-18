@@ -264,6 +264,12 @@ class AiAgent(StrEnum):
     AUDITOR = "auditor"  # reviews other agents' outputs against data
 
 
+class NlDraftStatus(StrEnum):
+    DRAFT = "draft"
+    SAVED = "saved"
+    DISCARDED = "discarded"
+
+
 class OptimizationKind(StrEnum):
     GRID = "grid"
     RANDOM = "random"
