@@ -142,7 +142,7 @@ class StrategyApproval(Base):
 
 class StrategyActivation(Base):
     """Binds one version to exactly one trading mode and one account (ADR-008).
-    paper_account_id / live_account_id get their FKs in the Phase 3 migrations."""
+    paper_account_id / live_account_id reference the Phase 3 account tables (migration 0007)."""
 
     __tablename__ = "strategy_activations"
     __table_args__ = (
@@ -168,8 +168,12 @@ class StrategyActivation(Base):
     trading_mode: Mapped[TradingMode] = mapped_column(
         pg_enum(TradingMode, "trading_mode"), nullable=False
     )
-    paper_account_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    live_account_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    paper_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("paper_accounts.id", ondelete="RESTRICT"), nullable=True
+    )
+    live_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("live_accounts.id", ondelete="RESTRICT"), nullable=True
+    )
     instrument_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("instruments.id", ondelete="RESTRICT"), nullable=False
     )

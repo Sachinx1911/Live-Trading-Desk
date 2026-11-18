@@ -244,3 +244,290 @@ export type MarketWsMessage =
   | ({ type: "candle" } & Candle)
   | { type: "status"; collector: CollectorDetail | null }
   | { type: "subscribed"; instrument_ids: number[] };
+
+// --- Phase 3: paper trading, risk, strategies, events ---------------------------------
+
+export type OrderSide = "buy" | "sell";
+export type OrderType = "market" | "limit" | "stop" | "stop_limit";
+export type ProductType = "intraday" | "delivery" | "carry";
+export type OrderStatus =
+  | "intent"
+  | "rejected"
+  | "submitted"
+  | "open"
+  | "partially_filled"
+  | "filled"
+  | "cancelled"
+  | "broker_rejected"
+  | "unknown";
+export type TradingModeApi = "paper" | "live";
+export type ActivationStatus = "active" | "paused" | "stopped";
+
+export interface PaperAccountIn {
+  name?: string;
+  initial_capital?: number | null;
+}
+
+export interface PaperAccount {
+  id: number;
+  name: string;
+  currency: string;
+  initial_capital: string;
+  cash: string;
+  equity: string;
+  equity_hwm: string;
+  unrealized_pnl: string;
+  realized_pnl_total: string;
+  open_positions: number;
+  is_active: boolean;
+  reset_at: string | null;
+  created_at: string;
+}
+
+export interface PaperOrder {
+  id: number;
+  paper_account_id: number;
+  activation_id: number | null;
+  instrument_id: number;
+  symbol: string | null;
+  side: OrderSide;
+  order_type: OrderType;
+  product: ProductType;
+  quantity: number;
+  filled_qty: number;
+  limit_price: string | null;
+  trigger_price: string | null;
+  avg_fill_price: string | null;
+  status: OrderStatus;
+  reason: string | null;
+  costs: string;
+  cost_breakdown: Record<string, string> | null;
+  bid_at_place: string | null;
+  ask_at_place: string | null;
+  submitted_at: string;
+  updated_at: string;
+}
+
+export interface PaperOrderEvent {
+  id: number;
+  from_status: OrderStatus;
+  to_status: OrderStatus;
+  fill_qty: number | null;
+  fill_px: string | null;
+  reason: string | null;
+  source: string;
+  ts: string;
+}
+
+export interface PaperPosition {
+  id: number;
+  instrument_id: number;
+  symbol: string | null;
+  product: ProductType;
+  activation_id: number | null;
+  quantity: number;
+  avg_price: string;
+  realized_pnl: string;
+  unrealized_pnl: string;
+  last_price: string | null;
+  opened_at: string;
+  closed_at: string | null;
+}
+
+export interface PaperTrade {
+  id: number;
+  activation_id: number | null;
+  strategy_version_id: number | null;
+  instrument_id: number;
+  symbol: string | null;
+  side: OrderSide;
+  quantity: number;
+  entry_at: string;
+  entry_price: string;
+  exit_at: string;
+  exit_price: string;
+  gross_pnl: string;
+  costs: string;
+  net_pnl: string;
+  entry_reason: string | null;
+  exit_reason: string | null;
+  bars_held: number | null;
+}
+
+export interface ActivationIn {
+  version_id: number;
+  instrument_id: number;
+  params_override?: Record<string, unknown>;
+}
+
+export interface Activation {
+  id: number;
+  version_id: number;
+  strategy_id: number;
+  strategy_name: string;
+  version_no: number;
+  trading_mode: TradingModeApi;
+  paper_account_id: number | null;
+  instrument_id: number;
+  symbol: string | null;
+  status: ActivationStatus;
+  activated_at: string;
+  stopped_at: string | null;
+  stop_reason: string | null;
+}
+
+export interface StopActivationIn {
+  reason: string;
+  flatten: boolean;
+}
+
+export interface RiskLimits {
+  max_risk_per_trade_pct: number;
+  max_daily_loss_pct: number;
+  max_weekly_loss_pct: number;
+  max_drawdown_pct: number;
+  max_open_positions: number;
+  max_lots_per_order: number;
+  max_exposure_pct: number;
+  max_correlated_exposure_pct: number;
+  allow_short: boolean;
+  allowed_products: ProductType[];
+  trade_start: string;
+  no_new_entries_after: string;
+  square_off: string;
+  event_block: boolean;
+  freeze_quantity_check: boolean;
+}
+
+export type RiskLimitScope = "paper_account" | "live_account" | "strategy";
+
+export interface RiskLimitsResponse {
+  scope: RiskLimitScope;
+  scope_id: number;
+  version: number;
+  effective_from: string | null;
+  limits: RiskLimits;
+  is_default: boolean;
+  edit_locked: boolean;
+  edit_lock_reason: string | null;
+}
+
+export type KillSwitchScope = "global" | "account" | "strategy";
+
+export interface KillStatus {
+  scope: string;
+  active: boolean;
+  detail: { reason?: string; by?: string; ts?: string } | null;
+}
+
+export interface KillIn {
+  reason: string;
+  flatten?: boolean;
+}
+
+export interface KillSwitchEvent {
+  id: number;
+  scope: KillSwitchScope;
+  scope_id: number | null;
+  action: "activate" | "deactivate";
+  reason: string;
+  triggered_by: number | null;
+  actor_type: string;
+  positions_flattened: boolean;
+  ts: string;
+}
+
+export type StrategyCategory = "trend" | "mean_reversion" | "breakout" | "options" | "swing" | "other";
+export type StrategyOrigin = "user_nl" | "user_visual" | "ai_research" | "ai_learning" | "import";
+export type StrategyVersionStatus =
+  | "draft"
+  | "backtested"
+  | "validated"
+  | "paper"
+  | "approved_live"
+  | "retired"
+  | "rejected";
+
+export interface StrategyIn {
+  name: string;
+  category?: StrategyCategory;
+  origin?: StrategyOrigin;
+  description?: string | null;
+  tags?: string[];
+}
+
+export interface VersionIn {
+  dsl: Record<string, unknown>;
+  source_text?: string | null;
+  source_language?: string | null;
+  change_summary?: string | null;
+  parent_version_id?: number | null;
+}
+
+export interface ValidationReport {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  missing_information: string[];
+}
+
+export interface StrategyVersion {
+  id: number;
+  strategy_id: number;
+  version_no: number;
+  parent_version_id: number | null;
+  status: StrategyVersionStatus;
+  dsl: Record<string, unknown>;
+  dsl_schema_version: string;
+  dsl_hash: string;
+  source_text: string | null;
+  source_language: string | null;
+  created_by: "user" | "ai";
+  change_summary: string | null;
+  created_at: string;
+  frozen_at: string | null;
+  validation?: ValidationReport | null;
+}
+
+export interface Strategy {
+  id: number;
+  name: string;
+  category: StrategyCategory;
+  origin: StrategyOrigin;
+  description: string | null;
+  tags: string[];
+  is_archived: boolean;
+  created_at: string;
+  latest_version: StrategyVersion | null;
+}
+
+export interface TransitionIn {
+  to_status: StrategyVersionStatus;
+  note?: string | null;
+  evidence?: Record<string, unknown>;
+}
+
+export type EventType =
+  | "rbi_policy"
+  | "fed"
+  | "budget"
+  | "expiry"
+  | "results"
+  | "holiday_eve"
+  | "macro"
+  | "custom";
+
+export interface MarketEventIn {
+  exchange?: string | null;
+  event_type: EventType;
+  title: string;
+  starts_at: string;
+  ends_at?: string | null;
+  impact?: "low" | "medium" | "high";
+  blocks_trading?: boolean;
+  source?: string | null;
+}
+
+export interface MarketEvent extends MarketEventIn {
+  id: number;
+}

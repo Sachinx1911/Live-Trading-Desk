@@ -8,22 +8,28 @@ dependencies = [
     "providers",
     "market_data",
     "strategy",
+    "execution",
+    "risk",
     "api",
     "worker",
     "collector",
+    "trader",
 ]
 
 [tool.uv.workspace]
-members = ["packages/*", "apps/api", "apps/worker", "apps/collector"]
+members = ["packages/*", "apps/api", "apps/worker", "apps/collector", "apps/trader"]
 
 [tool.uv.sources]
 core = { workspace = true }
 providers = { workspace = true }
 market_data = { workspace = true }
 strategy = { workspace = true }
+execution = { workspace = true }
+risk = { workspace = true }
 api = { workspace = true }
 worker = { workspace = true }
 collector = { workspace = true }
+trader = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -36,6 +42,7 @@ dev = [
     "import-linter>=2.1",
     "email-validator>=2.4.0",
     "respx>=0.23.1",
+    "fakeredis[aioredis]>=2.40.0",
 ]
 
 [tool.ruff]
@@ -55,7 +62,7 @@ ignore = ["S101", "RUF012"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:packages/strategy/src:apps/api/src:apps/worker/src:apps/collector/src"
+mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:packages/strategy/src:packages/execution/src:packages/risk/src:apps/api/src:apps/worker/src:apps/collector/src:apps/trader/src"
 namespace_packages = true
 explicit_package_bases = true
 exclude = ["/tests/", "_pb2"]
@@ -67,7 +74,7 @@ testpaths = ["packages", "apps"]
 addopts = "-q"
 
 [tool.importlinter]
-root_packages = ["core", "providers", "market_data", "strategy", "api", "worker", "collector"]
+root_packages = ["core", "providers", "market_data", "strategy", "execution", "risk", "api", "worker", "collector", "trader"]
 
 [[tool.importlinter.contracts]]
 name = "core depends on nothing above it"
@@ -92,3 +99,15 @@ name = "strategy depends only on core"
 type = "forbidden"
 source_modules = ["strategy"]
 forbidden_modules = ["providers", "market_data", "api", "worker", "collector"]
+
+[[tool.importlinter.contracts]]
+name = "risk depends only on core"
+type = "forbidden"
+source_modules = ["risk"]
+forbidden_modules = ["providers", "market_data", "strategy", "api", "worker", "collector"]
+
+[[tool.importlinter.contracts]]
+name = "execution depends only on core"
+type = "forbidden"
+source_modules = ["execution"]
+forbidden_modules = ["providers", "market_data", "strategy", "api", "worker", "collector"]

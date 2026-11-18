@@ -12,9 +12,12 @@ members = [
     "api",
     "collector",
     "core",
+    "execution",
     "market-data",
     "providers",
+    "risk",
     "strategy",
+    "trader",
     "trading-platform",
     "worker",
 ]
@@ -71,12 +74,15 @@ source = { editable = "apps/api" }
 dependencies = [
     { name = "argon2-cffi" },
     { name = "core" },
+    { name = "execution" },
     { name = "fastapi" },
     { name = "market-data" },
     { name = "orjson" },
     { name = "providers" },
     { name = "pyjwt" },
     { name = "python-multipart" },
+    { name = "risk" },
+    { name = "strategy" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -84,12 +90,15 @@ dependencies = [
 requires-dist = [
     { name = "argon2-cffi", specifier = ">=23.1" },
     { name = "core", editable = "packages/core" },
+    { name = "execution", editable = "packages/execution" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "market-data", editable = "packages/market_data" },
     { name = "orjson", specifier = ">=3.10" },
     { name = "providers", editable = "packages/providers" },
     { name = "pyjwt", specifier = ">=2.9" },
     { name = "python-multipart", specifier = ">=0.0.12" },
+    { name = "risk", editable = "packages/risk" },
+    { name = "strategy", editable = "packages/strategy" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
 
@@ -534,6 +543,36 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/4d/f5e9d9de19f4b8f9e33d802fe3efb0ef96e88d4d6d45d604f335bef2f1ef/email_validator-2.4.0.tar.gz", hash = "sha256:be487bc50bc3bd832a98515a55a15649d9bec06d954fa178663190714b6c4ee1", size = 55168, upload-time = "2026-11-14T20:21:28.125Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/8b/99e715c59560afa0bf68f21ed16eec794d94293945f57934b70c5255d741/email_validator-2.4.0-py3-none-any.whl", hash = "sha256:4454e41c4e1c6b6caee34a1dc71d5e736791562be8fd179b02e298f796522684", size = 36810, upload-time = "2026-11-14T20:21:27.14Z" },
+]
+
+[[package]]
+name = "execution"
+version = "0.1.0"
+source = { editable = "packages/execution" }
+dependencies = [
+    { name = "core" },
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "core", editable = "packages/core" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pydantic", specifier = ">=2.9" },
+]
+
+[[package]]
+name = "fakeredis"
+version = "2.40.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "redis" },
+    { name = "sortedcontainers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/61/d0/8cbd1339c2a606a0ceda74e1a181248d372bb2c66bc6cf9d954871839ff9/fakeredis-2.40.0.tar.gz", hash = "sha256:16eb05a3e97c37a033c73d1da7e885eb2aa47ba7604cc377144339efa2780a02", size = 332674, upload-time = "2026-10-14T12:46:01.851Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/e4/6919d3653d72c53d1fb22c97ceb6fa3664cad302994e90ee52279f7eb394/fakeredis-2.40.0-py3-none-any.whl", hash = "sha256:b155ef2442134372eb1cc5664cf5638ccbe0a6dde9d1942153708e2782f315c9", size = 204148, upload-time = "2026-10-14T12:46:00.014Z" },
 ]
 
 [[package]]
@@ -2013,6 +2052,23 @@ wheels = [
 ]
 
 [[package]]
+name = "risk"
+version = "0.1.0"
+source = { editable = "packages/risk" }
+dependencies = [
+    { name = "core" },
+    { name = "pydantic" },
+    { name = "redis" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "core", editable = "packages/core" },
+    { name = "pydantic", specifier = ">=2.9" },
+    { name = "redis", specifier = ">=5.2" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.17.5"
 source = { registry = "https://pypi.org/simple" }
@@ -2174,6 +2230,29 @@ wheels = [
 ]
 
 [[package]]
+name = "trader"
+version = "0.1.0"
+source = { editable = "apps/trader" }
+dependencies = [
+    { name = "core" },
+    { name = "execution" },
+    { name = "market-data" },
+    { name = "providers" },
+    { name = "risk" },
+    { name = "strategy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "core", editable = "packages/core" },
+    { name = "execution", editable = "packages/execution" },
+    { name = "market-data", editable = "packages/market_data" },
+    { name = "providers", editable = "packages/providers" },
+    { name = "risk", editable = "packages/risk" },
+    { name = "strategy", editable = "packages/strategy" },
+]
+
+[[package]]
 name = "trading-platform"
 version = "0.1.0"
 source = { virtual = "." }
@@ -2181,15 +2260,19 @@ dependencies = [
     { name = "api" },
     { name = "collector" },
     { name = "core" },
+    { name = "execution" },
     { name = "market-data" },
     { name = "providers" },
+    { name = "risk" },
     { name = "strategy" },
+    { name = "trader" },
     { name = "worker" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "email-validator" },
+    { name = "fakeredis" },
     { name = "httpx" },
     { name = "hypothesis" },
     { name = "import-linter" },
@@ -2205,15 +2288,19 @@ requires-dist = [
     { name = "api", editable = "apps/api" },
     { name = "collector", editable = "apps/collector" },
     { name = "core", editable = "packages/core" },
+    { name = "execution", editable = "packages/execution" },
     { name = "market-data", editable = "packages/market_data" },
     { name = "providers", editable = "packages/providers" },
+    { name = "risk", editable = "packages/risk" },
     { name = "strategy", editable = "packages/strategy" },
+    { name = "trader", editable = "apps/trader" },
     { name = "worker", editable = "apps/worker" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "email-validator", specifier = ">=2.4.0" },
+    { name = "fakeredis", extras = ["aioredis"], specifier = ">=2.40.0" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "hypothesis", specifier = ">=6.112" },
     { name = "import-linter", specifier = ">=2.1" },

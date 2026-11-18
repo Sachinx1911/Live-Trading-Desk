@@ -1,5 +1,7 @@
-import { DataStateBadge, Dash, PanelCard, PhasePlaceholder } from "@/components/design";
+import { PanelCard, PhasePlaceholder } from "@/components/design";
 import { MarketStrip } from "@/components/dashboard/MarketStrip";
+import { BrokerSessionPanel } from "@/components/dashboard/BrokerSessionPanel";
+import { PaperTiles } from "@/components/dashboard/PaperTiles";
 import { ProviderStatusPanel } from "@/components/dashboard/ProviderStatusPanel";
 
 export default function DashboardPage() {
@@ -9,12 +11,7 @@ export default function DashboardPage() {
 
       <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
         <ProviderStatusPanel />
-        <PanelCard title="Broker session">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-text-secondary">No broker connected</p>
-            <DataStateBadge state="disconnected" detail="Phase 2" />
-          </div>
-        </PanelCard>
+        <BrokerSessionPanel />
         <PanelCard title="Multi-market status">
           <ul className="text-xs">
             <li className="flex items-center justify-between py-1">
@@ -25,24 +22,8 @@ export default function DashboardPage() {
         </PanelCard>
       </div>
 
-      <PanelCard title="Daily P&L" className="col-span-12 md:col-span-6 xl:col-span-3" actions={<DataStateBadge state="disconnected" />}>
-        <Dash className="text-2xl font-semibold" />
-        <p className="mt-1 text-[11px] text-text-muted">Paper and live accounts arrive in Phase 3.</p>
-      </PanelCard>
-      <PanelCard title="Win rate" className="col-span-12 md:col-span-6 xl:col-span-3" actions={<DataStateBadge state="disconnected" />}>
-        <Dash className="text-2xl font-semibold" />
-        <p className="mt-1 text-[11px] text-text-muted">Computed from closed trades only.</p>
-      </PanelCard>
-      <PanelCard title="Portfolio overview" className="col-span-12 xl:col-span-6">
-        <PhasePlaceholder phase={3} what="Capital, margin and exposure" />
-      </PanelCard>
+      <PaperTiles />
 
-      <PanelCard title="Active strategies" className="col-span-12 md:col-span-6 xl:col-span-4">
-        <PhasePlaceholder phase={3} what="Strategy activations" />
-      </PanelCard>
-      <PanelCard title="Running trades" className="col-span-12 md:col-span-6 xl:col-span-4">
-        <PhasePlaceholder phase={3} what="Open positions and orders" />
-      </PanelCard>
       <PanelCard title="Strategy approval queue" className="col-span-12 xl:col-span-4">
         <PhasePlaceholder phase={5} what="Candidate versions awaiting your approval" />
       </PanelCard>

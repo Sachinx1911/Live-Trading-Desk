@@ -22,6 +22,8 @@ worker:
 	uv run arq worker.main.WorkerSettings
 collector:
 	uv run python -m collector.main
+trader:
+	uv run python -m trader.main
 web:
 	pnpm --dir apps/web dev
 gen-api:       ## regenerate TypeScript API types from the running API

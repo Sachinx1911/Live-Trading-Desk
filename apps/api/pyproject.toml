@@ -7,6 +7,9 @@ dependencies = [
     "core",
     "providers",
     "market_data",
+    "strategy",
+    "risk",
+    "execution",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "python-multipart>=0.0.12",
@@ -19,6 +22,9 @@ dependencies = [
 core = { workspace = true }
 providers = { workspace = true }
 market_data = { workspace = true }
+strategy = { workspace = true }
+risk = { workspace = true }
+execution = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -2,9 +2,10 @@
 which is what Alembic's env.py uses as target metadata.
 
 Phase 1 scope: identity, reference data, instruments, strategy skeleton, market data core.
+Phase 3 adds trading: paper/live accounts, orders, positions, trades, risk, journal.
 """
 
-from core.db.models import identity, instruments, market_data, reference, strategy
+from core.db.models import identity, instruments, market_data, reference, strategy, trading
 from core.db.models.identity import ApiLog, AuditLog, RefreshSession, Role, User, UserRole
 from core.db.models.instruments import (
     Contract,
@@ -39,6 +40,24 @@ from core.db.models.strategy import (
     StrategyCondition,
     StrategyVersion,
 )
+from core.db.models.trading import (
+    JournalEntry,
+    KillSwitchEvent,
+    LiveAccount,
+    LiveOrder,
+    LiveOrderEvent,
+    LivePosition,
+    LiveTrade,
+    PaperAccount,
+    PaperOrder,
+    PaperOrderEvent,
+    PaperPosition,
+    PaperTrade,
+    PerformanceDaily,
+    PortfolioSnapshot,
+    ReconciliationRun,
+    RiskLimit,
+)
 
 __all__ = [
     "ApiLog",
@@ -58,10 +77,26 @@ __all__ = [
     "Instrument",
     "InstrumentHistory",
     "InstrumentMapping",
+    "JournalEntry",
+    "KillSwitchEvent",
+    "LiveAccount",
+    "LiveOrder",
+    "LiveOrderEvent",
+    "LivePosition",
+    "LiveTrade",
     "Market",
     "MarketQuote",
     "OptionChainSnapshot",
+    "PaperAccount",
+    "PaperOrder",
+    "PaperOrderEvent",
+    "PaperPosition",
+    "PaperTrade",
+    "PerformanceDaily",
+    "PortfolioSnapshot",
+    "ReconciliationRun",
     "RefreshSession",
+    "RiskLimit",
     "Role",
     "Segment",
     "Strategy",
@@ -77,4 +112,5 @@ __all__ = [
     "market_data",
     "reference",
     "strategy",
+    "trading",
 ]

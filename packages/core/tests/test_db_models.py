@@ -36,10 +36,15 @@ EXPECTED_TABLES = {
     # market data
     "historical_candles", "market_quotes", "option_chain_snapshots",
     "data_import_jobs", "data_quality_checks",
+    # trading (Phase 3)
+    "paper_accounts", "paper_orders", "paper_order_events", "paper_positions", "paper_trades",
+    "live_accounts", "live_orders", "live_order_events", "live_positions", "live_trades",
+    "reconciliation_runs", "kill_switch_events", "risk_limits",
+    "journal_entries", "portfolio_snapshots", "performance_daily",
 }  # fmt: skip
 
 
-def test_metadata_has_all_phase1_tables() -> None:
+def test_metadata_has_all_expected_tables() -> None:
     assert set(Base.metadata.tables) == EXPECTED_TABLES
 
 
@@ -174,6 +179,47 @@ def test_strategy_version_immutable_after_draft(alembic_cfg: Config, engine: sa.
     assert "immutable" in str(excinfo.value)
     with engine.begin() as conn:
         conn.execute(sa.text("delete from users where id = :u"), {"u": uid})
+
+
+@needs_db
+def test_trading_partial_unique_indexes_and_fks(alembic_cfg: Config, engine: sa.Engine) -> None:
+    with engine.connect() as conn:
+        rows = conn.execute(
+            sa.text(
+                "select indexname, indexdef from pg_indexes where indexname in "
+                "('uq_paper_positions_open', 'uq_live_positions_open', 'uq_risk_limits_active')"
+            )
+        ).all()
+        defs = {name: d for name, d in rows}
+        assert set(defs) == {
+            "uq_paper_positions_open",
+            "uq_live_positions_open",
+            "uq_risk_limits_active",
+        }
+        for d in defs.values():
+            assert "UNIQUE" in d and "WHERE" in d, d
+        fks = set(
+            conn.execute(
+                sa.text(
+                    "select conname from pg_constraint where contype='f' "
+                    "and conrelid='strategy_activations'::regclass"
+                )
+            ).scalars()
+        )
+        assert {
+            "fk_strategy_activations_paper_account_id_paper_accounts",
+            "fk_strategy_activations_live_account_id_live_accounts",
+        } <= fks
+        # paper and live never share a table (ADR-008)
+        cols = set(
+            conn.execute(
+                sa.text(
+                    "select column_name from information_schema.columns "
+                    "where table_name='paper_orders'"
+                )
+            ).scalars()
+        )
+        assert "live_account_id" not in cols and "broker_order_id" not in cols
 
 
 @needs_db

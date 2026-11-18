@@ -217,3 +217,36 @@ class ActivationStatus(StrEnum):
     ACTIVE = "active"
     PAUSED = "paused"
     STOPPED = "stopped"
+
+
+# --- Phase 3: trading ---------------------------------------------------------------
+
+
+class OrderEventSource(StrEnum):
+    BROKER_CALLBACK = "broker_callback"
+    RECONCILIATION = "reconciliation"
+    USER = "user"
+    GATEWAY = "gateway"
+
+
+class ReconciliationAction(StrEnum):
+    NONE = "none"
+    ALERT = "alert"
+    KILL_SWITCH = "kill_switch"
+
+
+class KillSwitchScope(StrEnum):
+    GLOBAL = "global"
+    ACCOUNT = "account"
+    STRATEGY = "strategy"
+
+
+class KillSwitchAction(StrEnum):
+    ACTIVATE = "activate"
+    DEACTIVATE = "deactivate"
+
+
+class RiskLimitScope(StrEnum):
+    PAPER_ACCOUNT = "paper_account"
+    LIVE_ACCOUNT = "live_account"
+    STRATEGY = "strategy"

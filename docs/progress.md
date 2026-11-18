@@ -57,4 +57,24 @@ fixtures and a protobuf round-trip; a live Upstox session has **not** been exerc
 
 ## Phase 3 · Trading foundation
 
+Verified 2026-11-18 end to end on the fake feed: an always-enter smoke strategy on the
+paper account entered at the ask (₹42,997.95, charges ₹26.45), hit its ATR stop one bar
+later, exited at the bid, and the round trip landed in paper_trades (net −₹104.75), the
+journal and performance_daily; the risk engine refused a NIFTY futures lot on a ₹1 lakh
+account (exposure cap) as designed. 192 Python tests; ruff, mypy strict, import-linter,
+web lint/typecheck/build clean.
+
+- [x] `packages/strategy`: DSL v1 Pydantic schema + validation + JSON Schema + 3 examples; 15 indicators (Polars); event-driven engine (closed bars only, session rules, stop/target/trailing, cooldown, max trades); regime detector
+- [x] `packages/execution`: order state machine + idempotency; Indian cost model (static schedule + cost_schedules rows); simulator (market/limit/stop/stop-limit, partial fills, bid/ask fills, seeded slippage); PositionBook with round-trip detection; live gateway with the five gates; Upstox order client reachable only from the gateway (import-boundary test)
+- [x] `packages/risk`: RiskLimits, sizing (risk %, lots, caps, drawdown halving), RiskEngine (13 checks, all reasons collected), KillSwitch (Redis), deterministic monitor rules
+- [x] Migration 0007: paper_*/live_* tables, reconciliation_runs, kill_switch_events, risk_limits, journal_entries, portfolio_snapshots, performance_daily
+- [x] `apps/trader`: activations × live candles → engine → risk → simulator → DB; warm-up from history; square-off/time rules; daily/weekly loss halt (pauses activations, Telegram); kill-switch flatten; health key
+- [x] API: `/strategies` (library, immutable versions, transitions, validate), `/paper/*` (accounts, orders+events, positions, trades, activations), `/risk/limits/paper/{id}` (market-hours edit lock), `/risk/kill-switch`, `/events`
+- [x] Web: `/paper` (+orders, positions & trades), `/trading` with kill switch, `/settings/risk`, `/strategies` + version detail/editor, `/reports` journal, `/portfolio`, dashboard tiles
+- [ ] Live trading remains disabled (`LIVE_TRADING_ENABLED=false`); live_* tables exist, no live runner until Phase 10
+- [ ] Engine stop/target are evaluated on closed bars (not tick-level) — the simulator's resting stop orders will be wired in Phase 4 together with the backtester so both modes behave identically
+- [ ] Paper account realism: a ₹1 lakh account cannot carry a NIFTY futures lot; demo ran on the NIFTY index instrument. Options/equity universes and margin modelling arrive with Phase 4/5
+
+## Phase 4 · Backtesting and research
+
 - [ ] not started
