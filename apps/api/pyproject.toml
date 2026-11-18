@@ -10,6 +10,8 @@ dependencies = [
     "strategy",
     "risk",
     "execution",
+    "backtest",
+    "arq>=0.26",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "python-multipart>=0.0.12",
@@ -25,6 +27,7 @@ market_data = { workspace = true }
 strategy = { workspace = true }
 risk = { workspace = true }
 execution = { workspace = true }
+backtest = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

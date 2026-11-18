@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRightLeft, Pencil, Play } from "lucide-react";
+import { ArrowRightLeft, BarChart3, Pencil, Play } from "lucide-react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { EmptyState, PanelCard } from "@/components/design";
@@ -135,6 +136,7 @@ export default function StrategyDetailPage() {
               {accountId != null && ["draft", "backtested", "validated", "paper"].includes(version.status) && (
                 <RunStrategySheet accountId={accountId} presetStrategyId={strategy.id} trigger={<Button size="xs" variant="outline"><Play /> Run on paper</Button>} />
               )}
+              <Link href={`/backtesting?strategy=${strategy.id}`} className="inline-flex h-6 items-center gap-1 rounded-sm border border-border-subtle px-2 text-[11px] text-accent-cyan hover:bg-panel-raised"><BarChart3 className="size-3" /> Backtest</Link>
               <Button size="xs" variant="outline" onClick={() => setEditing(true)}><Pencil /> Edit as new version</Button>
             </>
           ) : undefined

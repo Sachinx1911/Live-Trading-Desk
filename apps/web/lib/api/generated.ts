@@ -531,3 +531,161 @@ export interface MarketEventIn {
 export interface MarketEvent extends MarketEventIn {
   id: number;
 }
+
+// ---------------------------------------------------------------- Phase 4: backtests (mirrors apps/api/src/api/routers/backtests.py)
+export type JobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "partial";
+export type OptimizationKind = "grid" | "random" | "walk_forward";
+export type FillMode = "next_bar_open" | "bar_close";
+export type SlippageModel = "fixed_bps" | "spread_aware";
+export type Objective = "sharpe" | "net_pnl" | "calmar" | "expectancy";
+
+export interface SlippageIn {
+  model?: SlippageModel;
+  bps?: number;
+  size_impact?: number;
+}
+
+export interface BacktestIn {
+  strategy_version_id: number;
+  instrument_id: number;
+  start: string; // YYYY-MM-DD (IST day)
+  end: string;
+  timeframe?: Timeframe | null;
+  initial_capital?: string | number;
+  seed?: number;
+  fill_mode?: FillMode;
+  slippage?: SlippageIn;
+  param_overrides?: Record<string, unknown>;
+  risk_limits?: Record<string, unknown> | null;
+  label?: string | null;
+}
+
+export interface BacktestJob {
+  id: number;
+  strategy_version_id: number;
+  instrument_id: number;
+  timeframe: string;
+  start_at: string;
+  end_at: string;
+  status: JobStatus;
+  progress_pct: number;
+  config: Record<string, unknown> & Partial<BacktestIn>;
+  config_hash: string;
+  seed: number;
+  label: string | null;
+  queued_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  error: string | null;
+  has_result: boolean;
+}
+
+/** Metric keys the engine may emit; any may be null. */
+export interface BacktestMetrics {
+  total_return?: number | null; // ₹
+  total_return_pct?: number | null;
+  cagr_pct?: number | null;
+  win_rate_pct?: number | null;
+  profit_factor?: number | null;
+  max_drawdown?: number | null; // ₹
+  max_drawdown_pct?: number | null;
+  max_dd_duration_days?: number | null;
+  final_equity?: number | null;
+  initial_capital?: number | null;
+  sharpe?: number | null;
+  sortino?: number | null;
+  calmar?: number | null;
+  expectancy?: number | null;
+  avg_win?: number | null;
+  avg_loss?: number | null;
+  payoff_ratio?: number | null;
+  total_trades?: number | null;
+  wins?: number | null;
+  losses?: number | null;
+  max_consecutive_losses?: number | null;
+  exposure_time_pct?: number | null;
+  avg_bars_held?: number | null;
+  avg_mae?: number | null;
+  avg_mfe?: number | null;
+  fees_total?: number | null;
+  turnover?: number | null;
+  [k: string]: unknown;
+}
+
+/** Curve points arrive as `[ts, value]` tuples or `{ts, equity|value|drawdown}` objects. */
+export type CurvePoint = [string, string | number] | { ts: string; [k: string]: unknown };
+
+export interface BacktestResultOut {
+  job: BacktestJob;
+  metrics: BacktestMetrics;
+  equity_curve: CurvePoint[];
+  drawdown_curve: CurvePoint[];
+  monthly_table: unknown;
+  assumptions: Record<string, unknown>;
+  data_hash: string | null;
+  engine_stats: Record<string, unknown>;
+  warnings: string[];
+  elapsed_s: number | null;
+}
+
+export interface BacktestTrade {
+  id: number;
+  instrument_id: number;
+  side: OrderSide;
+  quantity: number;
+  entry_at: string;
+  entry_price: string;
+  exit_at: string;
+  exit_price: string;
+  gross_pnl: string;
+  costs: string;
+  net_pnl: string;
+  entry_reason: string | null;
+  exit_reason: string | null;
+  bars_held: number | null;
+  mae: string | null;
+  mfe: string | null;
+}
+
+export interface BacktestReport {
+  markdown: string | null;
+}
+
+export interface OptimizationIn {
+  strategy_version_id: number;
+  instrument_id: number;
+  start: string;
+  end: string;
+  kind?: OptimizationKind;
+  param_space: Record<string, unknown[]>;
+  objective?: Objective;
+  max_runs?: number;
+  windows?: { train_days: number; test_days: number; step_days: number } | null;
+  base?: BacktestIn | null;
+}
+
+export interface OptimizationJob {
+  id: number;
+  strategy_version_id: number;
+  instrument_id: number;
+  kind: OptimizationKind;
+  param_space: Record<string, unknown[]>;
+  objective: string;
+  windows: Record<string, unknown> | null;
+  status: JobStatus;
+  progress_pct: number;
+  queued_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  error: string | null;
+  best_backtest_job_id: number | null;
+  config: Record<string, unknown>;
+}
+
+export interface OptimizationRow {
+  rank: number;
+  params: Record<string, unknown>;
+  metrics: BacktestMetrics;
+  window: Record<string, unknown> | null;
+  is_oos: boolean;
+}

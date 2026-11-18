@@ -9,6 +9,7 @@ from arq.cron import cron
 
 from core.logging import configure_logging, get_logger
 from core.settings import get_settings
+from worker.jobs.backtests import run_backtest_job, run_optimization_job, run_walk_forward_job
 from worker.jobs.brokers import check_broker_sessions
 from worker.jobs.market_data import backfill_instrument, eod_gap_report, sync_instruments
 from worker.jobs.nse_reference import import_nse_reference
@@ -40,6 +41,9 @@ class WorkerSettings:
         backfill_instrument,
         eod_gap_report,
         import_nse_reference,
+        run_backtest_job,
+        run_optimization_job,
+        run_walk_forward_job,
     ]
     cron_jobs = [
         cron(heartbeat, minute=set(range(0, 60, 5)), run_at_startup=True),

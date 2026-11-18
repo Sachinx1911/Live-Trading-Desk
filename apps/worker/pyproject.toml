@@ -3,12 +3,14 @@ name = "worker"
 version = "0.1.0"
 description = "arq background worker"
 requires-python = ">=3.12"
-dependencies = ["core", "providers", "market_data", "arq>=0.26"]
+dependencies = ["core", "providers", "market_data", "strategy", "backtest", "arq>=0.26"]
 
 [tool.uv.sources]
 core = { workspace = true }
 providers = { workspace = true }
 market_data = { workspace = true }
+strategy = { workspace = true }
+backtest = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

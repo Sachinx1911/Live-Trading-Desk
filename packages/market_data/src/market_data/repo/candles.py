@@ -47,21 +47,24 @@ async def upsert_candles(session: AsyncSession, candles: Sequence[Candle]) -> in
                 "provider_ts": c.provider_ts,
             }
         )
-    stmt = insert(HistoricalCandle).values(rows)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=["instrument_id", "timeframe", "ts", "provider_id"],
-        set_={
-            "open": stmt.excluded.open,
-            "high": stmt.excluded.high,
-            "low": stmt.excluded.low,
-            "close": stmt.excluded.close,
-            "volume": stmt.excluded.volume,
-            "oi": stmt.excluded.oi,
-            "provider_ts": stmt.excluded.provider_ts,
-            "ingested_at": func.now(),
-        },
-    )
-    await session.execute(stmt)
+    # asyncpg caps a statement at 32767 bind parameters (11 per row): chunk the insert.
+    chunk = 2000
+    for i in range(0, len(rows), chunk):
+        stmt = insert(HistoricalCandle).values(rows[i : i + chunk])
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["instrument_id", "timeframe", "ts", "provider_id"],
+            set_={
+                "open": stmt.excluded.open,
+                "high": stmt.excluded.high,
+                "low": stmt.excluded.low,
+                "close": stmt.excluded.close,
+                "volume": stmt.excluded.volume,
+                "oi": stmt.excluded.oi,
+                "provider_ts": stmt.excluded.provider_ts,
+                "ingested_at": func.now(),
+            },
+        )
+        await session.execute(stmt)
     return len(rows)
 
 

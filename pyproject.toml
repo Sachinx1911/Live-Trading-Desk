@@ -10,6 +10,7 @@ dependencies = [
     "strategy",
     "execution",
     "risk",
+    "backtest",
     "api",
     "worker",
     "collector",
@@ -26,6 +27,7 @@ market_data = { workspace = true }
 strategy = { workspace = true }
 execution = { workspace = true }
 risk = { workspace = true }
+backtest = { workspace = true }
 api = { workspace = true }
 worker = { workspace = true }
 collector = { workspace = true }
@@ -62,7 +64,7 @@ ignore = ["S101", "RUF012"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:packages/strategy/src:packages/execution/src:packages/risk/src:apps/api/src:apps/worker/src:apps/collector/src:apps/trader/src"
+mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:packages/strategy/src:packages/execution/src:packages/risk/src:packages/backtest/src:apps/api/src:apps/worker/src:apps/collector/src:apps/trader/src"
 namespace_packages = true
 explicit_package_bases = true
 exclude = ["/tests/", "_pb2"]
@@ -74,7 +76,7 @@ testpaths = ["packages", "apps"]
 addopts = "-q"
 
 [tool.importlinter]
-root_packages = ["core", "providers", "market_data", "strategy", "execution", "risk", "api", "worker", "collector", "trader"]
+root_packages = ["core", "providers", "market_data", "strategy", "execution", "risk", "backtest", "api", "worker", "collector", "trader"]
 
 [[tool.importlinter.contracts]]
 name = "core depends on nothing above it"
@@ -111,3 +113,9 @@ name = "execution depends only on core"
 type = "forbidden"
 source_modules = ["execution"]
 forbidden_modules = ["providers", "market_data", "strategy", "api", "worker", "collector"]
+
+[[tool.importlinter.contracts]]
+name = "backtest never imports apps or data providers"
+type = "forbidden"
+source_modules = ["backtest"]
+forbidden_modules = ["providers", "market_data", "api", "worker", "collector", "trader"]

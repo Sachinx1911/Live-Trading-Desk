@@ -77,4 +77,27 @@ web lint/typecheck/build clean.
 
 ## Phase 4 · Backtesting and research
 
+Verified 2026-11-18: a one-year NIFTY backtest (98,000 one-minute bars, demo 1m EMA/RSI
+version, fake-provider data) ran through API → arq worker → `packages/backtest` in 3 minutes,
+stored 716 trades, metrics, equity/drawdown curves, monthly table and a markdown report; the
+results page renders them. The result itself is a loss (fees dominate a 1-unit index "trade"
+on random-walk data), which is the honest answer. 221 Python tests; ruff, mypy strict,
+import-linter, web lint/typecheck/build clean.
+
+- [x] `packages/backtest`: BacktestConfig (assumptions + hash), HistoricalFeed (strict time order, session-aligned resampling, warm-up, next-bar-open fills), runner reusing the strategy engine, risk engine, simulator and position book from paper trading (ADR-002), metrics (24), optimisation (grid/random, sensitivity, plateau, overfit flags), walk-forward (IS/OOS windows, stitched OOS equity, IS/OOS ratio), comparison, deterministic markdown report; golden, determinism, look-ahead and property tests
+- [x] Migration 0008: backtest_jobs/results/trades, optimization_jobs/results, replay_sessions
+- [x] Worker jobs: run_backtest_job, run_optimization_job, run_walk_forward_job with Redis progress + cancel
+- [x] API: `/backtests` (create, list, status with live progress, cancel, results, trades, report), `/backtests/optimizations` (+ walk-forward), `/replay/sessions` + `/ws/replay/{id}`, `/historical/imports` (CSV/XLSX/JSON/Parquet dry-run + commit)
+- [x] Replay engine: server-driven clock, play/pause/step/seek/speed, optional strategy overlay with the same engine/simulator, deterministic rewind
+- [x] Import tool with validation report, provenance (`provider=import`, manifest hash), `data_import_jobs`
+- [x] Web: `/backtesting` workspace, `/backtesting/[jobId]` results (metrics, equity, drawdown, monthly, trades, report, assumptions), `/backtesting/optimize` (+ results, walk-forward windows), `/strategies/compare`, `/tools` (charges + Greeks calculators)
+- [x] ADR-017: stops/targets on closed bars in every mode (paper = backtest parity)
+- [x] Fixed: bulk candle inserts over asyncpg's 32k-parameter limit are chunked (a month of 1m data failed before)
+- [ ] Web `/replay` page and `/tools` import UI (API exists; UI follows in Phase 5 alongside the strategy workspace)
+- [ ] Options backtesting on stored chain snapshots / expired contracts (needs Upstox Plus decision)
+- [ ] Paper-vs-backtest cross-check report over a recorded live session (needs a real feed day)
+- [ ] Deterministic regime per day persisted for the dashboard tile (detector exists; storage in Phase 6)
+
+## Phase 5 · Strategy intelligence
+
 - [ ] not started

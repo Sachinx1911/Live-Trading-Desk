@@ -5,7 +5,15 @@ Phase 1 scope: identity, reference data, instruments, strategy skeleton, market 
 Phase 3 adds trading: paper/live accounts, orders, positions, trades, risk, journal.
 """
 
-from core.db.models import identity, instruments, market_data, reference, strategy, trading
+from core.db.models import (
+    identity,
+    instruments,
+    market_data,
+    reference,
+    research,
+    strategy,
+    trading,
+)
 from core.db.models.identity import ApiLog, AuditLog, RefreshSession, Role, User, UserRole
 from core.db.models.instruments import (
     Contract,
@@ -32,6 +40,14 @@ from core.db.models.reference import (
     Market,
     Segment,
     TradingCalendar,
+)
+from core.db.models.research import (
+    BacktestJob,
+    BacktestResult,
+    BacktestTrade,
+    OptimizationJob,
+    OptimizationResult,
+    ReplaySession,
 )
 from core.db.models.strategy import (
     Strategy,
@@ -62,6 +78,9 @@ from core.db.models.trading import (
 __all__ = [
     "ApiLog",
     "AuditLog",
+    "BacktestJob",
+    "BacktestResult",
+    "BacktestTrade",
     "Broker",
     "BrokerAccount",
     "BrokerSession",
@@ -86,6 +105,8 @@ __all__ = [
     "LiveTrade",
     "Market",
     "MarketQuote",
+    "OptimizationJob",
+    "OptimizationResult",
     "OptionChainSnapshot",
     "PaperAccount",
     "PaperOrder",
@@ -96,6 +117,7 @@ __all__ = [
     "PortfolioSnapshot",
     "ReconciliationRun",
     "RefreshSession",
+    "ReplaySession",
     "RiskLimit",
     "Role",
     "Segment",
@@ -111,6 +133,7 @@ __all__ = [
     "instruments",
     "market_data",
     "reference",
+    "research",
     "strategy",
     "trading",
 ]

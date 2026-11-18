@@ -250,3 +250,16 @@ class RiskLimitScope(StrEnum):
     PAPER_ACCOUNT = "paper_account"
     LIVE_ACCOUNT = "live_account"
     STRATEGY = "strategy"
+
+
+class OptimizationKind(StrEnum):
+    GRID = "grid"
+    RANDOM = "random"
+    WALK_FORWARD = "walk_forward"
+
+
+class ReplayStatus(StrEnum):
+    CREATED = "created"
+    PLAYING = "playing"
+    PAUSED = "paused"
+    FINISHED = "finished"

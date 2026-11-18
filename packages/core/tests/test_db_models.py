@@ -41,6 +41,9 @@ EXPECTED_TABLES = {
     "live_accounts", "live_orders", "live_order_events", "live_positions", "live_trades",
     "reconciliation_runs", "kill_switch_events", "risk_limits",
     "journal_entries", "portfolio_snapshots", "performance_daily",
+    # research (Phase 4)
+    "backtest_jobs", "backtest_results", "backtest_trades",
+    "optimization_jobs", "optimization_results", "replay_sessions",
 }  # fmt: skip
 
 

@@ -22,3 +22,4 @@ something the master prompt specified; the reason is given each time.
 | [ADR-014](ADR-014-single-user-rbac-ready.md) | Single operator in v1; schema and auth are multi-user and RBAC ready | Accepted |
 | [ADR-015](ADR-015-monorepo-layout.md) | Single repository: apps/ + packages/ + infra/ + docs/ | Accepted |
 | [ADR-016](ADR-016-toolchain.md) | Python 3.12+ with uv; Node 24 with pnpm; Docker Compose for all environments | Accepted |
+| [ADR-017](ADR-017-closed-bar-stops.md) | Stops/targets evaluated on closed bars in every mode until intra-bar modelling exists for both | Accepted |

@@ -24,6 +24,10 @@ export default function DashboardPage() {
 
       <PaperTiles />
 
+      <PanelCard title="Market regime" className="col-span-12 xl:col-span-4">
+        <PhasePlaceholder phase={4} what="The deterministic regime (trend / range, volatility bucket) is reported with backtest results; the live dashboard tile" />
+      </PanelCard>
+
       <PanelCard title="Strategy approval queue" className="col-span-12 xl:col-span-4">
         <PhasePlaceholder phase={5} what="Candidate versions awaiting your approval" />
       </PanelCard>
