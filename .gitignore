@@ -30,3 +30,6 @@ data/
 # Web build artefacts
 *.tsbuildinfo
 next-env.d.ts
+
+# NL builder evaluation reports (local runs)
+nl-eval-report*.json
