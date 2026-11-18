@@ -94,6 +94,7 @@ import-linter, web lint/typecheck/build clean.
 - [x] Web: `/backtesting` workspace, `/backtesting/[jobId]` results (metrics, equity, drawdown, monthly, trades, report, assumptions), `/backtesting/optimize` (+ results, walk-forward windows), `/strategies/compare`, `/tools` (charges + Greeks calculators)
 - [x] ADR-017: stops/targets on closed bars in every mode (paper = backtest parity)
 - [x] Fixed: bulk candle inserts over asyncpg's 32k-parameter limit are chunked (a month of 1m data failed before)
+- [x] Fixed: collector and trader start on Windows (asyncio proactor loop has no `add_signal_handler`; falls back to `signal.signal`)
 - [ ] Web `/replay` page and `/tools` import UI (API exists; UI follows in Phase 5 alongside the strategy workspace)
 - [ ] Options backtesting on stored chain snapshots / expired contracts (needs Upstox Plus decision)
 - [ ] Paper-vs-backtest cross-check report over a recorded live session (needs a real feed day)

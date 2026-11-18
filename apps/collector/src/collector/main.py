@@ -268,7 +268,10 @@ class Collector:
     async def run(self) -> None:
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
-            loop.add_signal_handler(sig, self._stop.set)
+            try:
+                loop.add_signal_handler(sig, self._stop.set)
+            except NotImplementedError:  # Windows: the proactor loop has no signal handlers
+                signal.signal(sig, lambda *_: loop.call_soon_threadsafe(self._stop.set))
         log.info("collector.started", provider=self.settings.default_market_data_provider)
         tasks = [asyncio.create_task(self._stream()), asyncio.create_task(self._housekeeping())]
         await self._stop.wait()

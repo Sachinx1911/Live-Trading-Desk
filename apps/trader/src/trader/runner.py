@@ -541,7 +541,10 @@ class Trader:
     async def run(self) -> None:
         loop = asyncio.get_running_loop()
         for sig in (os_signal.SIGINT, os_signal.SIGTERM):
-            loop.add_signal_handler(sig, self._stop.set)
+            try:
+                loop.add_signal_handler(sig, self._stop.set)
+            except NotImplementedError:  # Windows: the proactor loop has no signal handlers
+                os_signal.signal(sig, lambda *_: loop.call_soon_threadsafe(self._stop.set))
         async with get_session_factory()() as db:
             n = await store.cancel_stale_open_orders(db, "trader restart")
             await db.commit()
