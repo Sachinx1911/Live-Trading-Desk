@@ -39,11 +39,13 @@ from execution.simulator.engine import ExecutionSimulator, MarketState
 from execution.simulator.slippage import SpreadAwareSlippage
 from market_data.repo.candles import fetch_candles
 from market_data.repo.instruments import get_instrument
+from market_data.repo.regime import latest_daily, latest_intraday
 from risk.engine import RiskEngine
 from risk.kill_switch import KillSwitch
 from risk.limits import AccountState, InstrumentMeta, RiskLimits
 from strategy.dsl.schema import StrategyDocument
 from strategy.engine import StrategyEngine
+from strategy.regime import RegimeDaily, RegimeIntraday
 from trader import store
 from trader.bars import BarAggregator
 
@@ -73,6 +75,9 @@ class Runner:
     paused: bool = False
     flatten_requested: bool = False
     last_rejections: tuple[str, ...] = ()
+    regime_daily: RegimeDaily | None = None
+    regime_intraday: RegimeIntraday | None = None
+    regime_loaded_at: datetime | None = None
 
 
 @dataclass
@@ -152,7 +157,9 @@ class Trader:
                     if ins is None:
                         continue
                     doc = StrategyDocument.model_validate(v.dsl)
-                    engine = StrategyEngine(doc, a.instrument_id, self.cal, v.id)
+                    engine = StrategyEngine(
+                        doc, a.instrument_id, self.cal, v.id, self._regime_provider(a.id)
+                    )
                     limits = await self._limits(db, acc.id)
                     meta = InstrumentMeta(
                         instrument_id=ins.instrument_id,
@@ -191,6 +198,7 @@ class Trader:
                         warmup_bars=n,
                     )
                 r.paused = a.status == ActivationStatus.PAUSED
+                await self._load_regime(r, db)
                 r.limits = await self._limits(db, acc.id)
                 r.risk = RiskEngine(r.limits)
             # stopped activations: flatten if asked, then drop
@@ -207,6 +215,53 @@ class Trader:
                         del self.runners[aid]
             await db.commit()
         self._last_refresh = utcnow()
+
+    def _regime_provider(self, activation_id: int) -> Any:
+        """Closure read by the strategy engine's regime filters; backed by the DB rows the
+        worker computes (daily at 09:05/16:10 IST, intraday every 15 min)."""
+
+        def provider(ts: datetime) -> dict[str, Any]:
+            r = self.runners.get(activation_id)
+            if r is None or r.regime_daily is None:
+                return {}
+            out = r.regime_daily.as_dict()
+            out["day_type"] = r.regime_intraday.day_type if r.regime_intraday else None
+            return out
+
+        return provider
+
+    async def _load_regime(self, r: Runner, db: Any) -> None:
+        now = utcnow()
+        if r.regime_loaded_at and now - r.regime_loaded_at < timedelta(minutes=10):
+            return
+        r.regime_loaded_at = now
+        try:
+            r.regime_daily = await latest_daily(db, r.instrument_id)
+            r.regime_intraday = await latest_intraday(
+                db, r.instrument_id, now.astimezone(IST).date()
+            )
+        except Exception as exc:
+            log.warning("trader.regime_load_failed", activation=r.activation_id, error=str(exc))
+
+    def _regime_tag(self, r: Runner | None) -> dict[str, Any] | None:
+        if r is None or r.regime_daily is None:
+            return None
+        d = r.regime_daily.as_dict()
+        tag = {
+            k: d.get(k)
+            for k in (
+                "date",
+                "trend",
+                "strength",
+                "volatility",
+                "structure",
+                "adx",
+                "vix",
+                "regime_label",
+            )
+        }
+        tag["day_type"] = r.regime_intraday.day_type if r.regime_intraday else None
+        return tag
 
     async def _limits(self, db: Any, account_id: int) -> RiskLimits:
         from sqlalchemy import select
@@ -373,7 +428,7 @@ class Trader:
                         activation_id=aid,
                         entry_reason=r.last_entry_reason if r else None,
                         exit_reason=r.last_exit_reason if r else None,
-                        regime=None,
+                        regime=self._regime_tag(r),
                         bars_held=r.entry_bar_count if r else None,
                     )
                     ctx.realized_day += closed.net_pnl

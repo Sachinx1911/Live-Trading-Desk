@@ -9,6 +9,7 @@ import { JobStatusChip, ProgressBar } from "@/components/backtests/JobStatus";
 import { Markdown } from "@/components/backtests/Markdown";
 import { MetricsGrid } from "@/components/backtests/MetricsGrid";
 import { MonthlyTable } from "@/components/backtests/MonthlyTable";
+import { RegimeTable } from "@/components/backtests/RegimeTable";
 import { BacktestTradesTable } from "@/components/backtests/BacktestTradesTable";
 import { EmptyState, PanelCard } from "@/components/design";
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,9 @@ export default function BacktestDetailPage() {
           {tab === "overview" && (
             <div className="flex flex-col gap-3">
               <MetricsGrid metrics={res.metrics} />
+              <PanelCard title="By regime" subtitle="Trades grouped by the deterministic regime of their entry day" bodyClassName="p-0 overflow-x-auto">
+                <RegimeTable rows={res.regime_table} />
+              </PanelCard>
               <div className="grid grid-cols-12 gap-3">
                 <PanelCard title="Equity curve" className="col-span-12 xl:col-span-8" bodyClassName="p-0">
                   <CurveChart series={eqSeries} height={280} emptyTitle="No equity curve" />

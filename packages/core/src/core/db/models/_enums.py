@@ -281,3 +281,34 @@ class ReplayStatus(StrEnum):
     PLAYING = "playing"
     PAUSED = "paused"
     FINISHED = "finished"
+
+
+class RegimeTrend(StrEnum):
+    UP = "up"
+    DOWN = "down"
+    SIDEWAYS = "sideways"
+
+
+class RegimeStrength(StrEnum):
+    WEAK = "weak"
+    MODERATE = "moderate"
+    STRONG = "strong"
+
+
+class RegimeVolatility(StrEnum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+
+
+class RegimeStructure(StrEnum):
+    BULLISH = "bullish"
+    BEARISH = "bearish"
+    RANGE = "range"
+
+
+class RegimeDayType(StrEnum):
+    TRENDING = "trending"
+    RANGE = "range"
+    VOLATILE_OPEN = "volatile_open"
+    UNKNOWN = "unknown"

@@ -89,6 +89,19 @@ def render_report(res: BacktestResult, *, worst_n: int = 5) -> str:
                 f"{t.quantity} | {t.entry_price} | {t.exit_price} | {t.net_pnl} | "
                 f"{t.exit_reason or ''} |"
             )
+    if res.regime_table:
+        lines.append("")
+        lines.append("## By regime")
+        lines.append("")
+        lines.append("| Regime | Trades | Wins | Win % | Net | Avg |")
+        lines.append("|---|---|---|---|---|---|")
+        for r in res.regime_table:
+            wr = "-" if r.get("win_rate_pct") is None else f"{r['win_rate_pct']:.1f}%"
+            avg = "-" if r.get("avg_pnl") is None else f"{r['avg_pnl']:,.2f}"
+            lines.append(
+                f"| {r['kind']}={r['key']} | {r['trades']} | {r['wins']} | {wr} | "
+                f"{r['net_pnl']:,.2f} | {avg} |"
+            )
     if res.monthly_table:
         lines.append("")
         lines.append("## Monthly")

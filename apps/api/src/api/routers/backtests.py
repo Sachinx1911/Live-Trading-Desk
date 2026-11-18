@@ -84,6 +84,7 @@ class ResultOut(BaseModel):
     engine_stats: dict[str, Any]
     warnings: list[str]
     elapsed_s: float | None
+    regime_table: list[Any] | None = None
 
 
 class TradeOut(BaseModel):
@@ -103,6 +104,7 @@ class TradeOut(BaseModel):
     bars_held: int | None
     mae: Decimal | None
     mfe: Decimal | None
+    regime: dict[str, Any] | None = None
 
 
 class OptimizationIn(BaseModel):
@@ -328,6 +330,7 @@ async def backtest_results(job_id: int, db: DB, user: User) -> ResultOut:
         engine_stats=r.engine_stats,
         warnings=list(r.warnings or []),
         elapsed_s=float(r.elapsed_s) if r.elapsed_s is not None else None,
+        regime_table=r.regime_table,
     )
 
 
@@ -370,6 +373,7 @@ async def backtest_trades(
             bars_held=t.bars_held,
             mae=t.mae,
             mfe=t.mfe,
+            regime=t.regime,
         )
         for t in rows.scalars().all()
     ]

@@ -108,6 +108,17 @@ import-linter, web lint/typecheck/build clean.
 - [x] Light theme (TradingView light: #ebebeb page, white panes, #f2f2f2 controls, #222 selected pill) with a Dark / Light / System switch in the user menu and `/settings/profile`; applied before first paint, charts re-skin live
 - [ ] Hover/transition tokens still measured by eye, not from TradingView
 
+## Market regime · Module 6 (2026-11-18, deterministic, no LLM)
+
+- [x] `strategy/regime.py`: daily regime (trend up/down/sideways from close·EMA20·EMA50 with ADX confirmation, strength from ADX, volatility from the VIX 1-year percentile or ATR %, structure from swing highs/lows, event flag) and intraday day type after 09:45 IST (opening range, VWAP distance, ATR ratio)
+- [x] Migration 0011: `regime_daily`, `regime_intraday`, `backtest_results.regime_table`, `backtest_trades.regime`
+- [x] Worker jobs: daily at 09:05 and 16:10 IST, intraday every 15 min in session; `POST /market/regime/recompute`
+- [x] API `/market/regime` + `/market/regime/summary`; trader passes the regime to the strategy engine's `regime_filters` and tags every closed paper trade; backtests tag trades and produce a "By regime" table in results and the markdown report
+- [x] Web: dashboard regime tile, `/market` regime strip with 30-day history cells, regime pills in paper/backtest trade tables, "By regime" panel on backtest results
+- [x] First real run (Upstox daily data): NIFTY 2026-11-17 up/strong, vol normal (VIX 15.5 = 68th percentile), ADX 41; BANKNIFTY up/strong
+- [ ] Breadth (stocks above 50-DMA) needs the full NIFTY 50 universe — Phase 9 data scope
+- [ ] Intraday day type not yet observed live (first market session pending)
+
 ## Phase 5 · Strategy intelligence
 
 Started 2026-11-18. The LLM boundary from ADR-009 exists and is tested without network

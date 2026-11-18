@@ -46,6 +46,8 @@ EXPECTED_TABLES = {
     "optimization_jobs", "optimization_results", "replay_sessions",
     # ai (Phase 5)
     "ai_calls", "strategy_nl_drafts",
+    # regime
+    "regime_daily", "regime_intraday",
 }  # fmt: skip
 
 

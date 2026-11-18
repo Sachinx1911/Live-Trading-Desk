@@ -28,8 +28,8 @@ from backtest.metrics import (
     monthly_table,
 )
 from core.calendar import ExchangeCalendar, nse_calendar
-from core.models import Candle, Instrument, OrderSide, Quote, Signal, TradingMode
-from core.time import ensure_utc
+from core.models import Candle, Instrument, OrderSide, Quote, Signal, Timeframe, TradingMode
+from core.time import IST, ensure_utc
 from execution.costs import CostModel, RowSchedule, StaticCostSchedule
 from execution.orders import Order
 from execution.simulator.book import ClosedTrade, PositionBook
@@ -38,6 +38,7 @@ from execution.simulator.slippage import FixedBpsSlippage, SlippageModel, Spread
 from risk.engine import RiskEngine, _product_for
 from risk.limits import AccountState, InstrumentMeta
 from strategy.engine import RegimeProvider, StrategyEngine
+from strategy.regime import RegimeDaily, RegimeDetector, provider_from_regimes, regime_table
 
 ProgressFn = Callable[[float], None]
 
@@ -62,6 +63,7 @@ class TradeRecord:
     mfe: Decimal | None  # max favourable excursion per unit (>= 0)
     bar_index_entry: int | None
     bar_index_exit: int | None
+    regime: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -83,6 +85,7 @@ class TradeRecord:
             "mfe": None if self.mfe is None else str(self.mfe),
             "bar_index_entry": self.bar_index_entry,
             "bar_index_exit": self.bar_index_exit,
+            "regime": self.regime,
         }
 
 
@@ -102,6 +105,7 @@ class BacktestResult:
     warnings: list[str]
     elapsed_s: float
     bars: int
+    regime_table: list[dict[str, Any]] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -118,6 +122,7 @@ class BacktestResult:
             "warnings": self.warnings,
             "elapsed_s": self.elapsed_s,
             "bars": self.bars,
+            "regime_table": self.regime_table,
         }
 
 
@@ -219,6 +224,58 @@ def _account_state(
     )
 
 
+def _daily_regimes(candles: Sequence[Candle], cal: ExchangeCalendar) -> dict[date, RegimeDaily]:
+    """Regime per session from the backtest's own series (resampled to daily, no VIX →
+    ATR-based volatility). Point-in-time: the regime for day D uses bars up to D's close and is
+    applied to trades on D+1 onwards by `provider_from_regimes` (it keys on date <= ts date,
+    so we store it under the NEXT session's date)."""
+    by_day: dict[date, list[Candle]] = {}
+    for c in candles:
+        by_day.setdefault(ensure_utc(c.ts).astimezone(IST).date(), []).append(c)
+    daily: list[Candle] = []
+    for d in sorted(by_day):
+        bars = sorted(by_day[d], key=lambda c: c.ts)
+        daily.append(
+            Candle(
+                instrument_id=bars[0].instrument_id,
+                timeframe=Timeframe.D1,
+                ts=bars[0].ts,
+                open=bars[0].open,
+                high=max(b.high for b in bars),
+                low=min(b.low for b in bars),
+                close=bars[-1].close,
+                volume=sum(b.volume for b in bars),
+                provider_id=bars[0].provider_id,
+                received_at=bars[-1].received_at,
+                is_demo=bars[0].is_demo,
+            )
+        )
+    det = RegimeDetector()
+    out: dict[date, RegimeDaily] = {}
+    for i in range(30, len(daily) + 1):
+        window = daily[max(0, i - 260) : i]
+        r = det.daily(window)
+        out[cal.next_trading_day(r.date)] = r
+    return out
+
+
+def _regime_tag(provider: RegimeProvider | None, ts: datetime) -> dict[str, Any] | None:
+    if provider is None:
+        return None
+    ctx = provider(ts) or {}
+    keys = (
+        "trend",
+        "strength",
+        "volatility",
+        "structure",
+        "day_type",
+        "adx",
+        "vix",
+        "regime_label",
+    )
+    return {k: ctx.get(k) for k in keys if k in ctx} or None
+
+
 def run_backtest(
     cfg: BacktestConfig,
     candles: Sequence[Candle],
@@ -246,6 +303,10 @@ def run_backtest(
         end=cfg.end,
         fill_mode=cfg.fill_mode,
     )
+    regimes_by_day: dict[date, RegimeDaily] = {}
+    if regime_provider is None:
+        regimes_by_day = _daily_regimes(candles, cal)
+        regime_provider = provider_from_regimes(regimes_by_day)
     engine = StrategyEngine(doc, ins.instrument_id, cal, cfg.strategy_version_id, regime_provider)
     risk = RiskEngine(cfg.risk_limits)
     sim = ExecutionSimulator(
@@ -367,6 +428,7 @@ def run_backtest(
                         mfe=ex.best if ex else None,
                         bar_index_entry=ex.entry_bar if ex else None,
                         bar_index_exit=bar_index,
+                        regime=_regime_tag(regime_provider, closed.entry_at),
                     )
                 )
                 st.excursion = None
@@ -507,4 +569,5 @@ def run_backtest(
         warnings=warnings,
         elapsed_s=round(_time.perf_counter() - t0, 3),
         bars=total_bars,
+        regime_table=regime_table(trades, lambda t: t.regime),
     )

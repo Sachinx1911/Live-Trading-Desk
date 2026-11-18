@@ -1288,6 +1288,7 @@ dependencies = [
     { name = "providers" },
     { name = "pyarrow" },
     { name = "redis" },
+    { name = "strategy" },
 ]
 
 [package.metadata]
@@ -1299,6 +1300,7 @@ requires-dist = [
     { name = "providers", editable = "packages/providers" },
     { name = "pyarrow", specifier = ">=18.0" },
     { name = "redis", specifier = ">=5.2" },
+    { name = "strategy", editable = "packages/strategy" },
 ]
 
 [[package]]

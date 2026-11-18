@@ -11,6 +11,7 @@ from core.db.models import (
     instruments,
     market_data,
     reference,
+    regime,
     research,
     strategy,
     trading,
@@ -43,6 +44,7 @@ from core.db.models.reference import (
     Segment,
     TradingCalendar,
 )
+from core.db.models.regime import RegimeDaily, RegimeIntraday
 from core.db.models.research import (
     BacktestJob,
     BacktestResult,
@@ -120,6 +122,8 @@ __all__ = [
     "PortfolioSnapshot",
     "ReconciliationRun",
     "RefreshSession",
+    "RegimeDaily",
+    "RegimeIntraday",
     "ReplaySession",
     "RiskLimit",
     "Role",
@@ -138,6 +142,7 @@ __all__ = [
     "instruments",
     "market_data",
     "reference",
+    "regime",
     "research",
     "strategy",
     "trading",

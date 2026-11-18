@@ -1,6 +1,7 @@
 "use client";
 
 import { Dash, EmptyState, Money } from "@/components/design";
+import { TradeRegimePills } from "@/components/market/RegimeBadge";
 import { SideText } from "@/components/trading/StatusChip";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BacktestTrade } from "@/lib/api/generated";
@@ -26,6 +27,7 @@ export function BacktestTradesTable({ trades, isPending }: { trades: BacktestTra
           <th className="px-3 py-1.5 text-right font-medium">Bars</th>
           <th className="px-3 py-1.5 text-right font-medium">MAE</th>
           <th className="px-3 py-1.5 text-right font-medium">MFE</th>
+          <th className="px-3 py-1.5 text-left font-medium">Regime</th>
           <th className="px-3 py-1.5 text-left font-medium">Reasons</th>
         </tr>
       </thead>
@@ -44,6 +46,7 @@ export function BacktestTradesTable({ trades, isPending }: { trades: BacktestTra
             <td className="px-3 py-1.5 text-right tabular text-text-2">{t.bars_held ?? <Dash />}</td>
             <td className="px-3 py-1.5 text-right"><Money value={num(t.mae)} muted /></td>
             <td className="px-3 py-1.5 text-right"><Money value={num(t.mfe)} muted /></td>
+            <td className="px-3 py-1.5"><TradeRegimePills r={t.regime} /></td>
             <td className="max-w-72 truncate px-3 py-1.5 text-text-2" title={`${t.entry_reason ?? ""} → ${t.exit_reason ?? ""}`}>
               {t.entry_reason ?? "—"} → {t.exit_reason ?? "—"}
             </td>

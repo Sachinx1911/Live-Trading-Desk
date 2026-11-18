@@ -92,6 +92,7 @@ class BacktestResult(Base):
     warnings: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
     elapsed_s: Mapped[Decimal | None] = mapped_column(Numeric(10, 3), nullable=True)
     report_md: Mapped[str | None] = mapped_column(Text, nullable=True)
+    regime_table: Mapped[list[Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -125,6 +126,7 @@ class BacktestTrade(Base):
     bars_held: Mapped[int | None] = mapped_column(Integer, nullable=True)
     mae: Mapped[Decimal | None] = mapped_column(MONEY, nullable=True)
     mfe: Mapped[Decimal | None] = mapped_column(MONEY, nullable=True)
+    regime: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
 
 class OptimizationJob(Base):

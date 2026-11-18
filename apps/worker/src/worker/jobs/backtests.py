@@ -225,6 +225,7 @@ async def _persist_result(db: AsyncSession, job: BacktestJob, result: Any) -> Ba
         warnings=list(getattr(result, "warnings", []) or []),
         elapsed_s=Decimal(str(round(float(getattr(result, "elapsed_s", 0) or 0), 3))),
         report_md=report_md,
+        regime_table=_json(list(getattr(result, "regime_table", None) or [])) or None,
     )
     db.add(row)
     await db.flush()
@@ -246,6 +247,7 @@ async def _persist_result(db: AsyncSession, job: BacktestJob, result: Any) -> Ba
             bars_held=getattr(t, "bars_held", None),
             mae=getattr(t, "mae", None),
             mfe=getattr(t, "mfe", None),
+            regime=_json(getattr(t, "regime", None)),
         )
         for t in result.trades
     ]

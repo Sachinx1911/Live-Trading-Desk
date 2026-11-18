@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import { CandleChart } from "@/components/market/CandleChart";
 import { instrumentLabel } from "@/components/market/InstrumentSearch";
 import { QuoteDetails } from "@/components/market/QuoteDetails";
+import { RegimeStrip } from "@/components/market/RegimeStrip";
 import { Watchlist, type WatchItem } from "@/components/market/Watchlist";
 import { api } from "@/lib/api/client";
 import type { Instrument, Timeframe } from "@/lib/api/generated";
@@ -38,6 +39,7 @@ function MarketContent() {
     <div className="grid grid-cols-12 gap-px bg-border">
       <Watchlist selectedId={selected?.instrument_id ?? null} onSelect={setSelected} className="col-span-12 border-0 xl:col-span-3" />
       <div className="col-span-12 flex flex-col gap-px bg-border xl:col-span-9">
+        <RegimeStrip instrumentId={selected?.instrument_id ?? null} className="border-b-0" />
         <CandleChart
           instrumentId={selected?.instrument_id ?? null}
           symbol={selected?.label}

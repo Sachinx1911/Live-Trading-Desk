@@ -3,11 +3,12 @@ name = "market_data"
 version = "0.1.0"
 description = "Provider-agnostic market data: candle building, resampling, storage, sync, backfill, quality, provider manager"
 requires-python = ">=3.12"
-dependencies = ["core", "providers", "polars>=1.12", "pyarrow>=18.0", "orjson>=3.10", "redis>=5.2", "fastexcel>=0.12"]
+dependencies = ["core", "providers", "strategy", "polars>=1.12", "pyarrow>=18.0", "orjson>=3.10", "redis>=5.2", "fastexcel>=0.12"]
 
 [tool.uv.sources]
 core = { workspace = true }
 providers = { workspace = true }
+strategy = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

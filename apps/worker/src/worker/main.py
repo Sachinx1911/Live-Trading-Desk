@@ -13,6 +13,7 @@ from worker.jobs.backtests import run_backtest_job, run_optimization_job, run_wa
 from worker.jobs.brokers import check_broker_sessions
 from worker.jobs.market_data import backfill_instrument, eod_gap_report, sync_instruments
 from worker.jobs.nse_reference import import_nse_reference
+from worker.jobs.regime import compute_regime_daily, compute_regime_intraday
 from worker.jobs.system import heartbeat
 
 log = get_logger(__name__)
@@ -44,6 +45,8 @@ class WorkerSettings:
         run_backtest_job,
         run_optimization_job,
         run_walk_forward_job,
+        compute_regime_daily,
+        compute_regime_intraday,
     ]
     cron_jobs = [
         cron(heartbeat, minute=set(range(0, 60, 5)), run_at_startup=True),
@@ -55,6 +58,10 @@ class WorkerSettings:
         # End of day: gap report 16:00 IST, NSE reference import 19:00 IST
         cron(eod_gap_report, hour={10}, minute={30}),
         cron(import_nse_reference, hour={13}, minute={30}),
+        # Regime: 09:05 IST (previous close) and 16:10 IST; day type every 15 min in session
+        cron(compute_regime_daily, hour={3}, minute={35}),
+        cron(compute_regime_daily, hour={10}, minute={40}),
+        cron(compute_regime_intraday, hour=set(range(4, 10)), minute={0, 15, 30, 45}),
     ]
     on_startup = startup
     on_shutdown = shutdown

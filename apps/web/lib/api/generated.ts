@@ -352,6 +352,7 @@ export interface PaperTrade {
   entry_reason: string | null;
   exit_reason: string | null;
   bars_held: number | null;
+  regime?: TradeRegime | null;
 }
 
 export interface ActivationIn {
@@ -612,6 +613,72 @@ export interface BacktestMetrics {
   [k: string]: unknown;
 }
 
+/** ---- Market regime (deterministic; Module 6). Mirrors apps/api/src/api/routers/regime.py ---- */
+export type RegimeTrend = "up" | "down" | "sideways";
+export type RegimeStrength = "weak" | "moderate" | "strong";
+export type RegimeVolatility = "low" | "normal" | "high";
+export type RegimeStructure = "bullish" | "bearish" | "range";
+export type RegimeDayType = "trending" | "range" | "volatile_open" | "unknown";
+
+export interface RegimeDaily {
+  date: string;
+  trend: RegimeTrend;
+  strength: RegimeStrength;
+  volatility: RegimeVolatility;
+  structure: RegimeStructure;
+  adx: number | null;
+  ema20: number | null;
+  ema50: number | null;
+  ema200: number | null;
+  atr_pct: number | null;
+  vix: number | null;
+  vix_percentile: number | null;
+  event_day: boolean;
+  events: string[];
+  computed_at: string;
+}
+
+export interface RegimeIntraday {
+  ts: string;
+  day_type: RegimeDayType;
+  or_high: number | null;
+  or_low: number | null;
+  vwap_distance_pct: number | null;
+  atr_ratio: number | null;
+}
+
+export interface RegimeResponse {
+  instrument_id: number;
+  symbol: string;
+  today: RegimeDaily | null;
+  intraday: RegimeIntraday | null;
+  history: RegimeDaily[];
+}
+
+export interface RegimeSummaryRow {
+  instrument_id: number;
+  symbol: string;
+  today: RegimeDaily | null;
+  intraday: RegimeIntraday | null;
+}
+
+/** Per-trade regime tag (paper_trades.regime jsonb / backtest trades). */
+export interface TradeRegime {
+  trend?: RegimeTrend | null;
+  volatility?: RegimeVolatility | null;
+  day_type?: RegimeDayType | null;
+  [k: string]: unknown;
+}
+
+export interface RegimeTableRow {
+  group: "trend_vol" | "day_type";
+  label: string;
+  trades: number;
+  wins: number;
+  net_pnl: number | string;
+  avg_pnl: number | string;
+}
+
 /** Curve points arrive as `[ts, value]` tuples or `{ts, equity|value|drawdown}` objects. */
 export type CurvePoint = [string, string | number] | { ts: string; [k: string]: unknown };
 
@@ -626,6 +693,8 @@ export interface BacktestResultOut {
   engine_stats: Record<string, unknown>;
   warnings: string[];
   elapsed_s: number | null;
+  /** Per-regime breakdown; null until the regime job has tagged this result. */
+  regime_table?: RegimeTableRow[] | null;
 }
 
 export interface BacktestTrade {
@@ -645,6 +714,7 @@ export interface BacktestTrade {
   bars_held: number | null;
   mae: string | null;
   mfe: string | null;
+  regime?: TradeRegime | null;
 }
 
 export interface BacktestReport {
