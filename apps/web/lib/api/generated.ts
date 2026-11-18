@@ -837,3 +837,120 @@ export interface NlSaveRequest {
   category?: StrategyCategory;
   tags?: string[];
 }
+
+// ---------------------------------------------------------------- DSL catalogue (Phase 5 visual builder)
+export interface DslParamSpec {
+  name: string;
+  type: "int" | "float" | "string" | "enum";
+  default?: number | string | null;
+  min?: number | null;
+  max?: number | null;
+  options?: string[] | null;
+}
+
+export interface DslIndicatorSpec {
+  type: string;
+  label: string;
+  params: DslParamSpec[];
+  outputs: string[];
+  description?: string | null;
+}
+
+export interface DslCatalogue {
+  indicators: DslIndicatorSpec[];
+  condition_kinds: string[];
+  price_fields: string[];
+  compare_ops: string[];
+  cross_directions: string[];
+  level_units: string[];
+  structure_levels: string[];
+  sizing_methods: string[];
+  products: string[];
+  directions: string[];
+  timeframes: string[];
+  universe_kinds: string[];
+  contract_expiries: string[];
+  contract_strikes: string[];
+}
+
+// ---- Scanner (Phase 5, Module: Market Scanner) ----------------------------------------
+
+export type ScanFieldType = "string" | "enum" | "number" | "percent" | "date" | "bool";
+export type ScanOp = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "between" | "in" | "contains";
+
+export interface ScanField {
+  name: string;
+  label: string;
+  type: ScanFieldType;
+  group: string;
+  unit?: string | null;
+  description?: string | null;
+  higher_is_better?: boolean | null;
+  values?: string[] | null;
+}
+
+export interface ScanFieldsResponse {
+  fields: ScanField[];
+  ops: ScanOp[];
+  default_columns: string[];
+}
+
+export type ScanValue = string | number | boolean | null | (string | number)[];
+
+export interface ScanCondition {
+  field: string;
+  op: ScanOp;
+  value: ScanValue;
+}
+
+export interface ScanFilters {
+  all: ScanCondition[];
+  any: ScanCondition[];
+}
+
+export interface ScanSort {
+  field: string;
+  dir: "asc" | "desc";
+}
+
+export interface SavedScanIn {
+  name: string;
+  description?: string | null;
+  filters: ScanFilters;
+  sort?: ScanSort | null;
+  columns: string[];
+}
+
+export interface SavedScan extends SavedScanIn {
+  id: number;
+  is_preset: boolean;
+}
+
+export interface ScanRunRequest {
+  filters: ScanFilters;
+  sort?: ScanSort | null;
+  columns?: string[] | null;
+  offset: number;
+  limit: number;
+  as_of?: string | null;
+}
+
+export type ScanRow = { instrument_id: number } & Record<string, string | number | boolean | null>;
+
+export interface ScanRunResponse {
+  as_of: string;
+  computed_at: string;
+  snapshot_age_s: number;
+  provider: string;
+  total: number;
+  columns: string[];
+  rows: ScanRow[];
+}
+
+export interface ScanSnapshotInfo {
+  provider: string;
+  as_of: string | null;
+  computed_at: string | null;
+  instrument_count: number;
+  available_dates: string[];
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightLeft, BarChart3, Pencil, Play } from "lucide-react";
+import { ArrowRightLeft, BarChart3, Pencil, Play, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -137,6 +137,7 @@ export default function StrategyDetailPage() {
                 <RunStrategySheet accountId={accountId} presetStrategyId={strategy.id} trigger={<Button size="xs" variant="outline"><Play /> Run on paper</Button>} />
               )}
               <Link href={`/backtesting?strategy=${strategy.id}`} className="inline-flex h-6 items-center gap-1 rounded-sm border border-border px-2 text-[11px] text-accent-cyan hover:bg-raised"><BarChart3 className="size-3" /> Backtest</Link>
+              <Link href={`/strategies/new/visual?from=${version.id}`} className="inline-flex h-6 items-center gap-1 rounded-sm border border-border px-2 text-[11px] text-accent-cyan hover:bg-raised"><SlidersHorizontal className="size-3" /> Edit visually</Link>
               <Button size="xs" variant="outline" onClick={() => setEditing(true)}><Pencil /> Edit as new version</Button>
             </>
           ) : undefined

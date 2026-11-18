@@ -14,6 +14,7 @@ from api.routers import (
     auth,
     backtests,
     brokers,
+    dsl,
     events,
     health,
     imports,
@@ -24,6 +25,7 @@ from api.routers import (
     regime,
     replay,
     risk,
+    scanner,
     strategies,
 )
 from api.state import AppState
@@ -79,7 +81,9 @@ def create_app() -> FastAPI:
     app.include_router(brokers.router, prefix=API_PREFIX)
     app.include_router(market.router, prefix=API_PREFIX)
     app.include_router(regime.router, prefix=API_PREFIX)
+    app.include_router(scanner.router, prefix=API_PREFIX)
     app.include_router(nl_builder.router, prefix=API_PREFIX)
+    app.include_router(dsl.router, prefix=API_PREFIX)  # before /strategies/{id}
     app.include_router(strategies.router, prefix=API_PREFIX)
     app.include_router(events.router, prefix=API_PREFIX)
     app.include_router(paper.router, prefix=API_PREFIX)

@@ -13,6 +13,7 @@ from core.db.models import (
     reference,
     regime,
     research,
+    scanner,
     strategy,
     trading,
 )
@@ -53,6 +54,7 @@ from core.db.models.research import (
     OptimizationResult,
     ReplaySession,
 )
+from core.db.models.scanner import SavedScan, ScanSnapshot
 from core.db.models.strategy import (
     Strategy,
     StrategyActivation,
@@ -127,6 +129,8 @@ __all__ = [
     "ReplaySession",
     "RiskLimit",
     "Role",
+    "SavedScan",
+    "ScanSnapshot",
     "Segment",
     "Strategy",
     "StrategyActivation",
@@ -144,6 +148,7 @@ __all__ = [
     "reference",
     "regime",
     "research",
+    "scanner",
     "strategy",
     "trading",
 ]

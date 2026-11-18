@@ -14,6 +14,7 @@ from worker.jobs.brokers import check_broker_sessions
 from worker.jobs.market_data import backfill_instrument, eod_gap_report, sync_instruments
 from worker.jobs.nse_reference import import_nse_reference
 from worker.jobs.regime import compute_regime_daily, compute_regime_intraday
+from worker.jobs.scanner import compute_scan_snapshot
 from worker.jobs.system import heartbeat
 
 log = get_logger(__name__)
@@ -47,6 +48,7 @@ class WorkerSettings:
         run_walk_forward_job,
         compute_regime_daily,
         compute_regime_intraday,
+        compute_scan_snapshot,
     ]
     cron_jobs = [
         cron(heartbeat, minute=set(range(0, 60, 5)), run_at_startup=True),
@@ -62,6 +64,8 @@ class WorkerSettings:
         cron(compute_regime_daily, hour={3}, minute={35}),
         cron(compute_regime_daily, hour={10}, minute={40}),
         cron(compute_regime_intraday, hour=set(range(4, 10)), minute={0, 15, 30, 45}),
+        # scanner snapshot after the daily bars + regime land (16:20 IST)
+        cron(compute_scan_snapshot, hour={10}, minute={50}),
     ]
     on_startup = startup
     on_shutdown = shutdown

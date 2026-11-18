@@ -48,6 +48,8 @@ EXPECTED_TABLES = {
     "ai_calls", "strategy_nl_drafts",
     # regime
     "regime_daily", "regime_intraday",
+    # scanner
+    "scan_snapshots", "saved_scans",
 }  # fmt: skip
 
 
