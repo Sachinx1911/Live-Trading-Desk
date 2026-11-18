@@ -22,6 +22,7 @@ function LoginBanner() {
   const login = params.get("login");
   const broker = params.get("broker") ?? "broker";
   const reason = params.get("reason");
+  const brokerMsg = params.get("broker_msg");
 
   useEffect(() => {
     if (login) qc.invalidateQueries({ queryKey: queryKeys.brokers });
@@ -42,6 +43,9 @@ function LoginBanner() {
       {ok
         ? `${broker} login successful. The session is valid until ~03:30 IST tomorrow.`
         : `${broker} login failed: ${(reason && REASONS[reason]) ?? reason ?? "unknown reason"}.`}
+      {!ok && brokerMsg ? (
+        <div className="mt-1 font-mono text-[11px] opacity-90">Broker said: {brokerMsg}</div>
+      ) : null}
     </div>
   );
 }

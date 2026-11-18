@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
@@ -17,6 +18,17 @@ router = APIRouter(prefix="/brokers", tags=["brokers"])
 log = get_logger(__name__)
 
 OAUTH_STATE_TTL = 600
+
+
+def _broker_message(raw: str) -> str:
+    """Pull `errorCode: message` out of an Upstox error body so the UI can show it."""
+    import re
+
+    code = re.search(r'"errorCode"\s*:\s*"([^"]+)"', raw)
+    msg = re.search(r'"message"\s*:\s*"([^"]+)"', raw)
+    if msg:
+        return (f"{code.group(1)}: " if code else "") + msg.group(1)[:200]
+    return raw[:200]
 
 
 class AccountIn(BaseModel):
@@ -152,7 +164,10 @@ async def oauth_callback(
         )
     except UpstoxAuthError as exc:
         log.warning("broker.login_failed", broker=code, error=str(exc))
-        return RedirectResponse(fail + "&reason=exchange", status_code=302)
+        return RedirectResponse(
+            fail + "&reason=exchange&broker_msg=" + quote(_broker_message(str(exc))),
+            status_code=302,
+        )
     sess = await svc.store_session(acct, token, expires_at)
     state.broker_tokens[code] = token
     await audit(
