@@ -53,10 +53,19 @@ Speaking up unprompted (EDITH) is a core trait of the product, not a side featur
 | Level | Kind of action | What JARVIS does |
 |---|---|---|
 | Green | Read only: charts, scans, reports, status | Does it immediately |
-| Yellow | Changes: new draft, backtest, start or stop a paper strategy, import | States what it will do and asks once |
+| Yellow | Changes: new draft, backtest, start or stop a paper strategy, import | Paper-trading changes: does it and reports (standing permission, see below). Other changes: states what it will do and asks once |
 | Red | Money or safety: live orders, risk limits, live approval, turning the kill switch off, applying a new hard rule | Risk engine check, explicit owner confirmation, and only through the deterministic gateway |
 
 Turning the kill switch **on** is always immediate.
+
+**Standing permission for paper trading** (owner decision, 2026-11-21). JARVIS does not ask
+before these; it acts and reports: start, stop or pause a paper strategy; run a backtest or
+a replay; create a strategy draft or a new version; close paper positions. It still asks
+for everything red: adding, changing or removing a hard trading rule, changing risk
+limits, turning the kill switch off, approving a strategy for live, and anything with real
+money. With the permission in place, every paper order still passes the risk engine and
+the owner rules, every change is logged and reported at once, and "stop" or "undo that"
+from the owner takes effect immediately.
 
 Rules that hold for JARVIS and every helper:
 
@@ -145,8 +154,20 @@ Requirements from the owner:
 4. While a task runs, windows resize and re-arrange themselves to make room.
 5. When the task is done, its windows go away.
 
-Approach (recommended, not yet confirmed by the owner): a **desktop shell** around the
-existing web app, because a browser tab cannot fully control windows across monitors.
+Decided (owner, 2026-11-21): a **desktop app** (a shell around the existing web app),
+because a browser tab cannot fully control windows across monitors. Platform is **macOS
+only**. The owner trades with **2 screens**.
+
+| Situation (2 screens) | JARVIS does |
+|---|---|
+| Content requested, main screen idle | Opens it on the main screen |
+| Owner is working on the main screen | Opens it on the second screen |
+| Second screen already has panels | They shrink to make room |
+| Task finished | Its panels dissolve |
+| Only one screen connected | Panels open in a side split |
+
+What stays permanently on the second screen (for example chart, positions, alerts) is
+still to be chosen.
 
 - Everything is a **panel** (option chain, OI chart, backtest result, positions). JARVIS
   opens, moves, resizes and closes panels; new screens are built as standalone panels from
@@ -198,6 +219,17 @@ them; and what sits at the centre of the dashboard.
 - SEBI's retail algo rules (static IP, registration above an order-rate threshold) must be
   checked for the chosen broker before live trading in Mark 2.
 
+### Candidate model: Jev (TypeSafe AI)
+
+Looked at on 2026-11-21 (https://typesafe.ai/). A decision model rather than a chat model:
+it returns typed decisions with a confidence value, and the vendor claims it is far faster
+and cheaper than an LLM. It is in early access and the claims are unverified. **Deferred by
+the owner**: it is not part of the plan now and will be considered only where a real need
+appears. Candidate places then: recognising the intent of a command, classifying its risk
+level, filtering alerts, tagging trades, sorting backtest results. Never inside the
+backtest or execution engine (results must be reproducible, free of look-ahead, and no
+model decides orders), and not for conversation, which it does not do.
+
 ## 7. What the owner supplies
 
 | When | What |
@@ -209,13 +241,14 @@ them; and what sits at the centre of the dashboard.
 
 ## 8. Open decisions
 
-1. Does JARVIS ask before every paper-trading change, or get standing permission?
-   (Recommended: ask every time at first.)
-2. Desktop shell: accepted? Which computers (this Mac only, or Windows too)? How many
-   screens during trading?
-3. Design questions in section 5, when the owner reopens them.
-4. Keep or revert the collector change made during planning (option chain every 3 minutes,
+1. Design questions in section 5, when the owner reopens them.
+2. Keep or revert the collector change made during planning (option chain every 3 minutes,
    commit `06bd9ed`).
+3. What stays permanently on the second screen.
+4. The owner's next trading rules.
+
+Closed on 2026-11-21: paper trading gets standing permission (section 2.3); desktop app on
+macOS with 2 screens (section 4); Jev deferred (section 6).
 
 ## 9. Working agreement
 
