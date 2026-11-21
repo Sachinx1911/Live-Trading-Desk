@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, KeyRound, Server, ShieldAlert, ShieldCheck, Sparkles, UserCircle, Users } from "lucide-react";
+import { Bell, Cable, KeyRound, Server, ShieldAlert, ShieldCheck, Sparkles, UserCircle, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const SECTIONS: { href: string; label: string; desc: string; icon: LucideIcon; phase?: number }[] = [
@@ -7,6 +7,7 @@ const SECTIONS: { href: string; label: string; desc: string; icon: LucideIcon; p
   { href: "/settings/providers", label: "Data providers", desc: "Active provider, comparison and failover", icon: Server, phase: 2 },
   { href: "/settings/notifications", label: "Notifications", desc: "Telegram alerts and in-app chips", icon: Bell },
   { href: "/settings/risk", label: "Risk limits", desc: "Per-trade risk, daily loss, kill switch", icon: ShieldAlert, phase: 3 },
+  { href: "/settings/tools", label: "Tool server", desc: "jarvis service tokens and the tool-call log", icon: Cable },
   { href: "/settings/ai", label: "AI", desc: "LLM status, key location and the ADR-009 boundary", icon: Sparkles, phase: 6 },
   { href: "/settings/users", label: "Users", desc: "Operators and roles", icon: Users, phase: 10 },
   { href: "/settings/profile", label: "Profile", desc: "Display name and locale", icon: UserCircle, phase: 10 },

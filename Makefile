@@ -1,4 +1,4 @@
-.PHONY: up down sync lint type test migrate api worker web gen-api check
+.PHONY: up down sync lint type test migrate api worker web gen-api check tool-server
 
 up:            ## start local infrastructure
 	docker compose up -d
@@ -24,6 +24,8 @@ collector:
 	uv run python -m collector.main
 trader:
 	uv run python -m trader.main
+tool-server:   ## jarvis tool server: HTTP /tools + MCP /mcp on TOOL_SERVER_HOST:PORT (127.0.0.1:8100)
+	uv run python -m tool_server.main
 web:
 	pnpm --dir apps/web dev
 gen-api:       ## regenerate TypeScript API types from the running API

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { AlertList } from "@/components/alerts/AlertList";
 import { PanelCard } from "@/components/design";
 import { useAckAlert, useAckAll, useAlerts, useUnreadAlerts } from "@/lib/api/alerts";
@@ -49,6 +50,7 @@ export default function AlertsPage() {
             >
               Acknowledge all
             </button>
+            <OpenAsPanel panel="alerts" params={{ unread: unackOnly }} />
           </div>
         }
       >

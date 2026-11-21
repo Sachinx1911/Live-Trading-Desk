@@ -83,6 +83,23 @@ class KillFact:
 
 
 @dataclass(frozen=True)
+class ViewFact:
+    """An open JARVIS view (Mark 1 Stage 4.6) with an invalidation price, and the latest
+    real (non-demo) quote. `already_alerted` = an alert for it was stored before."""
+
+    observation_id: int
+    symbol: str
+    instrument_id: int
+    direction: str
+    ref_price: Decimal
+    invalidation_price: Decimal
+    invalidation: str | None
+    price: Decimal | None
+    price_ts: datetime | None
+    already_alerted: bool = False
+
+
+@dataclass(frozen=True)
 class AlertFacts:
     now: datetime
     market_open: bool
@@ -92,6 +109,7 @@ class AlertFacts:
     paper: tuple[PaperLossFact, ...] = ()
     trader: TraderFact | None = None
     kill: tuple[KillFact, ...] = ()
+    views: tuple[ViewFact, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -100,6 +118,7 @@ class AlertParams:
     pcr_no_put_buy_at: Decimal = Decimal("2.0")
     pcr_no_call_buy_at: Decimal = Decimal("0.5")
     pcr_max_age_minutes: int = 15
+    view_price_max_age_s: int = 120
 
 
 # ----------------------------------------------------------------------------- rules
@@ -309,6 +328,51 @@ def trader_down(f: AlertFacts, p: AlertParams) -> list[AlertCandidate]:
     ]
 
 
+def view_invalidated(f: AlertFacts, p: AlertParams) -> list[AlertCandidate]:
+    """Price crossed a recorded view's invalidation price, on the side away from the
+    reference price (below it when the level is under the reference, above it when over).
+    One alert per view, ever: the key carries the observation id and facts mark views
+    already alerted. Missing, demo or stale prices are not judged."""
+    out: list[AlertCandidate] = []
+    max_age = timedelta(seconds=p.view_price_max_age_s)
+    for v in f.views:
+        if v.already_alerted or v.price is None or v.price_ts is None:
+            continue
+        if f.now - v.price_ts > max_age or v.invalidation_price == v.ref_price:
+            continue
+        below = v.invalidation_price < v.ref_price
+        crossed = v.price <= v.invalidation_price if below else v.price >= v.invalidation_price
+        if not crossed:
+            continue
+        side = "below" if below else "above"
+        cond = f' ("{v.invalidation}")' if v.invalidation else ""
+        out.append(
+            AlertCandidate(
+                kind="view_invalidated",
+                severity="info",
+                title=f"{v.symbol} {v.price:.2f}: JARVIS {v.direction} view invalidated",
+                message=(
+                    f"Price {v.price:.2f} is {side} the invalidation level "
+                    f"{v.invalidation_price:.2f}{cond} of view #{v.observation_id} "
+                    f"(reference {v.ref_price:.2f}). The view is still scored at its horizon."
+                ),
+                dedup_key=f"view_invalidated:{v.observation_id}",
+                data={
+                    "observation_id": v.observation_id,
+                    "symbol": v.symbol,
+                    "direction": v.direction,
+                    "price": str(v.price),
+                    "price_ts": v.price_ts.isoformat(),
+                    "invalidation_price": str(v.invalidation_price),
+                    "ref_price": str(v.ref_price),
+                    "side": side,
+                },
+                instrument_id=v.instrument_id,
+            )
+        )
+    return out
+
+
 RULES = (
     pcr_near_limit,
     feed_stale,
@@ -316,6 +380,7 @@ RULES = (
     daily_loss_near,
     kill_switch_active,
     trader_down,
+    view_invalidated,
 )
 
 

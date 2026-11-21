@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { CandleChart } from "@/components/market/CandleChart";
 import { InstrumentNews } from "@/components/market/InstrumentNews";
 import { instrumentLabel } from "@/components/market/InstrumentSearch";
@@ -48,6 +49,7 @@ function MarketContent() {
           onTimeframe={setTf}
           height={440}
           className="border-0"
+          headerExtra={selected ? <OpenAsPanel panel="chart" params={{ symbol: selected.symbol, tf }} /> : undefined}
         />
         <QuoteDetails instrumentId={selected?.instrument_id ?? null} symbol={selected?.label} />
         <InstrumentNews symbol={selected?.symbol ?? null} segment={selected?.segment ?? null} className="border-0" />

@@ -14,6 +14,7 @@ export function PanelCard({
   children,
   className,
   bodyClassName,
+  bare = false,
 }: {
   title?: ReactNode;
   subtitle?: ReactNode;
@@ -23,7 +24,21 @@ export function PanelCard({
   children?: ReactNode;
   className?: string;
   bodyClassName?: string;
+  /**
+   * Chrome-less: no frame, glow or header (title and actions are not rendered). Used when the
+   * card is the body of a standalone panel (/panel/*), whose own header carries the title and
+   * data state (Stage 4.4).
+   */
+  bare?: boolean;
 }) {
+  if (bare) {
+    return (
+      <section className={cn("flex min-w-0 flex-col overflow-hidden bg-pane", className)}>
+        {banner}
+        <div className={cn("flex-1 p-3", bodyClassName)}>{children}</div>
+      </section>
+    );
+  }
   return (
     <section
       className={cn(

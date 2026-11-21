@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { DataStateBadge, Dash, DemoBanner, EmptyState, PanelCard } from "@/components/design";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiRequestError } from "@/lib/api/client";
@@ -38,15 +39,24 @@ export function OptionChainTable({
   expiry,
   symbol,
   at,
+  defaultGreeks = false,
+  bare = false,
+  openAsPanel,
 }: {
   underlyingId: number | null;
   expiry?: string;
   symbol?: string;
   /** ISO datetime: show the snapshot stored at or before this moment instead of the latest. */
   at?: string;
+  /** Initial state of the Greeks toggle (panels take it from `greeks=1`). */
+  defaultGreeks?: boolean;
+  /** No card header (standalone panel). */
+  bare?: boolean;
+  /** Show an "Open as panel" link for this underlying (carries the Greeks toggle state). */
+  openAsPanel?: { symbol: string; expiry?: string };
 }) {
   const { data, isPending, isError, error } = useOptionChain(underlyingId, expiry, at);
-  const [greeks, setGreeks] = useState(false);
+  const [greeks, setGreeks] = useState(defaultGreeks);
   // Greeks sit between IV/Δ and LTP so each side reads OI → Greeks → price towards the strike.
   const SIDE_COLS: Col[] = greeks ? [...BASE_COLS.slice(0, 4), ...GREEK_COLS, BASE_COLS[4]] : BASE_COLS;
   const notYet = isError && error instanceof ApiRequestError && error.status === 404;
@@ -82,9 +92,11 @@ export function OptionChainTable({
             Greeks
           </button>
           <DataStateBadge state={data ? data.freshness : "disconnected"} />
+          {openAsPanel && <OpenAsPanel panel="option-chain" params={{ ...openAsPanel, greeks }} />}
         </div>
       }
       bodyClassName="p-0"
+      bare={bare}
     >
       {underlyingId == null ? (
         <EmptyState title="Select an underlying" className="m-3" />
@@ -122,7 +134,7 @@ export function OptionChainTable({
                 const { ce, pe } = byStrike.get(s)!;
                 const isAtm = s === atm;
                 return (
-                  <tr key={s} className={cn("border-b border-border/60", isAtm && "bg-accent-soft")}>
+                  <tr key={s} data-atm={isAtm || undefined} className={cn("border-b border-border/60", isAtm && "bg-accent-soft")}>
                     {SIDE_COLS.map((c) => (
                       <td key={`ce-${c.key}`} className={cn("px-2 py-1 text-right", spot != null && s < spot && "bg-raised/40")}>
                         <N v={num(ce?.[c.key] as string | number | null | undefined)} d={c.d} signed={c.signed} />

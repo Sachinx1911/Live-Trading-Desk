@@ -15,8 +15,22 @@ import { cn } from "@/lib/utils";
  * from `/market/regime/summary`; when nothing has been computed the tile says so and offers the
  * owner a recompute, it never guesses a regime.
  */
-export function RegimeTile({ className }: { className?: string }) {
-  const { data, isPending, isError } = useRegimeSummary();
+export function RegimeTile({
+  className,
+  bare = false,
+  onlySymbol,
+  headerExtra,
+}: {
+  className?: string;
+  /** No card header and so no recompute button (read-only panel). */
+  bare?: boolean;
+  /** Show only this index's row. */
+  onlySymbol?: string;
+  headerExtra?: React.ReactNode;
+}) {
+  const summary = useRegimeSummary();
+  const { isPending, isError } = summary;
+  const data = onlySymbol ? summary.data?.filter((r) => r.symbol === onlySymbol) : summary.data;
   const me = useMe();
   const isOwner = me.data?.roles.includes("owner") ?? false;
   const recompute = useRecomputeRegime();
@@ -30,11 +44,12 @@ export function RegimeTile({ className }: { className?: string }) {
           <RefreshCw className={cn("size-3", recompute.isPending && "animate-spin")} /> recompute
         </Button>
       )}
+      {headerExtra}
     </div>
   );
 
   return (
-    <PanelCard title="Market regime" subtitle="Deterministic: EMA/ADX, VIX percentile, structure, day type" actions={actions} className={className} bodyClassName="p-0">
+    <PanelCard title="Market regime" subtitle="Deterministic: EMA/ADX, VIX percentile, structure, day type" actions={actions} className={className} bodyClassName="p-0" bare={bare}>
       {isPending ? (
         <Skeleton className="m-3 h-16" />
       ) : isError ? (
@@ -42,7 +57,7 @@ export function RegimeTile({ className }: { className?: string }) {
       ) : !data || data.length === 0 || data.every((r) => !r.today) ? (
         <EmptyState
           title="Not computed yet"
-          description={recompute.isSuccess ? "Recompute queued; the worker writes today's regime shortly." : "The regime job runs at 09:05 IST and after close. Owners can queue it now."}
+          description={recompute.isSuccess ? "Recompute queued; the worker writes today's regime shortly." : `The regime job runs at 09:05 IST and after close.${bare ? "" : " Owners can queue it now."}`}
           className="m-3"
         />
       ) : (

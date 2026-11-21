@@ -15,7 +15,7 @@ import {
 import { useEffect, useMemo, useRef } from "react";
 import { DataStateBadge, DemoBanner, EmptyState, PanelCard } from "@/components/design";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Candle, Timeframe } from "@/lib/api/generated";
+import type { Candle, CandlesResponse, Freshness, Timeframe } from "@/lib/api/generated";
 import { useCandles } from "@/lib/api/queries";
 import { marketSocket } from "@/lib/ws/market";
 import { num, useLiveQuote } from "@/lib/ws/useMarket";
@@ -61,6 +61,18 @@ function themeOptions(pal: ReturnType<typeof chartPalette>) {
   } as const;
 }
 
+/**
+ * Data state shown for a candle chart: Demo for the fake provider; with stored candles but no
+ * live feed it is Historical; otherwise the instrument's quote freshness. Shared with the chart
+ * panel's header so both always agree.
+ */
+export function candleDataState(data: CandlesResponse | undefined, freshness: Freshness): Freshness {
+  if (!data) return "disconnected";
+  if (data.is_demo) return "demo";
+  if (!data.candles.length) return "disconnected";
+  return freshness === "disconnected" ? "historical" : freshness;
+}
+
 export function CandleChart({
   instrumentId,
   symbol,
@@ -68,14 +80,22 @@ export function CandleChart({
   onTimeframe,
   className,
   height = 360,
+  bare = false,
+  headerExtra,
 }: {
   instrumentId: number | null;
   symbol?: string;
   timeframe: Timeframe;
   onTimeframe?: (tf: Timeframe) => void;
   className?: string;
-  height?: number;
+  /** Pixel height, or "fill" to follow the container (standalone panels). */
+  height?: number | "fill";
+  /** No card header (the panel header shows title and data state). */
+  bare?: boolean;
+  /** Extra controls in the card header, e.g. "Open as panel". */
+  headerExtra?: React.ReactNode;
 }) {
+  const fill = height === "fill";
   const { data, isPending, isError } = useCandles(instrumentId, timeframe, 500);
   const { quote, freshness } = useLiveQuote(instrumentId);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -107,7 +127,7 @@ export function CandleChart({
     if (!el) return;
     const pal = chartPalette();
     palRef.current = pal;
-    const chart = createChart(el, { height, ...themeOptions(pal) });
+    const chart = createChart(el, fill ? { autoSize: true, ...themeOptions(pal) } : { height, ...themeOptions(pal) });
     const candle = chart.addSeries(CandlestickSeries, {
       upColor: pal.up,
       downColor: pal.down,
@@ -123,8 +143,9 @@ export function CandleChart({
     chartRef.current = chart;
     candleRef.current = candle;
     volRef.current = vol;
-    const ro = new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
-    ro.observe(el);
+    // autoSize (fill) tracks the container itself; fixed height only follows the width.
+    const ro = fill ? null : new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
+    ro?.observe(el);
     // Re-skin on theme change: chart options, candle colours and the volume bars' colours.
     const offTheme = onThemeChange(() => {
       const next = chartPalette();
@@ -135,13 +156,13 @@ export function CandleChart({
     });
     return () => {
       offTheme();
-      ro.disconnect();
+      ro?.disconnect();
       chart.remove();
       chartRef.current = null;
       candleRef.current = null;
       volRef.current = null;
     };
-  }, [height]);
+  }, [height, fill]);
 
   // Load history.
   useEffect(() => {
@@ -187,7 +208,7 @@ export function CandleChart({
     lastBarRef.current = bar;
   }, [quote, instrumentId, timeframe]);
 
-  const badgeState = data ? (data.is_demo ? "demo" : candles.length ? (freshness === "disconnected" ? "historical" : freshness) : "disconnected") : "disconnected";
+  const badgeState = candleDataState(data, freshness);
 
   return (
     <PanelCard
@@ -195,7 +216,8 @@ export function CandleChart({
       subtitle={data ? `source ${data.source}` : undefined}
       banner={data?.is_demo ? <DemoBanner /> : undefined}
       className={className}
-      bodyClassName="p-0"
+      bodyClassName={cn("p-0", fill && "flex min-h-0 flex-col")}
+      bare={bare}
       actions={
         <div className="flex items-center gap-2">
           {onTimeframe && (
@@ -216,6 +238,7 @@ export function CandleChart({
             </div>
           )}
           <DataStateBadge state={badgeState} />
+          {headerExtra}
         </div>
       }
     >
@@ -228,7 +251,7 @@ export function CandleChart({
       ) : candles.length === 0 ? (
         <EmptyState title="No data yet" description="No candles stored for this instrument and timeframe. The collector builds 1-minute bars while the feed runs." className="m-3" />
       ) : null}
-      <div className={cn("relative", (instrumentId == null || isPending || candles.length === 0) && "hidden")}>
+      <div className={cn("relative", fill && "min-h-0 flex-1", (instrumentId == null || isPending || candles.length === 0) && "hidden")}>
         {symbol && (
           <div className="pointer-events-none absolute top-2 left-3 z-10 flex items-baseline gap-2 opacity-60">
             <span className="text-[16px] text-text-1">{symbol}</span>
@@ -241,7 +264,7 @@ export function CandleChart({
             )}
           </div>
         )}
-        <div ref={containerRef} className="w-full" />
+        <div ref={containerRef} className={cn("w-full", fill && "h-full")} />
       </div>
     </PanelCard>
   );

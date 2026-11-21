@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { DataStateBadge, DemoBanner, EmptyState, PanelCard } from "@/components/design";
 import { OiChangeChart } from "@/components/market/OiChangeChart";
 import { api, ApiRequestError } from "@/lib/api/client";
@@ -211,7 +212,12 @@ export default function OiChangePage() {
             ? `snapshots ${formatTime(data.from_ts)} → ${formatTime(data.to_ts)} (asked ${start} → ${end}) · source ${data.source}`
             : undefined
         }
-        actions={data && <DataStateBadge state={data.freshness} />}
+        actions={
+          <div className="flex items-center gap-2">
+            {data && <DataStateBadge state={data.freshness} />}
+            <OpenAsPanel panel="oi-change" params={{ symbol, date: day, from: start, to: end, expiry: effectiveExpiry, range }} />
+          </div>
+        }
         banner={data?.freshness === "demo" ? <DemoBanner /> : undefined}
       >
         {q.isLoading && <p className="text-[13px] text-text-3">Loading…</p>}

@@ -1447,3 +1447,133 @@ export interface AlertUnreadCount {
 export interface AlertAckAll {
   acknowledged: number;
 }
+
+// --- hand-appended: JARVIS accuracy loop (Mark 1 Stage 4.6; mirrors apps/api/src/api/routers/ai_views.py) — replace with `pnpm gen:api` output
+export type AiViewStatus = "pending" | "hit" | "miss" | "void";
+export type AiViewDirection = "up" | "down" | "sideways";
+
+export interface AiObservation {
+  id: number;
+  ts: string;
+  caller: string;
+  mode: string | null;
+  instrument_id: number;
+  symbol: string;
+  direction: AiViewDirection;
+  horizon_days: number;
+  confidence: number;
+  invalidation: string | null;
+  invalidation_price: number | null;
+  statement: string | null;
+  ref_price: number;
+  ref_source: string;
+  ref_freshness: string;
+  ref_ts: string;
+  tool_call_id: number | null;
+  due_date: string;
+  status: AiViewStatus;
+  close_price: number | null;
+  return_pct: number | null;
+  threshold_pct: number | null;
+  scored_at: string | null;
+  void_reason: string | null;
+}
+
+export interface AiObservationList {
+  count: number;
+  items: AiObservation[];
+}
+
+export interface AiAccuracyGroup {
+  key: string;
+  total: number;
+  pending: number;
+  hits: number;
+  misses: number;
+  voids: number;
+  hit_rate: number | null;
+  mean_confidence: number | null;
+}
+
+export interface AiSpendDay {
+  day: string;
+  calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number | null;
+  calls_without_cost: number;
+}
+
+export interface AiSpend {
+  days: number;
+  total_calls: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_usd: number | null;
+  calls_without_cost: number;
+  daily_token_budget: number;
+  by_day: AiSpendDay[];
+}
+
+export interface AiAccuracy {
+  threshold_pct: number;
+  thresholds_in_use: number[];
+  grace_days: number;
+  provider: string;
+  overall: AiAccuracyGroup;
+  by_instrument: AiAccuracyGroup[];
+  by_horizon: AiAccuracyGroup[];
+  by_mode: AiAccuracyGroup[];
+  by_caller: AiAccuracyGroup[];
+  by_confidence: AiAccuracyGroup[];
+  by_direction: AiAccuracyGroup[];
+  confidence_bands: { key: string; low: number; high: number }[];
+  horizon_buckets: string[];
+  recent: AiObservation[];
+  spend: AiSpend;
+}
+
+// ---- Tool-server tokens + call log (Mark 1 Stage 4.1; mirrors apps/api/src/api/routers/tool_tokens.py) ----
+export type ToolLevel = "green" | "yellow";
+export type ToolCallStatus = "ok" | "error" | "refused";
+
+export interface ToolTokenIn {
+  name: string;
+  max_level: ToolLevel;
+}
+
+export interface ToolToken {
+  id: number;
+  name: string;
+  prefix: string;
+  max_level: ToolLevel;
+  created_at: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+}
+
+/** Returned once by POST /tool-tokens; `token` is never shown again. */
+export interface ToolTokenCreated extends ToolToken {
+  token: string;
+}
+
+export interface ToolCallLog {
+  id: number;
+  ts: string;
+  token_id: number | null;
+  token_name: string | null;
+  transport: "http" | "mcp";
+  tool: string;
+  level: string | null;
+  args: Record<string, unknown>;
+  status: ToolCallStatus;
+  error: string | null;
+  duration_ms: number | null;
+  result_meta: {
+    code?: string;
+    source?: string | null;
+    freshness?: string | null;
+    is_demo?: boolean | null;
+    rows?: Record<string, number>;
+  };
+}

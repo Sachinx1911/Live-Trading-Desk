@@ -2,10 +2,12 @@
 
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { DataStateBadge, Dash, PanelCard, Pct } from "@/components/design";
 import { api } from "@/lib/api/client";
 import type { Instrument } from "@/lib/api/generated";
 import { formatNumber } from "@/lib/format";
+import { MAX_QUOTE_SYMBOLS } from "@/lib/panels";
 import { cn } from "@/lib/utils";
 import { num, useLiveQuote, useMarketSubscription } from "@/lib/ws/useMarket";
 import { InstrumentSearch, instrumentLabel } from "./InstrumentSearch";
@@ -129,7 +131,11 @@ export function Watchlist({ selectedId, onSelect, className }: { selectedId: num
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
   return (
-    <PanelCard title="Watchlist" className={className} bodyClassName="flex flex-col gap-2 p-0 pt-2 [&>div:first-child]:px-3">
+    <PanelCard
+      title="Watchlist"
+      actions={items?.length ? <OpenAsPanel panel="quotes" params={{ symbols: items.slice(0, MAX_QUOTE_SYMBOLS).map((i) => i.symbol).join(",") }} /> : undefined}
+      className={className}
+      bodyClassName="flex flex-col gap-2 p-0 pt-2 [&>div:first-child]:px-3">
       <InstrumentSearch onPick={add} />
       {items === null ? (
         <p className="px-2 text-[11px] text-text-3">Resolving instruments…</p>

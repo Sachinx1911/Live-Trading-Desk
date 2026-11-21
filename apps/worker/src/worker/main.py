@@ -9,6 +9,7 @@ from arq.cron import cron
 
 from core.logging import configure_logging, get_logger
 from core.settings import get_settings
+from worker.jobs.ai_views import rebuild_ai_view_scores, score_ai_views
 from worker.jobs.alerts import evaluate_alerts
 from worker.jobs.backtests import run_backtest_job, run_optimization_job, run_walk_forward_job
 from worker.jobs.breadth import compute_market_breadth, rebuild_market_breadth
@@ -64,6 +65,8 @@ class WorkerSettings:
         evaluate_alerts,
         refresh_daily_candles,
         generate_evening_brief,
+        score_ai_views,
+        rebuild_ai_view_scores,
     ]
     cron_jobs = [
         cron(heartbeat, minute=set(range(0, 60, 5)), run_at_startup=True),
@@ -91,6 +94,8 @@ class WorkerSettings:
         cron(generate_evening_brief, hour={13}, minute={30}),
         # proactive alerts every minute 09:00-15:45 IST (job re-checks window + NSE calendar)
         cron(evaluate_alerts, hour=set(range(3, 11)), minute=set(range(60))),
+        # JARVIS view scoring after the daily candles (16:30 IST = 11:00 UTC), every day
+        cron(score_ai_views, hour={11}, minute={0}),
     ]
     on_startup = startup
     on_shutdown = shutdown

@@ -51,6 +51,7 @@ export function ScannerTable({
   sort,
   onSort,
   loading,
+  linkRows = true,
 }: {
   columns: string[];
   rows: ScanRow[];
@@ -58,6 +59,8 @@ export function ScannerTable({
   sort: ScanSort | null;
   onSort: (s: ScanSort | null) => void;
   loading: boolean;
+  /** Row click opens the instrument on /market; off in panels (they never navigate away). */
+  linkRows?: boolean;
 }) {
   const router = useRouter();
   const cols = columns.filter((c) => c !== "symbol" && c !== "name");
@@ -95,7 +98,7 @@ export function ScannerTable({
         </TableHeader>
         <TableBody>
           {rows.map((r) => (
-            <TableRow key={r.instrument_id} className="cursor-pointer" onClick={() => router.push(`/market?instrument=${r.instrument_id}`)}>
+            <TableRow key={r.instrument_id} className={cn(linkRows && "cursor-pointer")} onClick={linkRows ? () => router.push(`/market?instrument=${r.instrument_id}`) : undefined}>
               <TableCell className="whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-text-1">{String(r.symbol ?? "")}</span>

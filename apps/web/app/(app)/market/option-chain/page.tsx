@@ -99,7 +99,7 @@ export default function OptionChainPage() {
         )}
         {id == null && <span className="text-[11px] text-text-3">{symbol} not found in the instrument master yet.</span>}
       </PanelCard>
-      <OptionChainTable underlyingId={id} expiry={effectiveExpiry ? `${effectiveExpiry}T15:30:00+05:30` : undefined} symbol={symbol} at={at} />
+      <OptionChainTable underlyingId={id} expiry={effectiveExpiry ? `${effectiveExpiry}T15:30:00+05:30` : undefined} symbol={symbol} at={at} openAsPanel={{ symbol, expiry: effectiveExpiry }} />
     </div>
   );
 }

@@ -60,7 +60,8 @@ export function CurveChart({
   priceFormat = "price",
 }: {
   series: CurveSeries[];
-  height?: number;
+  /** Pixel height, or "fill" to follow the container (standalone panels). */
+  height?: number | "fill";
   className?: string;
   emptyTitle?: string;
   priceFormat?: "price" | "percent";
@@ -73,8 +74,9 @@ export function CurveChart({
   useEffect(() => {
     const el = ref.current;
     if (!el || !hasData) return;
+    const fill = height === "fill";
     const chart = createChart(el, {
-      height,
+      ...(fill ? { autoSize: true } : { height }),
       ...themeOptions(chartPalette()),
       localization: priceFormat === "percent" ? { priceFormatter: (p: number) => `${p.toFixed(2)}%` } : undefined,
     });
@@ -95,11 +97,11 @@ export function CurveChart({
       return api;
     });
     chart.timeScale().fitContent();
-    const ro = new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
-    ro.observe(el);
+    const ro = fill ? null : new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
+    ro?.observe(el);
     return () => {
       offTheme();
-      ro.disconnect();
+      ro?.disconnect();
       chart.remove();
       chartRef.current = null;
       seriesRef.current = [];
@@ -108,7 +110,7 @@ export function CurveChart({
 
   if (!hasData) return <EmptyState title={emptyTitle} className={className} />;
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full", height === "fill" && "flex h-full flex-col", className)}>
       {series.length > 1 && (
         <div className="flex flex-wrap gap-3 bg-pane px-3 pt-2 text-[12px]">
           {series.map((s, idx) => (
@@ -119,7 +121,7 @@ export function CurveChart({
           ))}
         </div>
       )}
-      <div ref={ref} className="w-full bg-pane" />
+      <div ref={ref} className={cn("w-full bg-pane", height === "fill" && "min-h-0 flex-1")} />
     </div>
   );
 }

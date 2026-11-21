@@ -9,14 +9,26 @@ import { formatNumber } from "@/lib/format";
  * references, image 19: two sides, two colours; red stays reserved for danger). The ATM strike
  * is marked. A strike without OI at one end has no bar for that side: nothing is assumed.
  */
-export function OiChangeChart({ strikes, atm }: { strikes: OiStrikeOut[]; atm: number | null }) {
+export function OiChangeChart({
+  strikes,
+  atm,
+  width,
+  height = 288,
+}: {
+  strikes: OiStrikeOut[];
+  atm: number | null;
+  /** Available width: strikes spread to fill it (never narrower than 34 px each). */
+  width?: number;
+  /** Total height including the strike labels. */
+  height?: number;
+}) {
   const max = Math.max(
     1,
     ...strikes.flatMap((s) => [Math.abs(s.call_change ?? 0), Math.abs(s.put_change ?? 0)]),
   );
-  const STEP = 48;
+  const STEP = width && strikes.length ? Math.max(34, Math.floor(width / strikes.length)) : 48;
   const W = Math.max(strikes.length * STEP, 320);
-  const H = 260;
+  const H = Math.max(120, height - 28);
   const mid = H / 2;
   const scale = (v: number) => (Math.abs(v) / max) * (mid - 18);
   const atmIndex =
@@ -42,13 +54,13 @@ export function OiChangeChart({ strikes, atm }: { strikes: OiStrikeOut[]; atm: n
       >
         <line x1={0} x2={W} y1={mid} y2={mid} stroke="var(--border-strong)" strokeWidth={1} />
         {strikes.map((s, i) => {
-          const x = i * STEP + 8;
+          const x = i * STEP + Math.floor((STEP - 30) / 2) - 1; // 8 at the default 48 px step
           const call = s.call_change;
           const put = s.put_change;
           return (
             <g key={s.strike}>
               {i === atmIndex && (
-                <rect x={x - 6} y={4} width={STEP - 4} height={H - 8} fill="var(--accent-soft)" opacity={0.6} />
+                <rect x={i * STEP + 2} y={4} width={STEP - 4} height={H - 8} fill="var(--accent-soft)" opacity={0.6} />
               )}
               {call != null && call !== 0 && (
                 <rect

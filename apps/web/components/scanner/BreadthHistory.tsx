@@ -15,7 +15,7 @@ const H = 120;
  * Small history of NIFTY 50 breadth: bars = advances − declines per session (green above zero,
  * red below), line = % of members above EMA 200 (0–100 on the same height). Stored rows only.
  */
-export function BreadthHistory({ className }: { className?: string }) {
+export function BreadthHistory({ className, bare = false }: { className?: string; bare?: boolean }) {
   const { data, isPending, isError } = useBreadthHistory("NIFTY50", 120);
   const me = useMe();
   const isOwner = me.data?.roles.includes("owner") ?? false;
@@ -44,6 +44,7 @@ export function BreadthHistory({ className }: { className?: string }) {
       title="Breadth history"
       subtitle={data ? `NIFTY 50 · ${n} sessions · ${data.provider.toUpperCase()} daily candles` : "NIFTY 50"}
       className={className}
+      bare={bare}
       actions={
         isOwner && (
           <Button size="xs" variant="ghost" disabled={rebuild.isPending} onClick={() => rebuild.mutate({ from_date: fromDate })} title="Recompute the last ~120 days in the worker">

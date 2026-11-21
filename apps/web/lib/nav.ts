@@ -16,6 +16,7 @@ import {
   Newspaper,
   Radar,
   Settings,
+  Target,
   Wallet,
   Wrench,
   Zap,
@@ -44,6 +45,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "AI Trading Hub", href: "/ai-hub", icon: Bot, phase: 6 },
       { label: "AI Learning", href: "/ai-learning", icon: BrainCircuit, phase: 6 },
+      { label: "AI Accuracy", href: "/ai/accuracy", icon: Target },
     ],
   },
   {

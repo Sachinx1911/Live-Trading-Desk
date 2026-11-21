@@ -53,6 +53,8 @@ EXPECTED_TABLES = {
     # Mark 1 Stage 3
     "protocols", "protocol_runs", "alerts", "news_items", "ingest_errors",
     "market_breadth", "daily_reports",
+    # Mark 1 Stage 4
+    "tool_tokens", "tool_calls", "ai_observations", "ai_view_scores",
 }  # fmt: skip
 
 

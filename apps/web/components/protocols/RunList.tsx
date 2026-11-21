@@ -1,5 +1,6 @@
 "use client";
 
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { EmptyState } from "@/components/design";
 import { Button } from "@/components/ui/button";
 import type { ProtocolRun, ProtocolRunStep } from "@/lib/api/generated";
@@ -52,12 +53,15 @@ export function RunList({
   onConfirm,
   onCancel,
   busy,
+  readOnly = false,
 }: {
   runs: ProtocolRun[];
   isOwner: boolean;
   onConfirm: (id: number) => void;
   onCancel: (id: number) => void;
   busy: boolean;
+  /** Panels: no confirm / cancel buttons; those stay on /protocols. */
+  readOnly?: boolean;
 }) {
   if (runs.length === 0) return <EmptyState title="No runs yet" description="Run a protocol to see each step's stored result here." />;
   return (
@@ -76,30 +80,39 @@ export function RunList({
                   {formatDateTime(r.started_at)}
                   {r.finished_at ? ` → ${formatDateTime(r.finished_at)}` : ""} · {r.trigger}
                 </span>
+                {!readOnly && <OpenAsPanel panel="protocol-run" params={{ id: r.id }} className="ml-auto self-center" />}
               </summary>
               {r.status === "awaiting_confirmation" && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 rounded-[var(--r-sm)] border border-amber/40 bg-amber/5 p-2 text-[12px]">
                   <span className="text-text-2">
                     This protocol asks first. It will run: {r.steps.map((s) => s.tool).join(" → ")}.
                   </span>
-                  {isOwner ? (
-                    <Button size="sm" onClick={() => onConfirm(r.id)} disabled={busy}>
-                      Confirm and run
-                    </Button>
+                  {readOnly ? (
+                    <span className="text-text-3">Confirm or cancel it on the Protocols page.</span>
                   ) : (
-                    <span className="text-text-3">Only the owner can confirm.</span>
+                    <>
+                      {isOwner ? (
+                        <Button size="sm" onClick={() => onConfirm(r.id)} disabled={busy}>
+                          Confirm and run
+                        </Button>
+                      ) : (
+                        <span className="text-text-3">Only the owner can confirm.</span>
+                      )}
+                      <Button size="sm" variant="ghost" onClick={() => onCancel(r.id)} disabled={busy}>
+                        Cancel
+                      </Button>
+                    </>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => onCancel(r.id)} disabled={busy}>
-                    Cancel
-                  </Button>
                 </div>
               )}
               {r.status === "running" && (
                 <div className="mt-2 flex items-center gap-2 text-[12px] text-text-3">
                   Running in the worker…
-                  <Button size="sm" variant="ghost" onClick={() => onCancel(r.id)} disabled={busy}>
-                    Cancel remaining steps
-                  </Button>
+                  {!readOnly && (
+                    <Button size="sm" variant="ghost" onClick={() => onCancel(r.id)} disabled={busy}>
+                      Cancel remaining steps
+                    </Button>
+                  )}
                 </div>
               )}
               {r.summary && <p className="mt-2 text-[12px] text-text-2">{r.summary}</p>}

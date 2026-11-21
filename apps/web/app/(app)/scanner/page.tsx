@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useMemo, useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { EmptyState, PanelCard } from "@/components/design";
 import { BreadthHistory } from "@/components/scanner/BreadthHistory";
 import { ColumnTabs } from "@/components/scanner/ColumnTabs";
@@ -124,6 +125,7 @@ function ScannerPage() {
         actions={
           <div className="flex items-center gap-2">
             <SnapshotPill info={snapshotQ.data} isOwner={isOwner} busy={recompute.isPending} onRecompute={() => recompute.mutate(undefined)} />
+            {active && !dirty && <OpenAsPanel panel="scanner" params={{ preset: active.id }} />}
             <Button variant={dirty ? "primary" : "outline"} size="sm" onClick={() => setSaveOpen(true)} disabled={!fieldsQ.isSuccess}>
               <Save className="size-3" /> {active && !active.is_preset ? (dirty ? "Update scan" : "Edit scan") : "Save scan"}
             </Button>

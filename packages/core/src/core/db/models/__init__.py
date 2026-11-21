@@ -9,6 +9,7 @@ from core.db.models import (
     ai,
     identity,
     instruments,
+    jarvis,
     market_data,
     operations,
     reference,
@@ -28,6 +29,7 @@ from core.db.models.instruments import (
     InstrumentHistory,
     InstrumentMapping,
 )
+from core.db.models.jarvis import AiObservation, AiViewScore, ToolCall, ToolToken
 from core.db.models.market_data import (
     DataImportJob,
     DataQualityCheck,
@@ -94,6 +96,8 @@ from core.db.models.trading import (
 
 __all__ = [
     "AiCall",
+    "AiObservation",
+    "AiViewScore",
     "Alert",
     "ApiLog",
     "AuditLog",
@@ -157,12 +161,15 @@ __all__ = [
     "StrategyCondition",
     "StrategyNlDraft",
     "StrategyVersion",
+    "ToolCall",
+    "ToolToken",
     "TradingCalendar",
     "User",
     "UserRole",
     "ai",
     "identity",
     "instruments",
+    "jarvis",
     "market_data",
     "operations",
     "reference",

@@ -7,6 +7,7 @@
  */
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { EmptyState, PanelCard } from "@/components/design";
 import { Button } from "@/components/ui/button";
 import { ApiRequestError } from "@/lib/api/client";
@@ -30,7 +31,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Body({ c }: { c: DailyReportContent }) {
+/** Structured brief content; shared with the brief panel (/panel/brief). */
+export function EveningBriefBody({ c }: { c: DailyReportContent }) {
   const missing = c.coverage.filter((x) => !x.complete);
   return (
     <div className="grid gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
@@ -119,6 +121,7 @@ export function EveningBrief() {
           <Button size="xs" variant="outline" disabled={gen.isPending} onClick={() => gen.mutate({ day })}>
             <RefreshCw /> {gen.isSuccess ? "Queued" : "Regenerate"}
           </Button>
+          <OpenAsPanel panel="brief" params={{ date: day }} />
         </div>
       }
     >
@@ -127,7 +130,7 @@ export function EveningBrief() {
       ) : (
         <>
           {!report.content.is_trading_day && <p className="mb-2 text-xs text-text-3">Market closed on this day.</p>}
-          <Body c={report.content} />
+          <EveningBriefBody c={report.content} />
         </>
       )}
     </PanelCard>

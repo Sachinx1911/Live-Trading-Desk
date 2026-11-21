@@ -66,6 +66,20 @@ class Settings(BaseSettings):
     alert_pcr_margin: float = Field(default=0.1, ge=0, le=1)
     alert_dedup_minutes: int = Field(default=30, ge=1, le=24 * 60)
 
+    # Tool server for the owner's jarvis (Mark 1 Stage 4.1, docs/tool-server.md). Loopback by
+    # default; LAN only if the owner sets the host. The highest level it serves is the lower of
+    # this and the calling token's max_level (red is never served). Per-token rate limit.
+    tool_server_host: str = "127.0.0.1"
+    tool_server_port: int = Field(default=8100, ge=1, le=65535)
+    tool_server_max_level: Literal["green", "yellow"] = "green"
+    tool_server_rate_per_minute: int = Field(default=120, ge=1, le=6000)
+
+    # JARVIS accuracy loop (Mark 1 Stage 4.6): a view is a hit when the close at its due date
+    # moved at least this many percent its way (sideways: less than this either way). The
+    # due-date close may arrive late; after this many trading days without it the view is void.
+    view_score_threshold_pct: float = Field(default=1.0, gt=0, le=20)
+    view_score_grace_days: int = Field(default=3, ge=0, le=20)
+
     # Local-dev convenience only: when set (and APP_ENV != production) POST /auth/dev-login
     # issues real tokens for this user without a password so the web app opens straight
     # on the dashboard. Refused at startup in production (see _refuse_dev_auto_login_in_prod).

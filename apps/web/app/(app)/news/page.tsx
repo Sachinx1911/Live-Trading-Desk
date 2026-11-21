@@ -3,6 +3,7 @@
 import { AlertTriangle, RefreshCw, Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { EmptyState, PanelCard } from "@/components/design";
 import { NewsList } from "@/components/news/NewsList";
 import { Button } from "@/components/ui/button";
@@ -166,6 +167,7 @@ function NewsPage() {
         subtitle="Raw headlines from public RSS feeds. No AI analysis yet (Stage 4); tags are plain name matching."
         className="col-span-12 xl:col-span-8"
         bodyClassName="p-0"
+        actions={<OpenAsPanel panel="news" params={{ symbol: symbol || undefined }} />}
       >
         <FilterForm
           key={`${q}|${symbol}`}

@@ -16,7 +16,16 @@ import orjson
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.db.models import Alert, PaperAccount, PaperTrade, RiskLimit, StrategyActivation
+from core.db.models import (
+    AiObservation,
+    AiViewScore,
+    Alert,
+    PaperAccount,
+    PaperTrade,
+    RiskLimit,
+    StrategyActivation,
+)
+from core.db.models import Instrument as InstrumentRow
 from core.db.models._enums import ActivationStatus, RiskLimitScope
 from core.logging import get_logger
 from core.notify import Notifier
@@ -25,6 +34,7 @@ from core.settings import Settings
 from core.time import ensure_utc
 from market_data.repo.chains import latest_chain_oi
 from market_data.repo.instruments import get_by_symbol
+from market_data.repo.quotes import get_cached_quotes
 from protocols.actions import broker_rows, ist_day_bounds
 from protocols.alerts import (
     AlertCandidate,
@@ -36,6 +46,7 @@ from protocols.alerts import (
     PaperLossFact,
     PcrFact,
     TraderFact,
+    ViewFact,
     dedup,
 )
 from protocols.context import ActionContext
@@ -54,6 +65,57 @@ def params_from(settings: Settings) -> AlertParams:
         pcr_no_call_buy_at=Decimal(str(lim.pcr_no_call_buy_at)),
         pcr_max_age_minutes=lim.pcr_max_age_minutes,
     )
+
+
+VIEW_LOOKBACK = timedelta(days=400)  # > 250 trading days: the longest allowed horizon
+
+
+async def view_facts(db: AsyncSession, redis: Any, now: datetime) -> tuple[ViewFact, ...]:
+    """Open JARVIS views (not scored yet) that carry an invalidation price, with the latest
+    cached quote. Demo quotes are not used (an alert never fires on demo prices). Reads the
+    table directly, not market_data.views, so the paper trader (which imports this module)
+    stays outside the views package (import-linter contract)."""
+    rows = (
+        await db.execute(
+            select(AiObservation, InstrumentRow.symbol)
+            .join(InstrumentRow, InstrumentRow.id == AiObservation.instrument_id)
+            .outerjoin(AiViewScore, AiViewScore.observation_id == AiObservation.id)
+            .where(
+                AiObservation.invalidation_price.is_not(None),
+                AiViewScore.id.is_(None),
+                AiObservation.ts >= now - VIEW_LOOKBACK,
+            )
+            .order_by(AiObservation.id)
+        )
+    ).all()
+    if not rows:
+        return ()
+    keys = [f"view_invalidated:{o.id}" for o, _ in rows]
+    alerted = set(
+        (await db.execute(select(Alert.dedup_key).where(Alert.dedup_key.in_(keys)))).scalars()
+    )
+    quotes = await get_cached_quotes(redis, sorted({o.instrument_id for o, _ in rows}), now)
+    out: list[ViewFact] = []
+    for o, sym in rows:
+        q = quotes.get(o.instrument_id)
+        real = q is not None and not q.is_demo
+        if o.invalidation_price is None:  # filtered in SQL; keeps the type narrow
+            continue
+        out.append(
+            ViewFact(
+                observation_id=o.id,
+                symbol=sym,
+                instrument_id=o.instrument_id,
+                direction=o.direction,
+                ref_price=Decimal(o.ref_price),
+                invalidation_price=Decimal(o.invalidation_price),
+                invalidation=o.invalidation,
+                price=q.ltp if q is not None and real else None,
+                price_ts=ensure_utc(q.ts) if q is not None and real else None,
+                already_alerted=f"view_invalidated:{o.id}" in alerted,
+            )
+        )
+    return tuple(out)
 
 
 def telegram_configured(settings: Settings) -> bool:
@@ -182,6 +244,7 @@ async def gather_facts(
         detail = _loads(await redis.get(k)) or {}
         kill.append(KillFact(k.removeprefix("kill:"), detail.get("reason"), detail.get("by")))
     kill.sort(key=lambda x: x.scope)
+    views = await view_facts(db, redis, now)
     return AlertFacts(
         now=now,
         market_open=market_open,
@@ -191,6 +254,7 @@ async def gather_facts(
         paper=tuple(paper),
         trader=trader,
         kill=tuple(kill),
+        views=views,
     )
 
 

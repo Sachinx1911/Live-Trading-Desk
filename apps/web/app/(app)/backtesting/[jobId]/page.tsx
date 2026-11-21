@@ -4,6 +4,7 @@ import { Ban, GitCompare, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { CurveChart } from "@/components/backtests/CurveChart";
 import { JobStatusChip, ProgressBar } from "@/components/backtests/JobStatus";
 import { Markdown } from "@/components/backtests/Markdown";
@@ -70,6 +71,7 @@ export default function BacktestDetailPage() {
               </Button>
             )}
             <Link href="/strategies/compare" className="text-[11px] text-accent-cyan">compare →</Link>
+            <OpenAsPanel panel="backtest" params={{ job: job.id }} />
           </div>
         }
       >

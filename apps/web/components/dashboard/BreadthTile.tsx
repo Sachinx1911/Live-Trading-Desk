@@ -37,7 +37,7 @@ function Move({ label, m }: { label: string; m: BreadthIndexMove | undefined }) 
  * EMA 50, 52-week highs and lows, index moves. Values come only from `market_breadth` (derived
  * from one provider's stored daily candles); the as-of date and provider are always shown.
  */
-export function BreadthTile({ className }: { className?: string }) {
+export function BreadthTile({ className, bare = false, headerExtra }: { className?: string; bare?: boolean; headerExtra?: React.ReactNode }) {
   const { data, isPending, isError } = useBreadthLatest();
   const total = data ? data.advances + data.declines + data.unchanged : 0;
   const w = (n: number) => (total ? `${(n / total) * 100}%` : "0%");
@@ -47,6 +47,8 @@ export function BreadthTile({ className }: { className?: string }) {
       title="Market breadth"
       subtitle={data ? `NIFTY 50 · EOD ${fmtDay(data.as_of_date)} · ${data.provider.toUpperCase()}` : "NIFTY 50 · end of day"}
       className={className}
+      actions={headerExtra}
+      bare={bare}
     >
       {isPending ? (
         <Skeleton className="h-24" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { OpenAsPanel } from "@/components/panels/OpenAsPanel";
 import { PanelCard } from "@/components/design";
 import { PaperHeader } from "@/components/trading/PaperHeader";
 import { PositionsTable } from "@/components/trading/PositionsTable";
@@ -19,9 +20,12 @@ function Positions({ accountId }: { accountId: number }) {
         title="Positions"
         bodyClassName="overflow-x-auto p-0"
         actions={
-          <label className="flex items-center gap-1 text-[11px] text-text-2">
-            <input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} /> include closed
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1 text-[11px] text-text-2">
+              <input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} /> include closed
+            </label>
+            <OpenAsPanel panel="positions" params={{ account: accountId, closed }} />
+          </div>
         }
       >
         <PositionsTable positions={pos.data} isPending={pos.isPending} />

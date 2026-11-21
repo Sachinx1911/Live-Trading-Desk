@@ -17,10 +17,11 @@ dependencies = [
     "collector",
     "trader",
     "protocols",
+    "tool_server",
 ]
 
 [tool.uv.workspace]
-members = ["packages/*", "apps/api", "apps/worker", "apps/collector", "apps/trader"]
+members = ["packages/*", "apps/api", "apps/worker", "apps/collector", "apps/trader", "apps/tool_server"]
 
 [tool.uv.sources]
 core = { workspace = true }
@@ -36,6 +37,7 @@ worker = { workspace = true }
 collector = { workspace = true }
 trader = { workspace = true }
 protocols = { workspace = true }
+tool_server = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -68,7 +70,7 @@ ignore = ["S101", "RUF012"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:packages/strategy/src:packages/execution/src:packages/risk/src:packages/backtest/src:packages/ai/src:apps/api/src:apps/worker/src:apps/collector/src:apps/trader/src:packages/protocols/src"
+mypy_path = "packages/core/src:packages/providers/src:packages/market_data/src:packages/strategy/src:packages/execution/src:packages/risk/src:packages/backtest/src:packages/ai/src:apps/api/src:apps/worker/src:apps/collector/src:apps/trader/src:packages/protocols/src:apps/tool_server/src"
 namespace_packages = true
 explicit_package_bases = true
 exclude = ["/tests/", "_pb2"]
@@ -80,7 +82,7 @@ testpaths = ["packages", "apps"]
 addopts = "-q"
 
 [tool.importlinter]
-root_packages = ["core", "providers", "market_data", "strategy", "execution", "risk", "backtest", "ai", "api", "worker", "collector", "trader", "protocols"]
+root_packages = ["core", "providers", "market_data", "strategy", "execution", "risk", "backtest", "ai", "api", "worker", "collector", "trader", "protocols", "tool_server"]
 
 [[tool.importlinter.contracts]]
 name = "core depends on nothing above it"
@@ -135,3 +137,21 @@ name = "protocols never import apps or the AI layer"
 type = "forbidden"
 source_modules = ["protocols"]
 forbidden_modules = ["api", "worker", "collector", "trader", "ai"]
+
+[[tool.importlinter.contracts]]
+name = "AI views never feed trading (ADR-009, Mark 1 Stage 4.6)"
+type = "forbidden"
+source_modules = ["strategy", "risk", "execution", "backtest", "trader"]
+forbidden_modules = ["market_data.views"]
+
+[[tool.importlinter.contracts]]
+name = "no package imports the tool server app"
+type = "forbidden"
+source_modules = ["core", "providers", "market_data", "strategy", "execution", "risk", "backtest", "ai", "protocols"]
+forbidden_modules = ["tool_server"]
+
+[[tool.importlinter.contracts]]
+name = "tool server never imports the API, trader, worker, collector or the AI layer"
+type = "forbidden"
+source_modules = ["tool_server"]
+forbidden_modules = ["api", "trader", "worker", "collector", "ai"]

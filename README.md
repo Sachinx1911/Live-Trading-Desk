@@ -23,6 +23,7 @@ user-approved live execution, AI-assisted research and trade review.
 | [`docs/architecture/08-risks-and-dependencies.md`](docs/architecture/08-risks-and-dependencies.md) | External dependencies, risks, open questions |
 | [`docs/mark-1-plan.md`](docs/mark-1-plan.md) | Mark 1 plan: JARVIS, the assistant the product becomes; features, stages, screens, data sources |
 | [`docs/trading-rules.md`](docs/trading-rules.md) | The owner's hard trading rules enforced by the risk engine |
+| [`docs/tool-server.md`](docs/tool-server.md) | Tool server for the owner's jarvis: run it, tokens, tools with levels/tiers, HTTP and MCP |
 | [`CLAUDE.md`](CLAUDE.md) | Rules every contributor (human or AI) follows |
 
 ## Principles that do not bend

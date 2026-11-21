@@ -11,6 +11,7 @@ from fastapi.responses import ORJSONResponse
 
 from api.middleware import RequestLogMiddleware
 from api.routers import (
+    ai_views,
     alerts,
     auth,
     backtests,
@@ -32,6 +33,7 @@ from api.routers import (
     risk,
     scanner,
     strategies,
+    tool_tokens,
 )
 from api.state import AppState
 from api.ws import market as ws_market
@@ -100,7 +102,9 @@ def create_app() -> FastAPI:
     app.include_router(imports.router, prefix=API_PREFIX)
     app.include_router(protocols.router, prefix=API_PREFIX)
     app.include_router(alerts.router, prefix=API_PREFIX)
+    app.include_router(ai_views.router, prefix=API_PREFIX)
     app.include_router(reports.router, prefix=API_PREFIX)
+    app.include_router(tool_tokens.router, prefix=API_PREFIX)
     app.include_router(ws_replay.router)
     app.include_router(ws_market.router)
     return app
