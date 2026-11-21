@@ -21,6 +21,8 @@ user-approved live execution, AI-assisted research and trade review.
 | [`docs/architecture/06-ui-page-map.md`](docs/architecture/06-ui-page-map.md) | Design system and every route |
 | [`docs/architecture/07-roadmap.md`](docs/architecture/07-roadmap.md) | 10 phases, exit criteria, Phase 1 task list |
 | [`docs/architecture/08-risks-and-dependencies.md`](docs/architecture/08-risks-and-dependencies.md) | External dependencies, risks, open questions |
+| [`docs/mark-1-plan.md`](docs/mark-1-plan.md) | Mark 1 plan: JARVIS, the assistant the product becomes; features, stages, screens, data sources |
+| [`docs/trading-rules.md`](docs/trading-rules.md) | The owner's hard trading rules enforced by the risk engine |
 | [`CLAUDE.md`](CLAUDE.md) | Rules every contributor (human or AI) follows |
 
 ## Principles that do not bend
