@@ -28,7 +28,7 @@ function ProtocolRunPanel() {
     <PanelFrame
       panel="protocol-run"
       subtitle={r ? `#${r.id} · ${r.protocol_name} · ${r.status.replace("_", " ")}` : values.id ? `#${values.id}` : undefined}
-      state={r ? "historical" : run.isError ? "disconnected" : undefined}
+      state={r ? "historical" : run.isError && !(run.error instanceof ApiRequestError && run.error.status === 404) ? "disconnected" : undefined}
       stateDetail={r ? (OPEN.has(r.status) ? "refreshing" : "stored") : undefined}
       fullHref={fullPageUrl("protocol-run")}
     >
@@ -42,7 +42,7 @@ function ProtocolRunPanel() {
   if (run.isError || !r) return frame(<PanelMessage tone="error" title="Cannot reach the API" />);
   return frame(
     <div className="p-2">
-      <RunList runs={[r]} isOwner={false} onConfirm={() => undefined} onCancel={() => undefined} busy={false} readOnly />
+      <RunList runs={[r]} isOwner={false} onConfirm={() => undefined} onCancel={() => undefined} busy={false} readOnly expandAll />
     </div>,
   );
 }

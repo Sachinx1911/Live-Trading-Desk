@@ -277,7 +277,7 @@ Registry of the owner's hard market rules in `risk/owner_rules.py`, run by the r
 - [x] "Open as panel" icon on the full pages (market chart and watchlist, option chain, OI change, alerts, paper positions, dashboard regime and breadth, scanner, backtest detail, evening brief, news, protocol runs)
 - [x] Small component options for reuse (defaults keep the pages unchanged): `PanelCard bare`, `CandleChart`/`CurveChart height="fill"`, `OptionChainTable defaultGreeks`, `RegimeTile onlySymbol`, `RunList readOnly`, `ScannerTable linkRows`, `OiChangeChart width/height`, exported `EveningBriefBody`
 - [x] eslint, tsc, `next build` clean; `/panel/registry.json` checked; logged-out panel redirects to login with the full panel URL as `next`
-- [ ] Browser check of the panels at about 600×400 and full size with live data (blocked in this session: the browser pane was logged out and the login step was not available to the agent)
+- [x] Browser check (2026-11-21, owner session via dev auto-login): chart, option chain with Greeks, OI change, quotes, positions, breadth, brief, news, backtest and protocol-run panels at 600×400 and 1440×900 on real stored Upstox data (market closed: STALE / HISTORICAL shown, nothing as live); bad parameters show the parameter and expected URL. Fixed during the check: the protocol-run panel now opens with every step expanded, and a not-found backtest or run no longer shows DISCONNECTED. Note: the long-running web dev server had to be restarted (it predated the /panel routes and `pnpm build` runs in the same folder), after which every panel route answered 200
 - [ ] Screen manager (monitor choice, resize, dissolve) on the jarvis side
 
 ## Mark 1 Stage 4.6 · JARVIS accuracy loop (2026-11-21, `docs/mark-1-build-plan.md` §4.6, no LLM)

@@ -54,6 +54,7 @@ export function RunList({
   onCancel,
   busy,
   readOnly = false,
+  expandAll = false,
 }: {
   runs: ProtocolRun[];
   isOwner: boolean;
@@ -62,12 +63,14 @@ export function RunList({
   busy: boolean;
   /** Panels: no confirm / cancel buttons; those stay on /protocols. */
   readOnly?: boolean;
+  /** Panels showing one run: steps are the point, so start expanded. */
+  expandAll?: boolean;
 }) {
   if (runs.length === 0) return <EmptyState title="No runs yet" description="Run a protocol to see each step's stored result here." />;
   return (
     <ul className="flex flex-col gap-2">
       {runs.map((r) => {
-        const open = r.status === "running" || r.status === "awaiting_confirmation";
+        const open = expandAll || r.status === "running" || r.status === "awaiting_confirmation";
         return (
           <li key={r.id} className={cn("rounded-[var(--r-sm)] border border-border p-2", r.status === "awaiting_confirmation" && "border-amber/60")}>
             <details open={open}>

@@ -39,7 +39,7 @@ function BacktestPanel() {
     <PanelFrame
       panel="backtest"
       subtitle={j ? `#${j.id}${j.label ? ` · ${j.label}` : ""} · ${j.timeframe}` : values.job ? `#${values.job}` : undefined}
-      state={j ? "historical" : job.isError ? "disconnected" : undefined}
+      state={j ? "historical" : job.isError && !(job.error instanceof ApiRequestError && job.error.status === 404) ? "disconnected" : undefined}
       stateDetail={j ? "stored result" : undefined}
       fullHref={j ? fullPageUrl("backtest", { job: String(j.id) }) : "/backtesting"}
       bodyClassName="flex flex-col"
