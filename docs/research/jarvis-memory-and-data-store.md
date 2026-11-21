@@ -1,5 +1,11 @@
 # JARVIS memory and data store — research note
 
+> **Superseded for storage (2026-11-21, owner decision, option A):** JARVIS is the owner's existing
+> assistant `Sachinx1911/jarvis`, which has its own memory (markdown files as truth, SQLite index).
+> The Postgres `jarvis_*` tables below are not built in Live-Trading-Desk. The principles (provenance,
+> owner-owned notes, numbers always fetched by tools, procedures stay code) still apply. See
+> `docs/mark-1-build-plan.md` §4.3.
+
 Status: **research only** (2026-11-21). Nothing here is built; per `docs/mark-1-plan.md` §9 building
 starts on the owner's go-ahead. This note exists so that Stage 4/5 of Mark 1 can start from a
 decided storage design instead of inventing one under time pressure. It extends ADR-009 (what an

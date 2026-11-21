@@ -17,6 +17,7 @@ Mark 1 stages), what to avoid, and the licence.
 | [open-jarvis/OpenJarvis](open-jarvis-OpenJarvis.md) | Stanford's local-first personal-agent framework: 5 primitives, registries, memory backends, traces, proactive agent, Tauri app | JARVIS core design checklist: tool spec + confirmation, approval queue, hybrid memory, guardrails, traces | Apache-2.0 | 2026-11-21 |
 | [microsoft/JARVIS](microsoft-JARVIS.md) | Microsoft Research: HuggingGPT (LLM plans tool graph), TaskBench (planning benchmark), EasyTool (concise tool docs) | Multi-step plans with step dependencies, scoring the JARVIS command eval set, writing tool descriptions | MIT (TaskBench Apache-2.0) | 2026-11-21 |
 | [Sachinx1911/Stock-Market-Prediction-Software](sachinx1911-stock-market-prediction-software.md) | Owner's earlier project "AI-MIOS v1": NSE end-of-day analysis, 10-year data, indicators, market breadth, RSS news analyst, daily AI brief, accuracy loop scoring every AI statement | Accuracy loop for JARVIS statements, news pipeline, market breadth, daily brief, importing its 10-year data | Owner's own | 2026-11-21 |
+| [Sachinx1911/jarvis](sachinx1911-jarvis.md) | Owner's existing general personal assistant: agent loop, markdown memory, T0–T4 risk tiers, approvals, kill switch, tasks + receipts, agent team, Telegram, Marathi voice, dashboard; 40k lines, 1,813 tests | Deciding Mark 1 Stage 4: connect Live-Trading-Desk as a tool server to this JARVIS instead of building a second core | Owner's own | 2026-11-21 |
 
 ## Design
 

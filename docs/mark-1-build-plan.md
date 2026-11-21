@@ -93,10 +93,11 @@ once in a live session (cadence gap recorded, plan open decision 2).
 
 ## 3. Stage 3 · Protocols, alerts, reports, Dhan (no AI)
 
-### 3.1 Protocol engine (domain-agnostic core)
+### 3.1 Protocol engine (trading protocols)
 
-- Package `packages/jarvis` (new, no trading imports in its core; trading tools live in
-  `jarvis.domains.trading`, every tool and protocol carries `domain`, research note §11).
+- Package `packages/protocols` (new). Since the 2026-11-21 decision (Stage 4, option A) the
+  domain-agnostic assistant core is the owner's jarvis, so protocols here are trading
+  protocols; each still carries `domain="trading"` and is exposed as a tool in Stage 4.
 - A protocol = a named, versioned list of tool calls with arguments and an optional screen
   layout, stored as JSON (no code; CLAUDE.md rule 4). Migration **0014** `protocols`,
   `protocol_runs` (append-only, step results).
@@ -161,51 +162,82 @@ Owner supplies: Dhan access token, Telegram bot token.
 
 ## 4. Stage 4 · JARVIS reads and talks (AI, read-only)
 
-Needs: OpenAI key in the server `.env`.
+**Decision (owner, 2026-11-21): option A, connect.** The JARVIS is the owner's existing
+assistant, `Sachinx1911/jarvis` (`references/sachinx1911-jarvis.md`): it already has the agent
+loop, memory, approvals, kill switch, Telegram, Marathi voice and a dashboard. Live-Trading-Desk
+does **not** build a second assistant core. It stays the trading engine and exposes its actions
+as a **tool server**; the owner's jarvis gets a trading workspace that calls those tools.
 
-### 4.1 Tool catalogue
+Split of responsibility:
 
-- Every platform action becomes one typed tool: `name, domain, description (EasyTool style:
-  one purpose line + one example), input schema (Pydantic), output schema, risk level
-  Green/Yellow/Red, timeout`. Unknown tool name = refusal.
-- Stage 4 exposes **Green tools only**: quotes, candles, chain, OI change, Greeks, regime,
-  scanner results, backtest results, positions, paper P&L, health, alerts, reports, protocol
-  status. The executor refuses any non-Green tool in this stage (server-side check, not
-  prompt).
-- Exposed internally and via MCP so the model stays replaceable (plan §2.1).
+| Live-Trading-Desk (this repo) | Owner's jarvis (`Sachinx1911/jarvis`) |
+|---|---|
+| Market data, option chains, strategies, backtest, replay, paper trading, risk engine, owner rules, execution gateway, alerts, reports, protocols | Conversation, memory, voice, Telegram, approvals UI, agent loop, modes (JARVIS / FRIDAY / EDITH narration / KAREN), schedules, briefs |
+| Decides what each tool may do and enforces it server-side | Decides which tool to call and asks the owner when its tier requires |
+| Holds broker secrets; they never leave this repo | Holds only a scoped tool-server token (Keychain) |
 
-### 4.2 Agent loop
+Needs: nothing from OpenAI for the tool server itself. jarvis uses its own model (Claude today).
+OpenAI under ADR-009 stays for AI that runs inside Live-Trading-Desk (NL builder, News Analyst).
 
-- One agent (JARVIS) with mode selection by clock and request: JARVIS (market closed),
-  FRIDAY (market open, short answers), KAREN (when asked to explain). EDITH stays the
-  deterministic alert job from Stage 3; JARVIS only narrates its alerts.
-- Loop: model proposes tool calls → executor validates name, args, level → runs → result
-  back to the model → answer. Every number in the answer must come from a tool result in
-  that turn; answers cite which tool supplied it.
-- Budgets: per-turn token budget and the existing daily cap; `ai_calls` logs every call.
+### 4.1 Tool server (this repo)
 
-### 4.3 Memory (research note §4, confirmed at go-ahead)
+- New app `apps/tool_server` (or a router set in `apps/api`, decided at build time) speaking
+  **MCP**, with a typed HTTP fallback generated from the same definitions.
+- Each tool: `name, domain="trading", description (EasyTool style: one purpose line + one
+  example), input schema (Pydantic), output schema, level Green/Yellow/Red, jarvis tier, timeout`.
+- Level → jarvis tier mapping: **Green → T0** (run), **Yellow paper (standing permission) → T1**
+  (run, report), **other Yellow → T2** (ask first), **Red → not exposed at all**. The tool server
+  refuses anything above the level the stage allows, whatever the caller claims.
+- Stage 4 exposes **Green tools only**: quotes, candles, option chain, OI change, Greeks, regime,
+  breadth, scanner results, backtest results, positions, paper P&L, health, alerts, reports,
+  news headlines, protocol status.
+- Every response carries `source`, `freshness` and `is_demo` (CLAUDE.md rule 5); jarvis must
+  repeat them, never present demo data as live.
+- Auth: one service token per jarvis install, scoped to the tool server, stored encrypted here
+  and in the Keychain there; loopback or LAN only, rate-limited, revocable from
+  `/settings`. Migration: `tool_calls` (append-only authority log: tool, args, level, caller,
+  result reference, duration). jarvis keeps its own audit too.
+- Kill switch: a jarvis `/stop` or "Clean Slate" maps to the existing kill-switch endpoint,
+  which only ever turns trading **off** (turning it back on stays Red, owner in our UI).
+- Tests: every tool has a contract test; property test that no tool above the allowed level is
+  callable; secret-scan test that no response contains broker credentials.
 
-- Migration (next free number after Stage 3): `jarvis_conversations`, `jarvis_messages` (append-only),
-  `jarvis_tool_runs` (authority log: tool, args, level, who confirmed, result ref),
-  `jarvis_notes` (owner-owned, provenance, pgvector), `owner_preferences`.
-- Redis working memory per conversation with TTL. Notes store ids and facts, never prices;
-  prices are always fetched by a tool.
+### 4.2 jarvis side (work in the owner's jarvis repo, its own sessions and commits)
 
-### 4.4 Chat surface and desktop shell
+- Connector `trading` in jarvis's connector registry pointing at the tool server, with health
+  check and the tier mapping above.
+- A trading workspace (loka) with its own memory folder, budget and constraints file; the owner
+  rules and "no orders from an LLM" go into its `constraints.md`, so they are always in the prompt
+  (the tool server still enforces them; the prompt is a second line, not the first).
+- Modes: FRIDAY behaviour (short answers) during NSE market hours as a skill / SOUL addition;
+  KAREN as the review skill.
+- EDITH: Live-Trading-Desk's alert engine (3.2) pushes alerts to jarvis (webhook or event
+  stream); jarvis only narrates and forwards them (Telegram, voice). Alerts are never generated
+  by the model.
+- Morning and evening brief: jarvis's brief gets a trading section from the tool server
+  (3.7 report data).
 
-- Web: JARVIS panel (chat, current mode, what it is doing now, tool steps with narration,
-  always-visible Stop). Built in the HUD design language from
-  `references/design-reference-images.md` as a theme (decision pending, §7).
-- Desktop: Tauri shell around the web app on **macOS** (built on the MacBook): monitor
-  detection, panel windows per screen, "busy screen" detection, layouts from protocols
-  (plan §4).
+### 4.3 Memory
+
+- Trading notes, preferences and episodes live in **jarvis's memory** (the trading workspace).
+  The Postgres `jarvis_*` tables from `docs/research/jarvis-memory-and-data-store.md` are
+  **not built** here; that note is superseded by jarvis's memory design for everything except
+  the principles (provenance, owner-owned, numbers always via tools).
+- Live-Trading-Desk keeps only its domain data plus `tool_calls` and the accuracy log (4.6).
+
+### 4.4 Screens and panels
+
+- Live-Trading-Desk web screens are built as standalone **panels** with stable URLs (plan §4),
+  so jarvis (or its macOS wrapper `mac/Jarvis`) can open a panel by URL with parameters.
+- Screen manager (which monitor, resize, dissolve) belongs to the jarvis side; the Tauri shell
+  planned here is dropped unless jarvis's wrapper cannot do it. To be designed with the HUD
+  theme.
 
 ### 4.5 Command evaluation set
 
-- 100+ real owner commands (Marathi, Hindi, English) with expected tool calls; scored like
-  TaskBench (steps, tool choice, arguments separately); offline self-check in CI, online run
-  gated on the key, like `nl_eval`.
+- 100+ real owner commands (Marathi, Hindi, English) with expected tool calls, scored like
+  TaskBench (steps, tool choice, arguments). Lives in jarvis's evaluation suite, runs against a
+  tool server with demo data.
 
 ### 4.6 Accuracy loop for JARVIS's views (from AI-MIOS v1)
 
@@ -216,8 +248,10 @@ honest.
   carries a structured stance: instrument, direction (up / down / sideways), horizon in
   trading days, confidence, and an **invalidation condition** ("view wrong below 23,800").
   Facts, news and JARVIS's own synthesis are labelled separately in the text.
-- Each stance is written to `jarvis_observations` (append-only): stance, reference price
-  taken from a tool at that moment (with source and freshness), `ai_call_id`, mode, time.
+- Each stance is recorded in Live-Trading-Desk through the `record_view` tool (it needs our
+  prices to be scored) into `ai_observations` (append-only): stance, reference price taken by
+  the tool server at that moment (with source and freshness), caller (jarvis or the internal
+  brief), mode, time. jarvis's skill makes the call whenever it states a direction.
 - A worker job scores matured observations against the actual close (single threshold
   constant, trading-day arithmetic, NSE holidays), writing the grade to a separate derived
   table; scores can be rebuilt.
@@ -232,27 +266,28 @@ honest.
 
 ### 4.7 News analysis and the AI brief
 
-- Turn on the News Analyst from 3.5 and JARVIS's written view in the evening brief from 3.7;
-  both go through `call_structured`, budgets and `ai_calls`.
+- Turn on the News Analyst from 3.5 (inside Live-Trading-Desk, OpenAI via `call_structured`,
+  budgets and `ai_calls`) and JARVIS's written view in the evening brief from 3.7 (written by
+  jarvis from tool data). Open: whether news analysis also moves to jarvis (§7).
 
-## 5. Stage 5 · JARVIS makes changes (AI, Yellow tools)
+## 5. Stage 5 · JARVIS makes changes (Yellow tools)
 
-- Yellow tools: run backtest / replay, create strategy draft or new version, start / stop /
-  pause a paper strategy, close paper positions, run a protocol, create a rule *draft*.
-- Paper standing permission (plan §2.3): these run without asking and are reported at once;
-  "stop" / "undo that" works mid-plan.
-- Multi-step plans as a dependency graph (HuggingGPT style): the whole plan is checked for
-  risk levels **before** the first step; it stops at the first Red.
-- Red tools are never executed by JARVIS: it prepares the request and the owner confirms in
-  the UI; live orders stay in `packages/execution/live/gateway.py` behind its five gates
-  (CLAUDE.md rules 1–2). Applying a hard rule, changing limits, kill switch off, live approval
-  all need explicit owner confirmation.
-- Helpers (short-lived sub-agents for one task) only if a single agent proves insufficient;
-  they get at most JARVIS's authority and never Red tools.
+- The tool server adds Yellow tools: run backtest / replay, create strategy draft or new
+  version, start / stop / pause a paper strategy, close paper positions, run a protocol, create
+  a rule *draft*, record a view (4.6).
+- Paper standing permission (plan §2.3) = jarvis tier T1 (run, then report at once); other
+  Yellow = T2 (ask first). "Stop" / "undo that" from jarvis works mid-plan.
+- The tool server enforces paper-only for these tools: they cannot reach the live account,
+  live tables or the live gateway (ADR-008), whatever arguments arrive.
+- Multi-step plans are jarvis's planner; the tool server still checks each call on its own.
+- Red actions are **never tools**: live orders, applying a hard rule, changing limits, kill
+  switch off, live approval. jarvis can only open the right Live-Trading-Desk panel with the
+  request prepared; the owner confirms there. Live orders stay in
+  `packages/execution/live/gateway.py` behind its five gates (CLAUDE.md rules 1–2).
 - Accuracy loop (4.6) extends to Stage 5 actions: when JARVIS runs a backtest or starts a
-  paper strategy "because it expects X", that expectation is logged and scored the same way.
-- KAREN: trade reviews and teaching ("where do I see PCR?" highlights the control in our own
-  UI; no screen control of other apps).
+  paper strategy "because it expects X", that expectation is recorded and scored the same way.
+- KAREN: trade reviews and teaching ("where do I see PCR?" opens the panel and highlights the
+  control; no clicking in other apps).
 
 ## 6. Order, dependencies, where it can be built
 
@@ -270,10 +305,12 @@ honest.
 | 3.5 News ingest (raw) | — | — | Either |
 | 3.6 Market breadth | daily candles | AI-MIOS data export (optional back-fill) | Export on MacBook; rest either |
 | 3.7 Evening brief (no AI) | 3.3, 3.5, 3.6 | Telegram token | Either |
-| 4 JARVIS read-only | 3.1, design theme | OpenAI key | Web: either; Tauri: MacBook |
-| 4.6 Accuracy loop | 4 (stance output), 3.2 for invalidation alerts | — | Either |
-| 4.7 News analysis + AI brief | 3.5, 3.7, 4 | OpenAI key | Either |
-| 5 JARVIS changes | 4 | — | Either |
+| 4.1 Tool server (Green) | 1–3 tools worth exposing | — | Either |
+| 4.2 jarvis connector + trading workspace | 4.1 | Work in the jarvis repo | Either (jarvis runs on both) |
+| 4.4 Panels by URL, screen manager | 4.1, design theme | — | Panels: either; screen manager: MacBook |
+| 4.6 Accuracy loop | 4.1 (`record_view`), 3.2 for invalidation alerts | — | Either |
+| 4.7 News analysis + AI brief | 3.5, 3.7, 4.2 | OpenAI key (news analysis here) | Either |
+| 5 Yellow tools | 4.1, 4.2 | — | Either |
 
 Suggested first step on go-ahead: **1.1 → 1.2 → 1.3** (no external input needed, immediately
 useful on the market screen); 1.4 as soon as Upstox Plus is active.
@@ -287,5 +324,5 @@ useful on the market screen); 1.4 as soon as Upstox Plus is active.
 | Stage 2 | The next owner trading rules |
 | Stage 3 | Alert thresholds (how close counts as "about to trigger"); which news feeds; whether to import AI-MIOS's 10-year data; evening brief time (19:00 IST as in AI-MIOS?) |
 | Stage 4.6 | Scoring threshold (AI-MIOS used ±1 %) and default horizons for JARVIS's views |
-| Stage 4 | HUD as a third theme or replacing the TradingView themes; cyan-first or amber-first palette; what stays on screen 2; memory questions in the research note §10 |
+| Stage 4 | MCP only or MCP + HTTP; tool server reachable on loopback only or also LAN (jarvis on the same Mac?); whether news analysis stays here (OpenAI) or moves to jarvis (Claude); HUD as a third theme or replacing the TradingView themes; cyan-first or amber-first palette; what stays on screen 2 |
 | Stage 5 | Confirm the paper standing-permission scope once more with real examples |

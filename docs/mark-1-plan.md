@@ -292,6 +292,13 @@ levels, confirmation flow, memory, protocols, modes, screen manager) is kept fre
 concepts and every tool, note and protocol carries a `domain`. Details and the storage
 consequences: `docs/research/jarvis-memory-and-data-store.md` §11.
 
+**Decided later on 2026-11-21 (option A, connect):** the JARVIS is the owner's existing
+assistant `Sachinx1911/jarvis` (`references/sachinx1911-jarvis.md`). Live-Trading-Desk does
+not build its own assistant core; it exposes its actions as a tool server (MCP, Green and
+Yellow only, Red never exposed) and jarvis gets a trading workspace that calls it. Memory,
+voice, Telegram, approvals and the agent loop come from jarvis. Details:
+`docs/mark-1-build-plan.md` Stage 4–5.
+
 ## 9. Working agreement
 
 While the owner is planning, nothing in the repository is changed. Items raised in a
