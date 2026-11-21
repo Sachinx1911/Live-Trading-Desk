@@ -21,6 +21,10 @@ This repository is the AI-powered multi-market algorithmic trading platform desc
 8. **Broker secrets never reach the frontend or the logs.** Credentials live encrypted in
    the database; `.env` holds only the encryption key and infrastructure URLs.
 
+9. **Owner trading rules are hard blocks.** The rules in `docs/trading-rules.md`
+   (`packages/risk/src/risk/owner_rules.py`) run on every entry; never bypass, weaken or
+   make them optional per strategy.
+
 ## Architecture rules
 
 - Provider-specific code lives only in `packages/providers/<name>/`. Everything else speaks

@@ -104,6 +104,7 @@ async def create_session(body: SessionIn, db: DB, user: User, state: State) -> S
             lot_size=ins.lot_size,
             tick_size=ins.tick_size,
             underlying_symbol=ins.underlying_symbol,
+            option_type=ins.option_type,
         )
         warm = await fetch_candles(
             db, body.instrument_id, Timeframe.M1, start - timedelta(days=10), start, provider

@@ -147,3 +147,12 @@ reports `llm: not_configured` and nothing pretends otherwise.
 - [x] Web API client surfaces FastAPI `detail` messages in `ApiRequestError`
 - [ ] `pnpm gen:api` regeneration (hand-appended sections in `lib/api/generated.ts` for scanner, approval, replay and imports should be replaced by the generated contract once the openapi-typescript pipeline runs in CI)
 - [ ] AI candidate generation (Mode A) and the research agents — last, when the OpenAI key is supplied
+
+## Owner trading rules (2026-11-21)
+
+Registry of the owner's hard market rules in `risk/owner_rules.py`, run by the risk engine on every entry; documented in `docs/trading-rules.md`. More rules will be added here.
+
+- [x] Rule 1 `pcr_guard`: PCR ≥ 2 → no PUT buy, PCR ≤ 0.5 → no CALL buy. PCR from the nearest-expiry chain snapshot (`market_data/repo/chains.py: latest_chain_oi`); the trader passes it as `MarketContext`; missing or >15 min old chain blocks option buys; backtest/replay record `pcr_guard:skipped`. Unit + property tests
+- [ ] Not yet verified on a live session (database was down when it was built); show PCR on the `/market` option chain and in the rejection journal UI
+- [ ] Chain history in backtest/replay so the rule is enforced there too
+

@@ -20,6 +20,7 @@ from core.models import (
 )
 from core.time import ensure_utc
 from risk.limits import AccountState, InstrumentMeta, RiskLimits
+from risk.owner_rules import MarketContext, evaluate_owner_rules
 from risk.sizing import SizingResult, size_order
 
 REDUCING_KINDS = frozenset({"exit", "stop", "target", "square_off"})
@@ -68,6 +69,7 @@ class RiskEngine:
         mode: TradingMode = TradingMode.PAPER,
         intraday: bool = True,
         product: ProductType | None = None,
+        market: MarketContext | None = None,
     ) -> RiskDecision:
         now = ensure_utc(now)
         price = _price(signal, quote)
@@ -86,6 +88,7 @@ class RiskEngine:
             events_today or [],
             mode,
             product,
+            market,
         )
 
     # -- reducing orders ---------------------------------------------------------------
@@ -125,6 +128,7 @@ class RiskEngine:
         events_today: list[str],
         mode: TradingMode,
         product: ProductType,
+        market: MarketContext | None,
     ) -> RiskDecision:
         lim = self.limits
         reasons: list[str] = []
@@ -254,6 +258,15 @@ class RiskEngine:
             fail("risk_per_trade", f"risk {sizing.risk_amount} exceeds cap {risk_cap:.2f}")
         else:
             ok("risk_per_trade")
+
+        # 14+ owner trading rules (risk.owner_rules): named hard blocks, e.g. pcr_guard
+        for code, outcome in evaluate_owner_rules(signal, instrument, market, lim):
+            if outcome.status == "block":
+                fail(code, outcome.message)
+            elif outcome.status == "pass":
+                ok(code)
+            elif outcome.status == "skipped":
+                ok(f"{code}:skipped")
 
         if reasons:
             return RiskDecision(False, tuple(reasons), None, sizing, tuple(checks))

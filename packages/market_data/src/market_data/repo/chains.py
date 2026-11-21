@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -56,3 +57,66 @@ async def expiries_for(
         .order_by(Contract.expiry)
     )
     return [d for (d,) in (await session.execute(q)).all()]
+
+
+@dataclass(frozen=True)
+class ChainOi:
+    """Total open interest per side of one stored chain snapshot (input to PCR)."""
+
+    underlying_instrument_id: int
+    expiry: datetime
+    ts: datetime
+    put_oi: int
+    call_oi: int
+
+
+def oi_totals(rows: list[dict[str, object]]) -> tuple[int, int]:
+    """(put OI, call OI) summed over every strike of a snapshot's JSONB rows."""
+    put = call = 0
+    for r in rows:
+        oi = r.get("oi")
+        if not isinstance(oi, int | float) or oi <= 0:
+            continue
+        if r.get("option_type") == "PE":
+            put += int(oi)
+        elif r.get("option_type") == "CE":
+            call += int(oi)
+    return put, call
+
+
+async def latest_chain_oi(
+    session: AsyncSession, underlying_instrument_id: int, now: datetime
+) -> ChainOi | None:
+    """Newest non-empty snapshot of the nearest unexpired expiry, from the last day."""
+    now = ensure_utc(now)
+    q = (
+        select(Row)
+        .where(
+            Row.underlying_instrument_id == underlying_instrument_id,
+            Row.row_count > 0,
+            Row.expiry >= now,
+            Row.ts > now - timedelta(days=1),
+            Row.ts <= now,
+        )
+        .order_by(Row.expiry.asc(), Row.ts.desc())
+        .limit(1)
+    )
+    row = (await session.execute(q)).scalar_one_or_none()
+    if row is None:
+        return None
+    put, call = oi_totals(row.rows)
+    return ChainOi(row.underlying_instrument_id, row.expiry, row.ts, put, call)
+
+
+async def chain_oi_for_option(
+    session: AsyncSession, option_instrument_id: int, now: datetime
+) -> ChainOi | None:
+    """Chain OI of the underlying of one option contract (None if it is not a contract)."""
+    underlying = (
+        await session.execute(
+            select(Contract.underlying_id).where(Contract.instrument_id == option_instrument_id)
+        )
+    ).scalar_one_or_none()
+    if underlying is None:
+        return None
+    return await latest_chain_oi(session, underlying, now)

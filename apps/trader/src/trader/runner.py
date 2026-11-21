@@ -29,7 +29,7 @@ from core.db import get_session_factory
 from core.db.models import PaperAccount
 from core.db.models._enums import ActivationStatus, RiskLimitScope
 from core.logging import configure_logging, get_logger
-from core.models import Candle, OrderSide, Quote, Signal, Timeframe, TradingMode
+from core.models import Candle, OrderSide, Quote, Segment, Signal, Timeframe, TradingMode
 from core.notify import build_notifier
 from core.settings import Settings, get_settings
 from core.time import IST, utcnow
@@ -38,11 +38,13 @@ from execution.simulator.book import PositionBook
 from execution.simulator.engine import ExecutionSimulator, MarketState
 from execution.simulator.slippage import SpreadAwareSlippage
 from market_data.repo.candles import fetch_candles
+from market_data.repo.chains import chain_oi_for_option
 from market_data.repo.instruments import get_instrument
 from market_data.repo.regime import latest_daily, latest_intraday
 from risk.engine import RiskEngine
 from risk.kill_switch import KillSwitch
 from risk.limits import AccountState, InstrumentMeta, RiskLimits
+from risk.owner_rules import MarketContext, pcr_from_oi
 from strategy.dsl.schema import StrategyDocument
 from strategy.engine import StrategyEngine
 from strategy.regime import RegimeDaily, RegimeIntraday
@@ -168,6 +170,7 @@ class Trader:
                         lot_size=ins.lot_size,
                         tick_size=ins.tick_size,
                         underlying_symbol=ins.underlying_symbol,
+                        option_type=ins.option_type,
                     )
                     ctx.sim.lot_size_of[ins.instrument_id] = ins.lot_size
                     ctx.sim.segment_of[ins.instrument_id] = ins.segment
@@ -305,6 +308,23 @@ class Trader:
             exposure_by_key=by_key,
         )
 
+    async def _market_context(
+        self, r: Runner, sig: Signal, db: Any, now: datetime
+    ) -> MarketContext:
+        """Facts the owner rules need (risk.owner_rules). Always a context in paper mode,
+        so a missing or stale option chain blocks option buys instead of skipping the rule."""
+        if r.meta.segment != Segment.OPTIONS or sig.kind != "entry":
+            return MarketContext(now=now)
+        oi = await chain_oi_for_option(db, r.instrument_id, now)
+        if oi is None:
+            return MarketContext(now=now)
+        return MarketContext(
+            now=now,
+            pcr=pcr_from_oi(oi.put_oi, oi.call_oi),
+            pcr_ts=oi.ts,
+            pcr_expiry=oi.expiry.date().isoformat(),
+        )
+
     async def _handle_signal(
         self, r: Runner, sig: Signal, db: Any, *, candle: Candle | None
     ) -> None:
@@ -326,6 +346,7 @@ class Trader:
             kill_switch_active=bool(kill),
             mode=TradingMode.PAPER,
             product=r.product,
+            market=await self._market_context(r, sig, db, now),
         )
         if not decision.allowed or decision.intent is None:
             log.info(

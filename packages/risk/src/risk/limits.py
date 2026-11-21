@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from core.models import Position, ProductType, Segment
+from core.models import OptionType, Position, ProductType, Segment
 
 
 def _parse_hhmm(v: str | time) -> time:
@@ -39,6 +39,10 @@ class RiskLimits(BaseModel):
     square_off: time = time(15, 15)
     event_block: bool = True
     freeze_quantity_check: bool = True
+    # Owner rule `pcr_guard` (docs/trading-rules.md): PCR = put OI / call OI, near expiry.
+    pcr_no_put_buy_at: float = Field(default=2.0, gt=1)
+    pcr_no_call_buy_at: float = Field(default=0.5, gt=0, lt=1)
+    pcr_max_age_minutes: int = Field(default=15, ge=1)
 
     _hhmm = field_validator("trade_start", "no_new_entries_after", "square_off", mode="before")(
         _parse_hhmm
@@ -55,6 +59,7 @@ class InstrumentMeta(BaseModel):
     tick_size: Decimal = Decimal("0.05")
     freeze_quantity: int | None = Field(default=None, description="Exchange freeze qty per order")
     underlying_symbol: str | None = None
+    option_type: OptionType | None = None
 
     @property
     def correlation_key(self) -> str:

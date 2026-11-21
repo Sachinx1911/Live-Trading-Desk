@@ -198,6 +198,7 @@ def _meta(ins: Instrument, lot_size: int) -> InstrumentMeta:
         lot_size=lot_size,
         tick_size=ins.tick_size,
         underlying_symbol=ins.underlying_symbol,
+        option_type=ins.option_type,
     )
 
 
