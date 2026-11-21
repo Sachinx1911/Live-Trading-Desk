@@ -14,6 +14,8 @@ from backtest.config import BacktestConfig
 from backtest.metrics import Metrics
 from backtest.runner import BacktestResult, run_backtest
 from core.models import Candle
+from risk.market_history import PcrHistory
+from strategy.option_features import ChainHistory
 
 Objective = Literal["sharpe", "net_pnl", "calmar", "expectancy", "profit_factor", "sortino"]
 ParamSpace = dict[str, Sequence[Any]]
@@ -201,13 +203,22 @@ def optimize(
     seed: int | None = None,
     progress: Callable[[float], None] | None = None,
     keep_results: bool = False,
+    market_history: PcrHistory | None = None,
+    option_history: ChainHistory | None = None,
 ) -> OptimizationResult:
+    """`market_history` / `option_history`: stored chain history, passed unchanged to every
+    run so owner rules and option features behave as in a single backtest (Mark 1 Stage 2)."""
     gen = grid(space) if method == "grid" else random_search(space, max_runs, seed or cfg.seed)
     combos = list(itertools.islice(gen, max_runs))
     rows: list[tuple[dict[str, Any], BacktestResult]] = []
     results: dict[str, BacktestResult] = {}
     for i, params in enumerate(combos):
-        res = run_backtest(cfg.with_overrides(params), candles)
+        res = run_backtest(
+            cfg.with_overrides(params),
+            candles,
+            market_history=market_history,
+            option_history=option_history,
+        )
         rows.append((params, res))
         if keep_results:
             results[res.config_hash] = res

@@ -15,6 +15,8 @@ from backtest.optimize import Objective, ParamSpace, _objective, optimize
 from backtest.runner import BacktestResult, TradeRecord, run_backtest
 from core.models import Candle
 from core.time import ensure_utc
+from risk.market_history import PcrHistory
+from strategy.option_features import ChainHistory
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,8 @@ def walk_forward(
     objective: Objective = "sharpe",
     max_runs_per_window: int = 100,
     progress: Callable[[float], None] | None = None,
+    market_history: PcrHistory | None = None,
+    option_history: ChainHistory | None = None,
 ) -> WalkForwardResult:
     windows = make_windows(cfg.start, cfg.end, train_days, test_days, step_days or test_days)
     results: list[WindowResult] = []
@@ -117,14 +121,24 @@ def walk_forward(
     bars_in_pos = 0
     for n, w in enumerate(windows):
         train_cfg = cfg.model_copy(update={"start": w.train_start, "end": w.train_end})
-        opt = optimize(train_cfg, candles, space, objective=objective, max_runs=max_runs_per_window)
+        opt = optimize(
+            train_cfg,
+            candles,
+            space,
+            objective=objective,
+            max_runs=max_runs_per_window,
+            market_history=market_history,
+            option_history=option_history,
+        )
         if opt.best is None:
             continue
         params = opt.best.params
         test_cfg = cfg.with_overrides(params).model_copy(
             update={"start": w.test_start, "end": w.test_end, "initial_capital": equity}
         )
-        oos = run_backtest(test_cfg, candles)
+        oos = run_backtest(
+            test_cfg, candles, market_history=market_history, option_history=option_history
+        )
         results.append(
             WindowResult(w, params, opt.best.metrics, oos.metrics, oos.metrics.total_trades, oos)
         )

@@ -118,3 +118,29 @@ def test_dsl_option_operand_drives_entries() -> None:
     assert low.trades
     assert high.trades == [] and none.trades == []
     assert low.assumptions["option_chain_snapshots"] > 0
+
+
+def test_optimisation_and_comparison_see_the_same_history() -> None:
+    """Optimise / compare runs get the chain history too, so pcr_guard blocks there as well."""
+    from backtest.compare import compare
+    from backtest.optimize import optimize
+
+    base, candles = _run(None)
+    hist = _history("2.5", candles)
+    cfg = BacktestConfig(
+        strategy_version_id=1,
+        dsl=minimal_dsl(position_sizing={"method": "fixed_quantity", "quantity": 75}),
+        instrument=PUT,
+        start=candles[0].ts,
+        end=candles[-1].ts + timedelta(days=1),
+        seed=42,
+    )
+    space = {"position_sizing.quantity": [75, 150]}
+    with_hist = optimize(cfg, candles, space, market_history=hist, keep_results=True)
+    without = optimize(cfg, candles, space, keep_results=True)
+    assert all(r.trades == [] for r in with_hist.results.values())
+    assert any(r.trades for r in without.results.values())
+
+    cmp = compare([cfg], {PUT.instrument_id: candles}, market_history_by_instrument={1: hist})
+    assert cmp.rows[0].result.trades == []
+    assert base.trades

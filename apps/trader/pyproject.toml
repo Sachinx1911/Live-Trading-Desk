@@ -3,10 +3,11 @@ name = "trader"
 version = "0.1.0"
 description = "Paper trading runner: activations x live data -> strategy engine -> risk -> simulator -> DB"
 requires-python = ">=3.12"
-dependencies = ["core", "providers", "market_data", "strategy", "execution", "risk"]
+dependencies = ["core", "protocols", "providers", "market_data", "strategy", "execution", "risk"]
 
 [tool.uv.sources]
 core = { workspace = true }
+protocols = { workspace = true }
 providers = { workspace = true }
 market_data = { workspace = true }
 strategy = { workspace = true }

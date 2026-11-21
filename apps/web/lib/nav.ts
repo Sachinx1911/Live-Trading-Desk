@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BarChart3,
+  Bell,
   BookOpenCheck,
   Bot,
   BrainCircuit,
@@ -10,7 +11,9 @@ import {
   FlaskConical,
   Globe2,
   History,
+  ListChecks,
   LayoutDashboard,
+  Newspaper,
   Radar,
   Settings,
   Wallet,
@@ -53,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Market Data", href: "/market", icon: CandlestickChart, phase: 2 },
       { label: "OI Change", href: "/market/oi-change", icon: BarChart3 },
       { label: "Market Scanner", href: "/scanner", icon: Radar, phase: 5 },
+      { label: "News", href: "/news", icon: Newspaper },
     ],
   },
   {
@@ -80,6 +84,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "System",
     items: [
+      { label: "Protocols", href: "/protocols", icon: ListChecks },
+      { label: "Alerts", href: "/alerts", icon: Bell },
       { label: "Multi-Market", href: "/multi-market", icon: Globe2 },
       { label: "Tools", href: "/tools", icon: Wrench, phase: 2 },
       { label: "Settings", href: "/settings", icon: Settings },

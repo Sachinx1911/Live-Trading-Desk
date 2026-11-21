@@ -6,9 +6,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.db.models import AuditLog
 from core.db.models._enums import ActorType
-from core.time import utcnow
+from core.services.audit import write_audit
 
 
 async def audit(
@@ -23,16 +22,14 @@ async def audit(
     reason: str | None = None,
     actor: ActorType = ActorType.USER,
 ) -> None:
-    db.add(
-        AuditLog(
-            user_id=user_id,
-            actor_type=actor,
-            action=action,
-            entity_type=entity_type,
-            entity_id=None if entity_id is None else str(entity_id),
-            before=before,
-            after=after,
-            reason=reason,
-            ts=utcnow(),
-        )
+    write_audit(
+        db,
+        user_id=user_id,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        before=before,
+        after=after,
+        reason=reason,
+        actor=actor,
     )

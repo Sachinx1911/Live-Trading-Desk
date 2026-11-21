@@ -50,6 +50,9 @@ EXPECTED_TABLES = {
     "regime_daily", "regime_intraday",
     # scanner
     "scan_snapshots", "saved_scans",
+    # Mark 1 Stage 3
+    "protocols", "protocol_runs", "alerts", "news_items", "ingest_errors",
+    "market_breadth", "daily_reports",
 }  # fmt: skip
 
 

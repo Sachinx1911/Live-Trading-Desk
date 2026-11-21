@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     paper_default_capital: int = 100_000  # ₹1,00,000 per master prompt, user-editable per account
     default_market_data_provider: Literal["fake", "upstox", "dhan"] = "fake"
 
+    # Raw news ingest (Mark 1 Stage 3.5): comma-separated RSS/Atom URLs; empty = built-in
+    # defaults (market_data.news.feeds.DEFAULT_FEEDS). Headlines + feed summary only.
+    news_feeds: str = ""
+    news_fetch_timeout_s: float = Field(default=15.0, ge=2, le=60)
+
     llm_provider: str = "openai"
     openai_api_key: SecretStr = SecretStr("")
     openai_model: str = "gpt-4o-mini"
@@ -55,6 +60,11 @@ class Settings(BaseSettings):
 
     telegram_bot_token: SecretStr = SecretStr("")
     telegram_chat_id: str = ""
+
+    # Proactive alerts (Mark 1 Stage 3.2): PCR distance from the pcr_guard thresholds that
+    # counts as "near", and the window inside which the same alert is not stored again.
+    alert_pcr_margin: float = Field(default=0.1, ge=0, le=1)
+    alert_dedup_minutes: int = Field(default=30, ge=1, le=24 * 60)
 
     # Local-dev convenience only: when set (and APP_ENV != production) POST /auth/dev-login
     # issues real tokens for this user without a password so the web app opens straight

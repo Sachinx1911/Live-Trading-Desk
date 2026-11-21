@@ -9,6 +9,8 @@ from typing import Any
 from backtest.config import BacktestConfig
 from backtest.runner import BacktestResult, run_backtest
 from core.models import Candle
+from risk.market_history import PcrHistory
+from strategy.option_features import ChainHistory
 
 COMPARE_FIELDS = (
     "total_return",
@@ -61,6 +63,9 @@ class Comparison:
 def compare(
     configs: Sequence[BacktestConfig],
     candles_by_instrument: dict[int, Sequence[Candle]],
+    *,
+    market_history_by_instrument: dict[int, PcrHistory | None] | None = None,
+    option_history_by_instrument: dict[int, ChainHistory | None] | None = None,
 ) -> Comparison:
     if not configs:
         raise ValueError("nothing to compare")
@@ -82,8 +87,14 @@ def compare(
                 "risk_limits": base.risk_limits,
             }
         )
-        candles = candles_by_instrument[cfg.instrument.instrument_id]
-        res = run_backtest(shared, candles)
+        iid = cfg.instrument.instrument_id
+        candles = candles_by_instrument[iid]
+        res = run_backtest(
+            shared,
+            candles,
+            market_history=(market_history_by_instrument or {}).get(iid),
+            option_history=(option_history_by_instrument or {}).get(iid),
+        )
         data_hash = data_hash or res.data_hash
         rows.append(
             ComparisonRow(

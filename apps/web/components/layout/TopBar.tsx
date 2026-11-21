@@ -5,6 +5,7 @@ import Link from "next/link";
 import { KeyRound, LogOut, Search, Server, User as UserIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { AlertBell } from "@/components/alerts/AlertBell";
 import { ThemeMenuItems } from "@/components/layout/ThemeControl";
 import { InstrumentSearch } from "@/components/market/InstrumentSearch";
 import { Button } from "@/components/ui/button";
@@ -185,6 +186,7 @@ export function TopBar() {
         <div className="hidden items-center gap-2 md:flex lg:hidden">
           <SessionPill />
         </div>
+        <AlertBell />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

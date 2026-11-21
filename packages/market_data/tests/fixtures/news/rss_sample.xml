@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sample Markets</title>
+    <link>https://news.example.com/markets</link>
+    <item>
+      <title><![CDATA[Reliance shares rise 2% after Q2 results; Nifty ends higher]]></title>
+      <link><![CDATA[https://news.example.com/markets/reliance-q2.cms?utm_source=rss&utm_medium=feed&id=42#top]]></link>
+      <description><![CDATA[<p>Shares of <b>Reliance Industries</b> rose &amp; the index gained.</p><img src="x.jpg"/>]]></description>
+      <pubDate>Fri, 20 Nov 2026 15:45:00 +0530</pubDate>
+      <guid>https://news.example.com/markets/reliance-q2.cms</guid>
+    </item>
+    <item>
+      <title>SBI Life slips; HDFC Bank, ICICI Bank gain</title>
+      <link>https://news.example.com/markets/banks.cms</link>
+      <description>Private lenders outperform.</description>
+      <pubDate>Fri, 20 Nov 2026 10:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Duplicate of the first story</title>
+      <link>https://news.example.com/markets/reliance-q2.cms?id=42&amp;utm_campaign=x</link>
+    </item>
+    <item>
+      <title></title>
+      <link>https://news.example.com/markets/untitled.cms</link>
+    </item>
+    <item>
+      <title>No link at all</title>
+    </item>
+    <item>
+      <title>Undated item</title>
+      <link>https://news.example.com/markets/undated.cms</link>
+      <description>Undated item</description>
+    </item>
+  </channel>
+</rss>

@@ -26,6 +26,7 @@ from core.db.models import (
 )
 from core.db.models._enums import ActivationStatus, StrategyVersionStatus
 from core.models import OrderSide, OrderStatus, OrderType, ProductType, TradingMode
+from core.services.paper import stop_activation as stop_paper_activation
 from core.time import utcnow
 
 router = APIRouter(prefix="/paper", tags=["paper"])
@@ -555,20 +556,10 @@ async def stop_activation(activation_id: int, body: StopIn, db: DB, user: User) 
     if a is None or a.paper_account_id is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "activation not found")
     await _account(db, user, a.paper_account_id)
-    if a.status == ActivationStatus.STOPPED:
-        return await _actout(db, a)
-    a.status = ActivationStatus.STOPPED
-    a.stopped_at = utcnow()
-    a.stop_reason = body.reason + (" (flatten)" if body.flatten else "")
-    await audit(
-        db,
-        user_id=user.user_id,
-        action="paper.activation.stop",
-        entity_type="strategy_activation",
-        entity_id=a.id,
-        reason=body.reason,
-    )
-    await db.commit()
+    if await stop_paper_activation(
+        db, a, reason=body.reason, flatten=body.flatten, user_id=user.user_id
+    ):
+        await db.commit()
     return await _actout(db, a)
 
 

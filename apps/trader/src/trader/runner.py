@@ -41,10 +41,12 @@ from market_data.repo.candles import fetch_candles
 from market_data.repo.chains import chain_oi_for_option, chain_underlying_id
 from market_data.repo.instruments import get_instrument
 from market_data.repo.regime import latest_daily, latest_intraday
+from protocols.alert_store import record_alert
+from protocols.alerts import AlertCandidate
 from risk.engine import RiskEngine
 from risk.kill_switch import KillSwitch
 from risk.limits import AccountState, InstrumentMeta, RiskLimits
-from risk.owner_rules import MarketContext, pcr_from_oi
+from risk.owner_rules import MarketContext, evaluate_owner_rules, pcr_from_oi
 from strategy.dsl.schema import StrategyDocument
 from strategy.engine import StrategyEngine
 from strategy.option_features import document_uses_options
@@ -351,6 +353,7 @@ class Trader:
             return
         if r.paused and sig.kind == "entry":
             return
+        market_ctx = await self._market_context(r, sig, db, now)
         decision = r.risk.evaluate(
             sig,
             self._account_state(ctx),
@@ -361,7 +364,7 @@ class Trader:
             kill_switch_active=bool(kill),
             mode=TradingMode.PAPER,
             product=r.product,
-            market=await self._market_context(r, sig, db, now),
+            market=market_ctx,
         )
         if not decision.allowed or decision.intent is None:
             log.info(
@@ -370,6 +373,7 @@ class Trader:
                 kind=sig.kind,
                 reasons=list(decision.reasons),
             )
+            await self._alert_rule_blocks(r, sig, market_ctx, db)
             return
         market = MarketState(ts=now, quote=quote, candle=candle)
         order = ctx.sim.submit(decision.intent, market)
@@ -400,8 +404,80 @@ class Trader:
             kind=sig.kind,
             reason=sig.reason,
         )
+        await self._alert_signal(r, sig, order, db)
         # Market orders fill on the next market event; nudge with the current quote now.
         await self._process_fills(r.instrument_id, market, db)
+
+    # ------------------------------------------------------------------ alerts (Stage 3.2)
+    async def _alert(self, db: Any, cand: AlertCandidate) -> None:
+        """Store an alert inside a savepoint; never lets an alert problem touch trading.
+        Telegram delivery is left to the worker's alert job (no HTTP in the market loop)."""
+        try:
+            async with db.begin_nested():
+                await record_alert(
+                    db,
+                    cand,
+                    now=utcnow(),
+                    window=timedelta(minutes=self.settings.alert_dedup_minutes),
+                )
+        except Exception as exc:
+            log.warning("trader.alert_failed", kind=cand.kind, error=str(exc))
+
+    async def _alert_signal(self, r: Runner, sig: Signal, order: Order, db: Any) -> None:
+        side = order.intent.side.value
+        key = (
+            f"signal_fired:{r.activation_id}:square_off"
+            if sig.kind == "square_off"
+            else f"signal_fired:{r.activation_id}:{sig.kind}:{sig.ts.isoformat()}"
+        )
+        await self._alert(
+            db,
+            AlertCandidate(
+                kind="signal_fired",
+                severity="info",
+                title=f"Paper {sig.kind}: {side} {order.intent.quantity} {r.meta.symbol}",
+                message=f"Strategy signal ({sig.kind}): {sig.reason}. Paper order submitted; "
+                "fills are shown on the Paper page.",
+                dedup_key=key,
+                data={
+                    "activation_id": r.activation_id,
+                    "paper_account_id": r.account_id,
+                    "kind": sig.kind,
+                    "side": side,
+                    "quantity": order.intent.quantity,
+                    "reason": sig.reason,
+                    "signal_ts": sig.ts.isoformat(),
+                },
+                instrument_id=r.instrument_id,
+            ),
+        )
+
+    async def _alert_rule_blocks(
+        self, r: Runner, sig: Signal, market: MarketContext, db: Any
+    ) -> None:
+        """An owner rule blocked this signal: one alert per rule (re-evaluated here, pure)."""
+        for code, outcome in evaluate_owner_rules(sig, r.meta, market, r.limits):
+            if outcome.status != "block":
+                continue
+            await self._alert(
+                db,
+                AlertCandidate(
+                    kind="rule_block",
+                    severity="warning",
+                    title=f"Owner rule {code} blocked a {sig.kind} on {r.meta.symbol}",
+                    message=outcome.message,
+                    dedup_key=f"rule_block:{r.activation_id}:{code}",
+                    data={
+                        "activation_id": r.activation_id,
+                        "paper_account_id": r.account_id,
+                        "rule": code,
+                        "kind": sig.kind,
+                        "side": sig.side.value,
+                        "signal_ts": sig.ts.isoformat(),
+                    },
+                    instrument_id=r.instrument_id,
+                ),
+            )
 
     async def _square_off(self, r: Runner, why: str, db: Any) -> None:
         ctx = self.accounts[r.account_id]

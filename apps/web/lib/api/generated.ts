@@ -1226,3 +1226,224 @@ export interface OiChangeResponse {
   put_oi_change_total: number;
   strikes: OiStrikeOut[];
 }
+
+// ---- Daily reports / evening brief (Mark 1 Stage 3.3, 3.7) ------------------
+export interface DailyReportContent {
+  date: string;
+  is_trading_day: boolean;
+  provider: string;
+  indices: { symbol: string; close: string | null; prev_close: string | null; change: string | null; change_pct: string | null }[];
+  pcr: { symbol: string; pcr: string | null; expiry: string | null; as_of: string | null }[];
+  breadth: {
+    advances: number;
+    declines: number;
+    unchanged: number;
+    new_52w_high: number;
+    new_52w_low: number;
+    above_ema200_pct: string | null;
+  } | null;
+  paper: { account_id: number; name: string; cash: string; trades: number; wins: number; net_pnl: string; open_positions: number }[];
+  alerts: { by_severity: Record<string, number>; rule_blocks: number };
+  coverage: { symbol: string; bars: number; expected: number; complete: boolean }[];
+  next_trading_day: string | null;
+  expiries_next_7d: { symbol: string; expiry: string }[];
+  headlines: { title: string; source: string; url: string }[];
+}
+
+export interface DailyReport {
+  report_date: string;
+  kind: string;
+  content: DailyReportContent;
+  text_md: string;
+  delivered: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface DailyReportSummary {
+  report_date: string;
+  kind: string;
+  created_at: string;
+}
+
+// ---- News headlines + market breadth (Mark 1 Stage 3.5, 3.6; mirrors apps/api/src/api/routers/news.py, breadth.py) ----
+export interface NewsItem {
+  id: number;
+  source: string;
+  url: string;
+  title: string;
+  summary: string | null;
+  published_at: string | null;
+  fetched_at: string;
+  /** Deterministic tags computed at query time (no AI). */
+  symbols: string[];
+}
+
+export interface NewsList {
+  items: NewsItem[];
+  count: number;
+  symbol: string | null;
+  scanned: number;
+}
+
+export interface NewsSource {
+  source: string;
+  feed_url: string;
+  configured: boolean;
+  items: number;
+  newest_published_at: string | null;
+  last_new_item_at: string | null;
+  last_fetch_at: string | null;
+  last_fetch_new: number | null;
+  last_fetch_items: number | null;
+  last_fetch_error: string | null;
+  stale: boolean;
+  last_error_at: string | null;
+  last_error: string | null;
+}
+
+export interface NewsSources {
+  sources: NewsSource[];
+  last_run_at: string | null;
+}
+
+export interface BreadthIndexMove {
+  close: number | null;
+  prev_close: number | null;
+  change: number | null;
+  change_pct: number | null;
+}
+
+export interface MarketBreadth {
+  as_of_date: string;
+  universe: string;
+  provider: string;
+  universe_size: number;
+  advances: number;
+  declines: number;
+  unchanged: number;
+  new_52w_high: number;
+  new_52w_low: number;
+  above_ema50_pct: number | null;
+  above_ema200_pct: number | null;
+  index_moves: Record<string, BreadthIndexMove>;
+  computed_at: string;
+}
+
+export interface MarketBreadthList {
+  universe: string;
+  provider: string;
+  members: number;
+  membership_as_of: string;
+  membership_source: string;
+  rows: MarketBreadth[];
+}
+
+// --- hand-appended: protocols + alerts (Mark 1 Stage 3.1/3.2) — replace with `pnpm gen:api` output
+
+export type ProtocolRiskLevel = "green" | "yellow" | "red";
+export type ProtocolRunStatus =
+  | "running"
+  | "awaiting_confirmation"
+  | "succeeded"
+  | "partial"
+  | "failed"
+  | "cancelled";
+
+export interface ProtocolStep {
+  tool: string;
+  args: Record<string, unknown>;
+  on_error: "stop" | "continue";
+  risk: ProtocolRiskLevel | "unknown";
+}
+
+export interface Protocol {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  domain: string;
+  version: number;
+  steps: ProtocolStep[];
+  layout: Record<string, unknown> | null;
+  confirm_required: boolean;
+  is_builtin: boolean;
+  editable: boolean;
+  max_risk: ProtocolRiskLevel | "unknown";
+  updated_at: string;
+}
+
+export interface ProtocolAction {
+  name: string;
+  description: string;
+  risk: ProtocolRiskLevel;
+  args_schema: Record<string, unknown>;
+}
+
+export interface ProtocolStepIn {
+  tool: string;
+  args?: Record<string, unknown>;
+  on_error?: "stop" | "continue";
+}
+
+export interface ProtocolUpdateIn {
+  name: string;
+  description?: string | null;
+  steps: ProtocolStepIn[];
+  layout?: Record<string, unknown> | null;
+  confirm_required?: boolean;
+}
+
+export interface ProtocolCreateIn extends ProtocolUpdateIn {
+  code: string;
+}
+
+export interface ProtocolRunStep {
+  tool: string;
+  args: Record<string, unknown>;
+  on_error: "stop" | "continue";
+  status: "pending" | "running" | "succeeded" | "failed" | "skipped";
+  started_at?: string;
+  finished_at?: string;
+  result?: Record<string, unknown> & { summary?: string };
+  error?: string;
+}
+
+export interface ProtocolRun {
+  id: number;
+  protocol_id: number;
+  protocol_code: string;
+  protocol_name: string;
+  protocol_version: number;
+  user_id: number | null;
+  trigger: string;
+  status: ProtocolRunStatus;
+  started_at: string;
+  finished_at: string | null;
+  steps: ProtocolRunStep[];
+  summary: string | null;
+}
+
+export type AlertSeverity = "info" | "warning" | "critical";
+
+export interface AlertItem {
+  id: number;
+  ts: string;
+  kind: string;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  data: Record<string, unknown>;
+  dedup_key: string;
+  instrument_id: number | null;
+  delivered: { in_app?: boolean; telegram?: "sent" | "skipped" | "failed" | "pending" };
+  acknowledged_at: string | null;
+}
+
+export interface AlertUnreadCount {
+  unread: number;
+  critical: number;
+}
+
+export interface AlertAckAll {
+  acknowledged: number;
+}

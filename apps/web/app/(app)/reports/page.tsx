@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { EmptyState, Money, PanelCard } from "@/components/design";
+import { EveningBrief } from "@/components/reports/EveningBrief";
 import { AccountPicker } from "@/components/trading/AccountPicker";
 import { TradesTable } from "@/components/trading/TradesTable";
 import { usePaperAccount } from "@/components/trading/usePaperAccount";
@@ -42,6 +43,7 @@ export default function ReportsPage() {
 
   return (
     <div className="grid grid-cols-12 gap-3">
+      <EveningBrief />
       <PanelCard
         title="Trading journal"
         subtitle={account ? `${account.name} · paper · every closed round trip, with reasons` : "Paper trades"}

@@ -16,6 +16,7 @@ members = [
     "core",
     "execution",
     "market-data",
+    "protocols",
     "providers",
     "risk",
     "strategy",
@@ -106,6 +107,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "market-data" },
     { name = "orjson" },
+    { name = "protocols" },
     { name = "providers" },
     { name = "pyjwt" },
     { name = "python-multipart" },
@@ -125,6 +127,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "market-data", editable = "packages/market_data" },
     { name = "orjson", specifier = ">=3.10" },
+    { name = "protocols", editable = "packages/protocols" },
     { name = "providers", editable = "packages/providers" },
     { name = "pyjwt", specifier = ">=2.9" },
     { name = "python-multipart", specifier = ">=0.0.12" },
@@ -670,6 +673,27 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/e8/3d9626a0b1e50704bfc19df2f69e2b3e7870f43e6cd8509565b5aa32e5b6/fastexcel-0.21.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:bce27f751cf1661f823088e89c11375448d19e425e3c3aa993c356720305c873", size = 3888071, upload-time = "2026-08-19T13:00:03.134Z" },
     { url = "https://files.pythonhosted.org/packages/a7/ff/23f43ec08ac44a02798508593f2af5c84bbad58db17da3237428577f5b1b/fastexcel-0.21.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:1a5742e598516734740ef4142cf3328d6ef6c8e43947d9a66d6a91a5d9bfa3ec", size = 4041849, upload-time = "2026-08-19T13:00:05.103Z" },
     { url = "https://files.pythonhosted.org/packages/13/90/4b2614123e185f20e386695771898c97a469f39129472db731a2c3d248ad/fastexcel-0.21.0-cp314-cp314t-win_amd64.whl", hash = "sha256:fe52f6053aac6ff3b8cc879052b671af9cb3ada16853b1c8b4bcac44574e4c10", size = 3311557, upload-time = "2026-08-19T13:00:18.614Z" },
+]
+
+[[package]]
+name = "feedparser"
+version = "6.0.14"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "feedparser-sgmllib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/37/8a/a53da4a77352045d277978a2df322d5379369f9deb1707178899ff7e1121/feedparser-6.0.14.tar.gz", hash = "sha256:088679b0c4b543ee211a820dd544698c76a402122eae7473c04a43425f283d06", size = 286108, upload-time = "2026-07-30T14:07:40.491Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7f/61/f04912e63702e73fb2a378f9c0a1ad9eb17a334a11a6b3fe1daa593903c2/feedparser-6.0.14-py3-none-any.whl", hash = "sha256:e35e3f760151b0c3b22cac9684155cae186a233e16c49bcbc6c49e91e3131137", size = 80668, upload-time = "2026-07-30T14:07:39.175Z" },
+]
+
+[[package]]
+name = "feedparser-sgmllib"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/df/38596299216e5c22d60ed7f97902bb2bc72cfb95f732400f4fa976fd2e62/feedparser_sgmllib-2.1.0.tar.gz", hash = "sha256:61facf2918c4389b5b00714f76c5e03431ffcd94cd1f51d657edd6cd7c396579", size = 26845, upload-time = "2026-08-02T21:27:53.891Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/a0/79a31f898092e145bd66e2b338fb0656979acb2bbbcae8220940fbfcd820/feedparser_sgmllib-2.1.0-py3-none-any.whl", hash = "sha256:2cab2d43b95a954f920f18aebce7a4dbbb3f539780b127e2aa114f579821e01d", size = 11652, upload-time = "2026-08-02T21:27:52.894Z" },
 ]
 
 [[package]]
@@ -1283,6 +1307,8 @@ source = { editable = "packages/market_data" }
 dependencies = [
     { name = "core" },
     { name = "fastexcel" },
+    { name = "feedparser" },
+    { name = "httpx" },
     { name = "orjson" },
     { name = "polars" },
     { name = "providers" },
@@ -1295,6 +1321,8 @@ dependencies = [
 requires-dist = [
     { name = "core", editable = "packages/core" },
     { name = "fastexcel", specifier = ">=0.12" },
+    { name = "feedparser", specifier = ">=6.0" },
+    { name = "httpx", specifier = ">=0.27" },
     { name = "orjson", specifier = ">=3.10" },
     { name = "polars", specifier = ">=1.12" },
     { name = "providers", editable = "packages/providers" },
@@ -1689,6 +1717,31 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/1b/dcc64f358fcb51811b58ae40b3d28f820725f116d86487cc20bd4b130701/protobuf-7.36.2-cp310-abi3-win32.whl", hash = "sha256:912c1221170e16c08d1f086762f563dd61ff83c18b5fa6652952dfaded66f728", size = 442998, upload-time = "2026-09-17T20:07:55.826Z" },
     { url = "https://files.pythonhosted.org/packages/8a/55/b77bda4e5e5f5971fb51b07663694690e9afdb9402136c16a522bd621cad/protobuf-7.36.2-cp310-abi3-win_amd64.whl", hash = "sha256:a300819d441e078a5608c0d3c709796bb548136058fda017ae51d425b44fd353", size = 456514, upload-time = "2026-09-17T20:07:57.188Z" },
     { url = "https://files.pythonhosted.org/packages/e4/04/d52c7016b04b6c5108f26691f9d33ec82a9b65d041f1a9c771137693d618/protobuf-7.36.2-py3-none-any.whl", hash = "sha256:bdb3a345d48db958e6ce1f18e508beb0cc981d64f24088427549c866cd039f1e", size = 179806, upload-time = "2026-09-17T20:07:58.211Z" },
+]
+
+[[package]]
+name = "protocols"
+version = "0.1.0"
+source = { editable = "packages/protocols" }
+dependencies = [
+    { name = "core" },
+    { name = "market-data" },
+    { name = "orjson" },
+    { name = "pydantic" },
+    { name = "redis" },
+    { name = "risk" },
+    { name = "strategy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "core", editable = "packages/core" },
+    { name = "market-data", editable = "packages/market_data" },
+    { name = "orjson", specifier = ">=3.10" },
+    { name = "pydantic", specifier = ">=2.9" },
+    { name = "redis", specifier = ">=5.2" },
+    { name = "risk", editable = "packages/risk" },
+    { name = "strategy", editable = "packages/strategy" },
 ]
 
 [[package]]
@@ -2322,6 +2375,7 @@ dependencies = [
     { name = "core" },
     { name = "execution" },
     { name = "market-data" },
+    { name = "protocols" },
     { name = "providers" },
     { name = "risk" },
     { name = "strategy" },
@@ -2332,6 +2386,7 @@ requires-dist = [
     { name = "core", editable = "packages/core" },
     { name = "execution", editable = "packages/execution" },
     { name = "market-data", editable = "packages/market_data" },
+    { name = "protocols", editable = "packages/protocols" },
     { name = "providers", editable = "packages/providers" },
     { name = "risk", editable = "packages/risk" },
     { name = "strategy", editable = "packages/strategy" },
@@ -2349,6 +2404,7 @@ dependencies = [
     { name = "core" },
     { name = "execution" },
     { name = "market-data" },
+    { name = "protocols" },
     { name = "providers" },
     { name = "risk" },
     { name = "strategy" },
@@ -2379,6 +2435,7 @@ requires-dist = [
     { name = "core", editable = "packages/core" },
     { name = "execution", editable = "packages/execution" },
     { name = "market-data", editable = "packages/market_data" },
+    { name = "protocols", editable = "packages/protocols" },
     { name = "providers", editable = "packages/providers" },
     { name = "risk", editable = "packages/risk" },
     { name = "strategy", editable = "packages/strategy" },
@@ -2680,6 +2737,7 @@ dependencies = [
     { name = "backtest" },
     { name = "core" },
     { name = "market-data" },
+    { name = "protocols" },
     { name = "providers" },
     { name = "strategy" },
 ]
@@ -2690,6 +2748,7 @@ requires-dist = [
     { name = "backtest", editable = "packages/backtest" },
     { name = "core", editable = "packages/core" },
     { name = "market-data", editable = "packages/market_data" },
+    { name = "protocols", editable = "packages/protocols" },
     { name = "providers", editable = "packages/providers" },
     { name = "strategy", editable = "packages/strategy" },
 ]

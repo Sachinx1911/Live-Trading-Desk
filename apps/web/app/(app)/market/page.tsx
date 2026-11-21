@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CandleChart } from "@/components/market/CandleChart";
+import { InstrumentNews } from "@/components/market/InstrumentNews";
 import { instrumentLabel } from "@/components/market/InstrumentSearch";
 import { QuoteDetails } from "@/components/market/QuoteDetails";
 import { RegimeStrip } from "@/components/market/RegimeStrip";
@@ -49,6 +50,7 @@ function MarketContent() {
           className="border-0"
         />
         <QuoteDetails instrumentId={selected?.instrument_id ?? null} symbol={selected?.label} />
+        <InstrumentNews symbol={selected?.symbol ?? null} segment={selected?.segment ?? null} className="border-0" />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ description = "FastAPI application"
 requires-python = ">=3.12"
 dependencies = [
     "core",
+    "protocols",
     "providers",
     "market_data",
     "strategy",
@@ -23,6 +24,7 @@ dependencies = [
 
 [tool.uv.sources]
 core = { workspace = true }
+protocols = { workspace = true }
 providers = { workspace = true }
 market_data = { workspace = true }
 strategy = { workspace = true }

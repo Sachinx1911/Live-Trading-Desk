@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Sample Atom</title>
+  <id>urn:example:atom</id>
+  <updated>2026-11-21T06:00:00Z</updated>
+  <entry>
+    <title type="html">Infosys &amp;amp; TCS lead IT rally</title>
+    <link rel="alternate" href="https://atom.example.com/it-rally"/>
+    <id>urn:example:1</id>
+    <updated>2026-11-21T05:30:00Z</updated>
+    <summary type="html">&lt;p&gt;Nifty IT up 3%.&lt;/p&gt;</summary>
+  </entry>
+  <entry>
+    <title>Only updated, published later</title>
+    <link href="https://atom.example.com/second"/>
+    <id>urn:example:2</id>
+    <published>2026-11-21T04:00:00+05:30</published>
+    <updated>2026-11-21T07:00:00Z</updated>
+  </entry>
+</feed>

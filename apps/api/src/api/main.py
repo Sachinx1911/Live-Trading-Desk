@@ -11,19 +11,24 @@ from fastapi.responses import ORJSONResponse
 
 from api.middleware import RequestLogMiddleware
 from api.routers import (
+    alerts,
     auth,
     backtests,
+    breadth,
     brokers,
     dsl,
     events,
     health,
     imports,
     market,
+    news,
     nl_builder,
     paper,
+    protocols,
     providers,
     regime,
     replay,
+    reports,
     risk,
     scanner,
     strategies,
@@ -81,6 +86,8 @@ def create_app() -> FastAPI:
     app.include_router(brokers.router, prefix=API_PREFIX)
     app.include_router(market.router, prefix=API_PREFIX)
     app.include_router(regime.router, prefix=API_PREFIX)
+    app.include_router(breadth.router, prefix=API_PREFIX)
+    app.include_router(news.router, prefix=API_PREFIX)
     app.include_router(scanner.router, prefix=API_PREFIX)
     app.include_router(nl_builder.router, prefix=API_PREFIX)
     app.include_router(dsl.router, prefix=API_PREFIX)  # before /strategies/{id}
@@ -91,6 +98,9 @@ def create_app() -> FastAPI:
     app.include_router(backtests.router, prefix=API_PREFIX)
     app.include_router(replay.router, prefix=API_PREFIX)
     app.include_router(imports.router, prefix=API_PREFIX)
+    app.include_router(protocols.router, prefix=API_PREFIX)
+    app.include_router(alerts.router, prefix=API_PREFIX)
+    app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(ws_replay.router)
     app.include_router(ws_market.router)
     return app

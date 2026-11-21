@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useMemo, useState } from "react";
 import { EmptyState, PanelCard } from "@/components/design";
+import { BreadthHistory } from "@/components/scanner/BreadthHistory";
 import { ColumnTabs } from "@/components/scanner/ColumnTabs";
 import { FilterChips } from "@/components/scanner/FilterChips";
 import { COLUMN_SETS, EMPTY_FILTERS, columnSetFor, sameScan } from "@/components/scanner/lib";
@@ -205,6 +206,8 @@ function ScannerPage() {
           </div>
         )}
       </PanelCard>
+
+      <BreadthHistory />
 
       {saveOpen && (
         <SaveScanDialog

@@ -208,10 +208,62 @@ Registry of the owner's hard market rules in `risk/owner_rules.py`, run by the r
 - [x] Backtest: `run_backtest(..., market_history=)`; the worker's backtest job loads the history from the candles' provider; `pcr_guard` now blocks in backtests exactly as in paper; result assumptions record `owner_rules_market_data` (points and range, or "none: rules ... skipped")
 - [x] Replay: sessions on an option load the day's history; the overlay's risk check gets the context per bar
 - [x] Tests: `PcrHistory` unit + hypothesis no-look-ahead property; SQL totals equal `oi_totals` and nearest expiry / provider filter (DB); backtest on a PUT blocked at PCR 2.5, allowed at 1.0, skipped without history; replay blocks a PUT buy with high-PCR history; risk, backtest, market_data, execution, strategy, api, worker, trader suites green
-- [ ] Optimisation, walk-forward and compare runs still run without history (rule skipped as before); pass `market_history` through them
+- [x] Optimisation, walk-forward and compare runs get the same stored chain history (`market_history`, `option_history`) as a single backtest, so `pcr_guard` and option features behave identically there (test: high-PCR history blocks put buys in every optimisation run and in a comparison)
 - [x] DSL 1.1 `option` operand (`pcr`, `iv_atm`, strike `oi`, `oi_change_from_open`, `greek` at ATM ± 10 strikes): schema + `v1.1.json` (1.0 documents stay valid), validator (refuses the operand in 1.0, warns about chain history), `strategy.option_features` (`ChainView`, `ChainHistory` with opening baseline, no look-ahead), engine `option_provider`
 - [x] Fed everywhere from stored snapshots of the underlying: backtest (`option_history`, loaded only when the strategy uses options; assumptions record the snapshot count), replay, paper trader (`trader.live_chain.LiveChain`, refreshed before each bar); `market_data.repo.chains.chain_snapshots_between` / `chain_underlying_id`
 - [x] Visual builder: "Option chain" operand (feature, ATM offset, CE/PE, Greek); builder saves DSL 1.1; API catalogue lists the operand; DSL doc §3.2 and §12 updated
 - [x] Tests: schema rules, values, opening baseline, hypothesis no-look-ahead, validator, backtest entries on `pcr < 1` (trades at 0.5, none at 2.0 or without data); full strategy, backtest, risk, ai (NL self-check 108 OK), market_data, api, worker, trader suites green; builder checked in the browser
 - [ ] NL builder: extraction does not yet produce `option` operands ("PCR 1 च्या खाली असेल तर" stays unsupported)
 - [ ] The owner's next trading rules
+
+## Mark 1 Stage 3.5 · Raw news ingest (2026-11-21, `docs/mark-1-build-plan.md` §3.5, no AI)
+
+- [x] `market_data/news`: feed list from `NEWS_FEEDS` (defaults checked with a real GET on 2026-11-21: Economic Times Markets, LiveMint Markets). Moneycontrol Markets and Business (AI-MIOS) answer 200 but are frozen at 2024-04-23, so they are not defaults; any feed whose newest item is older than 7 days is reported as `stale feed` in `ingest_errors`
+- [x] RSS/Atom parsing with `feedparser` (document bytes only); title, link (tracking params and fragment stripped), feed summary (tags removed, 1000 chars) and published time in UTC; never article bodies, never page scraping
+- [x] Ingest: one GET per feed per run, sequential, named User-Agent, timeout (`NEWS_FETCH_TIMEOUT_S`), 5 MB cap, no retries; `ON CONFLICT (url) DO NOTHING`; each feed committed separately; failures to `ingest_errors`; per-feed last result in Redis `news:feeds`
+- [x] Symbol tagging without AI (`market_data/news/tagger.py`): symbol token + curated NIFTY 50 / index aliases + name-derived alias, group-company exclusions (Reliance Power, SBI Life, Nifty Bank…); computed at query time over NSE equities/indices with daily candles from the active provider (no migration)
+- [x] Worker `ingest_news` every 30 min 07:00–22:30 IST; API `GET /news` (since, source, q, symbol, limit), `GET /news/sources`, `POST /news/ingest` (owner, enqueues)
+- [x] Web `/news` (filters by source / symbol / search, IST times, link out, honest empty state, failing/stale feed notice, owner "fetch now"), "News" panel for the selected stock/index on `/market`, nav entry
+- [x] Verified live: 85 headlines (ET Markets 50, LiveMint 35); re-run added 0 (dedup); 29 of 85 tagged
+- [ ] News analysis (sentiment, materiality) waits for Stage 4 (OpenAI key)
+
+## Mark 1 Stage 3.6 · Market breadth (2026-11-21, `docs/mark-1-build-plan.md` §3.6)
+
+- [x] Universe `NIFTY50` = NSE Indices constituent file (fetched 2026-11-21) in `market_data/breadth/universe.py`; today's list is used for past dates (no survivorship correction); BSE and TMPV have no stored daily candles yet
+- [x] Pure Polars computation (`market_data/breadth/compute.py`): A/D/unchanged vs previous stored close, new 52-week highs/lows (close basis, strict break of the previous 251 closes, needs 252 bars), % above EMA 50 / EMA 200 (`strategy.indicators` EMA), NIFTY / BANKNIFTY / INDIAVIX moves; hand-checked and hypothesis tests
+- [x] Active provider's daily candles only; worker `compute_market_breadth` 16:25 IST (first run back-fills 60 sessions, later runs recompute the last 10 so late candles are picked up), `rebuild_market_breadth(from, to)`; API `GET /market/breadth`, `GET /market/breadth/latest`, `POST /market/breadth/rebuild` (owner)
+- [x] Web: breadth tile on the dashboard (A/D bar, % above EMA 200/50, 52w highs/lows, index moves, date + provider), history chart on `/scanner`
+- [x] Verified live (Upstox): 56 sessions 2026-08-27 → 2026-11-17; 2026-11-17: 48 members, 27 advances / 21 declines, 4 new 52w highs, 68.75 % above EMA 200, NIFTY +0.38 %; A/D cross-checked with SQL
+- [ ] AI-MIOS 10-year history import (optional) and `avg_news_sentiment` (Stage 4)
+
+## Mark 1 Stage 3.1 · Protocol engine (2026-11-21, `docs/mark-1-build-plan.md` §3.1)
+
+- [x] Package `packages/protocols` (import contract: never imports apps or `ai`): `ActionRegistry` (name, description, risk green/yellow/red, Pydantic args, async fn → JSON); actions `health_check`, `broker_sessions`, `regime_summary`, `pcr_now` (with source/demo and freshness), `paper_status`, `todays_events`, `recent_alerts` (green), `kill_switch_on`, `stop_paper_strategies`, `close_paper_positions` (yellow; paper standing permission). No red action exists yet; validation refuses a red action unless the protocol has `confirm_required`
+- [x] `close_paper_positions` requests the trader's square-off (stops the owning activation with flatten; the trader closes through the execution simulator) and fails honestly when the trader is not running; it never reports a fill
+- [x] Shared services: `core.services.paper.stop_activation` (used by `POST /paper/activations/{id}/stop` and protocols), `core.services.audit.write_audit` (`api.audit.audit` delegates)
+- [x] Runner: ordered steps, per-step savepoint, `on_error` stop/continue, results `{tool,args,status,started_at,finished_at,result|error}`, final succeeded/partial/failed; cancel honoured between steps; run stores its planned steps at creation, so a confirmed plan is exactly what runs
+- [x] Built-ins seeded idempotently (version bump on change): market_open, market_close, shutdown (asks first), clean_slate (immediate kill switch), health_check, review
+- [x] API `/protocols` (list, actions, create/update/delete owner-only, run, runs, run, confirm owner-only, cancel), audit rows; worker job `run_protocol(run_id)`
+- [x] Web `/protocols`: risk badges per step, Run, confirm/cancel, run history with stored results, owner JSON step editor checked against `/protocols/actions`
+- [x] Tests: registry validation, red-without-confirm, runner order/on_error/cancel, DB tests (seed, confirm flow, shutdown, close positions, clean slate, health/market open)
+- [x] Checked live (Saturday): health_check and market_open executed by the worker; missing collector/trader/chains reported as missing
+- [ ] Verify with the API from the browser as the owner (dev auto-login is off locally); layouts (`layout` column) unused until section 4
+
+## Mark 1 Stage 3.2 · Proactive alerts (2026-11-21, `docs/mark-1-build-plan.md` §3.2)
+
+- [x] `protocols.alerts`: pure rules `pcr_near_limit` (ALERT_PCR_MARGIN), `feed_stale`, `broker_session`, `daily_loss_near`, `kill_switch_active`, `trader_down`; `dedup` window (ALERT_DEDUP_MINUTES)
+- [x] `protocols.alert_store`: facts from Redis/DB, store with dedup, Telegram delivery recorded in `delivered` (sent/skipped/failed; `pending` from the trader, delivered by the next job run)
+- [x] Worker cron `evaluate_alerts` every minute, job checks 09:00–15:45 IST on NSE trading days
+- [x] Trader: `signal_fired` alert after a paper order is submitted, `rule_block` alert when an owner rule blocks a signal (savepoint; trading behaviour unchanged)
+- [x] API `/alerts` (since, unacknowledged, kind), `/alerts/{id}/ack`, `/alerts/ack-all`, `/alerts/unread-count`; web bell in the top bar and `/alerts` page
+- [x] Tests: every rule, hypothesis properties (PCR alert iff within margin/beyond; dedup never stores a key twice inside the window), DB dedup + delivery
+- [ ] Watch a real session (alerts on a trading day, Telegram once configured)
+
+## Mark 1 Stage 3 · Storage, evening brief, candle refresh (2026-11-21)
+
+- [x] Migration 0014: `protocols`, `protocol_runs`, `alerts`, `news_items`, `ingest_errors`, `market_breadth`, `daily_reports` (Text + CHECK instead of Postgres enums; migration tests incl. models-match and clean downgrade pass)
+- [x] Evening brief (§3.3 + §3.7, no AI): `worker.reports.evening_brief` (pure build + markdown render, unit + property tests) and job `generate_evening_brief` at 19:00 IST on trading days: index closes and change vs previous daily close, PCR at close, NIFTY 50 breadth, paper accounts (trades, wins, net, open positions, cash), alerts by severity and owner-rule blocks, 1-minute completeness per collected symbol, next session and expiries within 7 days, headlines. Stored per day in `daily_reports` (regeneration replaces it), sent to Telegram when configured. API `GET /reports/daily`, `/reports/daily/latest`, `/reports/daily/{day}`, `POST /reports/daily/generate` (owner, enqueues). Web: "Evening brief" panel on `/reports` with day picker and Regenerate. Every missing source is printed as missing
+- [x] Found while building it: nothing refreshed stored candles after a session (`eod_gap_report` only reports), so daily candles for 18-20 Nov were never fetched and the brief, regime, scanner and breadth ran on stale days. New job `refresh_daily_candles` at 15:45 IST: re-fetches the last 10 days of 1d candles for every instrument with daily history, every NIFTY 50 member and the indices, plus the last 3 sessions of official 1-minute candles for the collector's symbols (repairs collector downtime). Single provider, idempotent upserts
+- [ ] `refresh_daily_candles` not yet run for real: the Upstox token had expired (Saturday, no login). Run it after the next broker login; breadth then recomputes 18-20 Nov automatically
+- [ ] Evening brief not yet seen with a full live session's data, nor delivered to Telegram (no bot token)
+

@@ -462,6 +462,8 @@ async def run_optimization_job(ctx: dict[str, Any], job_id: int) -> dict[str, An
             base = _build_config(
                 job, dsl, instrument, ctf, timeframe=tf.value, start=start, end=end
             )
+            history = await _pcr_history(db, instrument, start, end)
+            options = await _option_history(db, dsl, instrument, start, end)
             await reporter.report(1, f"{len(candles)} bars loaded")
             cb = reporter.sync()
             out = await asyncio.to_thread(
@@ -473,6 +475,8 @@ async def run_optimization_job(ctx: dict[str, Any], job_id: int) -> dict[str, An
                 method="random" if job.kind.value == "random" else "grid",
                 max_runs=int(cfg.get("max_runs", 200)),
                 progress=lambda pct: cb(pct, ""),
+                market_history=history,
+                option_history=options,
             )
             rows = [
                 {"rank": r.rank, "params": r.params, "metrics": r.metrics.as_dict()}
@@ -527,6 +531,8 @@ async def _walk_forward(
         if not candles:
             raise ValueError("no candles stored for the requested range; backfill first")
         base = _build_config(job, dsl, instrument, ctf, timeframe=tf.value, start=start, end=end)
+        history = await _pcr_history(db, instrument, start, end)
+        options = await _option_history(db, dsl, instrument, start, end)
         windows = job.windows or {"train_days": 180, "test_days": 60, "step_days": 60}
         await reporter.report(1, f"{len(candles)} bars loaded")
         cb = reporter.sync()
@@ -541,6 +547,8 @@ async def _walk_forward(
             objective=_objective(job.objective),
             max_runs_per_window=int(cfg.get("max_runs", 100)),
             progress=lambda pct: cb(pct, ""),
+            market_history=history,
+            option_history=options,
         )
         n = 0
         for idx, w in enumerate(out.windows):

@@ -1,5 +1,6 @@
 import { PanelCard, PhasePlaceholder } from "@/components/design";
 import { MarketStrip } from "@/components/dashboard/MarketStrip";
+import { BreadthTile } from "@/components/dashboard/BreadthTile";
 import { BrokerSessionPanel } from "@/components/dashboard/BrokerSessionPanel";
 import { PaperTiles } from "@/components/dashboard/PaperTiles";
 import { RegimeTile } from "@/components/dashboard/RegimeTile";
@@ -26,6 +27,8 @@ export default function DashboardPage() {
       <PaperTiles />
 
       <RegimeTile className="col-span-12 xl:col-span-4" />
+
+      <BreadthTile className="col-span-12 md:col-span-6 xl:col-span-4" />
 
       <PanelCard title="Strategy approval queue" className="col-span-12 xl:col-span-4">
         <PhasePlaceholder phase={5} what="Candidate versions awaiting your approval" />
