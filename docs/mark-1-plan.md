@@ -286,6 +286,12 @@ model decides orders), and not for conversation, which it does not do.
 Closed on 2026-11-21: paper trading gets standing permission (section 2.3); desktop app on
 macOS with 2 screens (section 4); Jev deferred (section 6).
 
+Also decided on 2026-11-21: **JARVIS will later serve other kinds of work besides trading.**
+Trading is the first domain and the only one built in Mark 1, but the core (tool catalogue, risk
+levels, confirmation flow, memory, protocols, modes, screen manager) is kept free of trading
+concepts and every tool, note and protocol carries a `domain`. Details and the storage
+consequences: `docs/research/jarvis-memory-and-data-store.md` §11.
+
 ## 9. Working agreement
 
 While the owner is planning, nothing in the repository is changed. Items raised in a
