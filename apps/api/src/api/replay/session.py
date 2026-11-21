@@ -18,8 +18,10 @@ from execution.simulator.engine import ExecutionSimulator, MarketState
 from execution.simulator.slippage import SpreadAwareSlippage
 from risk.engine import RiskEngine, _product_for
 from risk.limits import AccountState, InstrumentMeta, RiskLimits
+from risk.market_history import PcrHistory
 from strategy.dsl.schema import StrategyDocument
 from strategy.engine import StrategyEngine
+from strategy.option_features import ChainHistory
 
 Status = Literal["paused", "playing", "ended"]
 MAX_SPEED = 600
@@ -109,6 +111,8 @@ class Overlay:
     cal: ExchangeCalendar
     version_id: int
     pending_entry_reason: str | None = None
+    # Stored PCR of the underlying (Mark 1, Stage 2): owner rules see it as of each bar.
+    market_history: PcrHistory | None = None
     pending_exit_reason: str | None = None
     trades: list[dict[str, Any]] = field(default_factory=list)
     fills: list[dict[str, Any]] = field(default_factory=list)
@@ -150,6 +154,7 @@ class Overlay:
             kill_switch_active=False,
             mode=TradingMode.PAPER,
             product=self.product,
+            market=self.market_history.context_at(ts) if self.market_history is not None else None,
         )
         if not decision.allowed or decision.intent is None:
             out.append(
@@ -296,8 +301,12 @@ class ReplaySession:
         speed: float = 10.0,
         seed: int | None = None,
         calendar: ExchangeCalendar | None = None,
+        market_history: PcrHistory | None = None,
+        option_history: ChainHistory | None = None,
     ) -> None:
         self.session_id: str = uuid4().hex[:12]
+        self.market_history = market_history
+        self.option_history = option_history
         self.user_id = user_id
         self.instrument_id = instrument_id
         self.day = day
@@ -328,7 +337,13 @@ class ReplaySession:
     def _make_overlay(self) -> Overlay | None:
         if self.strategy is None or self.meta is None or self.version_id is None:
             return None
-        engine = StrategyEngine(self.strategy, self.instrument_id, self.cal, self.version_id)
+        engine = StrategyEngine(
+            self.strategy,
+            self.instrument_id,
+            self.cal,
+            self.version_id,
+            option_provider=self.option_history.at if self.option_history is not None else None,
+        )
         sim = ExecutionSimulator(
             slippage=SpreadAwareSlippage(base_bps=2, size_impact_per_lot=0.5),
             seed=self.seed,
@@ -346,6 +361,7 @@ class ReplaySession:
             product=_product_for(self.meta, True),
             cal=self.cal,
             version_id=self.version_id,
+            market_history=self.market_history,
         )
 
     def _build(self, upto: int) -> None:

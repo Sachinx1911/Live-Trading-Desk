@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ApiRequestError } from "@/lib/api/client";
+import { ApiRequestError, tryDevLogin } from "@/lib/api/client";
 import { useLogin } from "@/lib/api/queries";
 
 function LoginForm() {
@@ -14,17 +14,49 @@ function LoginForm() {
   const login = useLogin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // With dev auto-login on (local development only) the form is never needed: sign in and
+  // go on. The form shows only when the API says dev login is off.
+  const [checking, setChecking] = useState(true);
+
+  const goNext = () => {
+    const next = params.get("next");
+    router.replace(next && next.startsWith("/") ? next : "/dashboard");
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    void tryDevLogin().then((r) => {
+      if (cancelled) return;
+      if (r === "ok" || r === "unreachable") {
+        // unreachable: AppShell waits for the API and retries; no login form for that.
+        const next = params.get("next");
+        router.replace(next && next.startsWith("/") ? next : "/dashboard");
+        return;
+      }
+      setChecking(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [params, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login.mutateAsync({ email, password });
-      const next = params.get("next");
-      router.replace(next && next.startsWith("/") ? next : "/dashboard");
+      goNext();
     } catch {
       /* error rendered below */
     }
   };
+
+  if (checking) {
+    return (
+      <p role="status" className="hud-label text-accent-text">
+        Signing in…
+      </p>
+    );
+  }
 
   const err = login.error;
   const message =

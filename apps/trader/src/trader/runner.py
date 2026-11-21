@@ -38,7 +38,7 @@ from execution.simulator.book import PositionBook
 from execution.simulator.engine import ExecutionSimulator, MarketState
 from execution.simulator.slippage import SpreadAwareSlippage
 from market_data.repo.candles import fetch_candles
-from market_data.repo.chains import chain_oi_for_option
+from market_data.repo.chains import chain_oi_for_option, chain_underlying_id
 from market_data.repo.instruments import get_instrument
 from market_data.repo.regime import latest_daily, latest_intraday
 from risk.engine import RiskEngine
@@ -47,9 +47,11 @@ from risk.limits import AccountState, InstrumentMeta, RiskLimits
 from risk.owner_rules import MarketContext, pcr_from_oi
 from strategy.dsl.schema import StrategyDocument
 from strategy.engine import StrategyEngine
+from strategy.option_features import document_uses_options
 from strategy.regime import RegimeDaily, RegimeIntraday
 from trader import store
 from trader.bars import BarAggregator
+from trader.live_chain import LiveChain
 
 log = get_logger("trader")
 
@@ -78,6 +80,8 @@ class Runner:
     flatten_requested: bool = False
     last_rejections: tuple[str, ...] = ()
     regime_daily: RegimeDaily | None = None
+    # DSL 1.1 `option` operands: stored chain of the underlying, refreshed before each bar.
+    options: LiveChain | None = None
     regime_intraday: RegimeIntraday | None = None
     regime_loaded_at: datetime | None = None
 
@@ -159,8 +163,18 @@ class Trader:
                     if ins is None:
                         continue
                     doc = StrategyDocument.model_validate(v.dsl)
+                    options: LiveChain | None = None
+                    if document_uses_options(doc):
+                        und = await chain_underlying_id(db, ins)
+                        if und is not None:
+                            options = LiveChain(und, get_settings().default_market_data_provider)
                     engine = StrategyEngine(
-                        doc, a.instrument_id, self.cal, v.id, self._regime_provider(a.id)
+                        doc,
+                        a.instrument_id,
+                        self.cal,
+                        v.id,
+                        self._regime_provider(a.id),
+                        option_provider=options.at if options is not None else None,
                     )
                     limits = await self._limits(db, acc.id)
                     meta = InstrumentMeta(
@@ -187,6 +201,7 @@ class Trader:
                         product=_product_for(meta, True),
                         limits=limits,
                         risk=RiskEngine(limits),
+                        options=options,
                     )
                     prow = await store.open_position(db, acc.id, a.instrument_id)
                     if prow is not None and prow.quantity != 0:
@@ -498,6 +513,8 @@ class Trader:
                 continue
             if not r.engine.state.position == "flat":
                 r.entry_bar_count += 1
+            if r.options is not None:
+                await r.options.refresh(db, utcnow())
             signals = r.engine.on_candle(closed)
             rej = tuple(getattr(r.engine.state, "rejections", ()) or ())
             if rej != r.last_rejections:
@@ -518,6 +535,8 @@ class Trader:
         for r in list(self.runners.values()):
             closed = r.bars.maybe_close(now)
             if closed is not None:
+                if r.options is not None:
+                    await r.options.refresh(db, now)
                 for sig in r.engine.on_candle(closed):
                     await self._handle_signal(r, sig, db, candle=closed)
             for sig in r.engine.on_time(now):

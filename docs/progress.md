@@ -34,6 +34,7 @@ showing real provider status with explicit Disconnected/Demo states. Web: lint, 
 - [x] CI workflow (ruff, mypy, import-linter, alembic upgrade, pytest, web lint+build)
 - [x] `.env.example` documented; `infra/scripts/create_owner_user.py` + `make seed-owner`
 - [x] Dev-only auto-login (`DEV_AUTO_LOGIN_EMAIL` → `POST /auth/dev-login`, 404 when off, settings refuse it in production); web shell uses it before falling back to `/login`
+- [x] Login page never shown while dev auto-login is on (owner, 2026-11-21: "login sadhya kadun tak" until the project is finished): API not reachable → "Connecting to the API" with a 3 s retry instead of `/login`; `/login` itself signs in and forwards; an expired session signs in again. The form appears only when the API answers that dev login is off (production). Checked in the browser with the API stopped and restarted
 - [ ] Audit-log writes on state-changing endpoints (table exists; middleware hook lands with the first mutating endpoints in Phase 2)
 - [ ] TOTP second factor (schema ready; UI/API in Phase 10 hardening)
 
@@ -172,3 +173,45 @@ Registry of the owner's hard market rules in `risk/owner_rules.py`, run by the r
 - [x] `uv run python -m collector.oi_cadence --underlying NIFTY --minutes 20 --poll 15`: read-only tool that polls the chain and reports how often OI really changes
 - [ ] Run the cadence tool in a live session and record the measured gap here (built on a Saturday; Sensibull states about 3 minutes)
 
+
+## Mark 1 Stage 1.1 · Per-strike option series (2026-11-21, `docs/mark-1-build-plan.md` §1.1)
+
+- [x] Migration 0013 `option_strike_series` (hypertable on `ts`, compressed after 30 days): one row per strike and side of every stored chain snapshot with OI, OI change from the day's open, LTP, volume, IV, delta, gamma, theta, vega; derived and rebuildable from `option_chain_snapshots`
+- [x] `market_data.strike_series`: pure `derive_points` / `opening_oi`; opening baseline = first non-empty snapshot at or after 09:15 IST of the same day, underlying, expiry and provider; before that or without a baseline the change is null, never guessed
+- [x] Collector writes the derived rows right after each raw snapshot, inside a savepoint so a derivation error never loses the raw snapshot
+- [x] Worker job `rebuild_strike_series_job(symbol, day)` replaces one IST day from raw
+- [x] Tests: derivation, bad rows, 09:15 IST boundary; hypothesis properties (per-side OI totals equal `oi_totals`, change against itself is zero); DB test that live writes equal a rebuild; collector, worker and core suites green; ruff, mypy, import contracts clean
+- [ ] Check with real Upstox chains during market hours (strike decimals, missing Greeks)
+
+## Mark 1 Stage 1.2 · OI Change chart (2026-11-21, `docs/mark-1-build-plan.md` §1.2)
+
+- [x] `market_data.oi_change`: `compare_chains` (per-strike call/put OI at both ends over the union of strikes; no change claimed when a side is missing at one end), `pcr`, `snapshot_pair` (first stored snapshot at or after the start, last at or before the end, one provider, expiry matched by IST date), `expiries_on_day`
+- [x] API `GET /market/oi-change?underlying_id&expiry&day&start&end` (IST HH:MM, default 09:15–15:30, end capped at now) → strikes, totals, PCR and spot at both ends, snapshot times used, source, freshness (demo / delayed / stale / historical); 404 when the window holds no snapshot; `GET /market/oi-change/expiries?underlying_id&day`
+- [x] Web `/market/oi-change` (nav "OI Change"): NIFTY/BANKNIFTY, day, expiry, from/to with presets (full day, last 15/30/60 min), ATM ± 5/10/15/all strikes; hero stats (call Δ, put Δ, PCR, spot with start values); SVG bars per strike, calls cyan and puts amber, ATM shaded; snapshot times used vs asked; DEMO banner and freshness badge; honest empty states
+- [x] Sidebar marks only the most specific matching item active
+- [x] Fake provider (DEMO): chain OI now drifts through the day, deterministic per strike, so OI-change views show movement in demo mode
+- [x] Tests: comparison and PCR, hypothesis properties (change = to − from, a chain against itself never changes), DB test for the snapshot choice and expiries; ruff, mypy, tsc, eslint clean; checked in the browser with demo data
+- [ ] Check with real Upstox chains during market hours
+
+## Mark 1 Stage 1.3 · Greeks view (2026-11-21, `docs/mark-1-build-plan.md` §1.3)
+
+- [x] Option chain table: "Greeks" toggle adds gamma, theta (per day) and vega next to IV and delta on both sides; values exactly as the provider sent them, "—" when missing; column tooltips; ATM row highlighted; CALLS/PUTS headers in cyan/amber (red stays for danger)
+- [x] Fake provider (DEMO): gamma, theta and vega from Black-Scholes with zero rate, so the demo chain fills every column; fake provider test asserts their signs
+- [x] tsc, eslint, ruff, mypy clean; checked in the browser with demo data
+- [x] "At" date + time picker on the option chain page: `GET /market/option-chain?at=` returns the last snapshot stored at or before that moment (freshness historical), "Back to latest" returns to live; checked in the browser
+- [ ] Check with real Upstox chains (which Greeks Upstox sends, units of theta and vega)
+
+## Mark 1 Stage 2 · Owner rules on stored chain history (2026-11-21, `docs/mark-1-build-plan.md` §2)
+
+- [x] `risk.market_history.PcrHistory`: sorted PCR points of an underlying; `context_at(now)` gives the owner-rule `MarketContext` from the newest point at or before `now` (never later); before the first point the PCR is missing, so the rule blocks like in paper
+- [x] `market_data.repo.chains.chain_oi_history` (put/call OI totals per stored snapshot, summed in SQL with the `oi_totals` rule, nearest unexpired expiry, one provider) and `underlying_chain_oi_history` (for an option contract's underlying, one day of lead-in)
+- [x] Backtest: `run_backtest(..., market_history=)`; the worker's backtest job loads the history from the candles' provider; `pcr_guard` now blocks in backtests exactly as in paper; result assumptions record `owner_rules_market_data` (points and range, or "none: rules ... skipped")
+- [x] Replay: sessions on an option load the day's history; the overlay's risk check gets the context per bar
+- [x] Tests: `PcrHistory` unit + hypothesis no-look-ahead property; SQL totals equal `oi_totals` and nearest expiry / provider filter (DB); backtest on a PUT blocked at PCR 2.5, allowed at 1.0, skipped without history; replay blocks a PUT buy with high-PCR history; risk, backtest, market_data, execution, strategy, api, worker, trader suites green
+- [ ] Optimisation, walk-forward and compare runs still run without history (rule skipped as before); pass `market_history` through them
+- [x] DSL 1.1 `option` operand (`pcr`, `iv_atm`, strike `oi`, `oi_change_from_open`, `greek` at ATM ± 10 strikes): schema + `v1.1.json` (1.0 documents stay valid), validator (refuses the operand in 1.0, warns about chain history), `strategy.option_features` (`ChainView`, `ChainHistory` with opening baseline, no look-ahead), engine `option_provider`
+- [x] Fed everywhere from stored snapshots of the underlying: backtest (`option_history`, loaded only when the strategy uses options; assumptions record the snapshot count), replay, paper trader (`trader.live_chain.LiveChain`, refreshed before each bar); `market_data.repo.chains.chain_snapshots_between` / `chain_underlying_id`
+- [x] Visual builder: "Option chain" operand (feature, ATM offset, CE/PE, Greek); builder saves DSL 1.1; API catalogue lists the operand; DSL doc §3.2 and §12 updated
+- [x] Tests: schema rules, values, opening baseline, hypothesis no-look-ahead, validator, backtest entries on `pcr < 1` (trades at 0.5, none at 2.0 or without data); full strategy, backtest, risk, ai (NL self-check 108 OK), market_data, api, worker, trader suites green; builder checked in the browser
+- [ ] NL builder: extraction does not yet produce `option` operands ("PCR 1 च्या खाली असेल तर" stays unsupported)
+- [ ] The owner's next trading rules

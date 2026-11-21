@@ -3,7 +3,7 @@ freshness; nothing here invents a price."""
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Annotated, Any
 
@@ -14,6 +14,8 @@ from pydantic import BaseModel
 from api.deps import DB, State, User
 from core.models import Candle, Freshness, Instrument, Quote, Timeframe
 from core.time import IST, ensure_utc, utcnow
+from market_data.oi_change import compare_chains, expiries_on_day, pcr, snapshot_pair
+from market_data.repo._lookup import provider_id
 from market_data.repo.candles import coverage, fetch_candles
 from market_data.repo.chains import expiries_for, latest_snapshot
 from market_data.repo.instruments import get_instrument, search
@@ -150,20 +152,24 @@ async def chain_expiries(db: DB, _: User, underlying_id: int) -> list[date]:
 
 @router.get("/market/option-chain", response_model=ChainOut)
 async def option_chain(
-    db: DB, _: User, underlying_id: int, expiry: datetime | None = None
+    db: DB, _: User, underlying_id: int, expiry: datetime | None = None, at: datetime | None = None
 ) -> ChainOut:
-    """Latest stored snapshot (collector writes every 5 min). Live provider calls are not
-    made from the API so a slow broker cannot block the UI."""
-    snap = await latest_snapshot(db, underlying_id, expiry)
+    """Latest stored snapshot (collector writes every few minutes), or with `at` the last one
+    stored at or before that moment (Greeks and OI of an earlier time). Live provider calls are
+    not made from the API so a slow broker cannot block the UI."""
+    snap = await latest_snapshot(db, underlying_id, expiry, at)
     if snap is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "no option chain snapshot yet")
     from market_data.repo._lookup import provider_code
 
     code = await provider_code(db, snap.provider_id)
     age = (utcnow() - snap.ts).total_seconds()
-    fresh = (
-        Freshness.DEMO if code == "fake" else Freshness.DELAYED if age < 600 else Freshness.STALE
-    )
+    if code == "fake":
+        fresh = Freshness.DEMO
+    elif at is not None:
+        fresh = Freshness.HISTORICAL
+    else:
+        fresh = Freshness.DELAYED if age < 600 else Freshness.STALE
     return ChainOut(
         underlying_instrument_id=snap.underlying_instrument_id,
         expiry=snap.expiry,
@@ -172,6 +178,120 @@ async def option_chain(
         freshness=fresh,
         underlying_price=snap.underlying_price,
         rows=snap.rows,
+    )
+
+
+class OiStrikeOut(BaseModel):
+    strike: Decimal
+    call_oi_from: int | None
+    call_oi_to: int | None
+    call_change: int | None
+    put_oi_from: int | None
+    put_oi_to: int | None
+    put_change: int | None
+
+
+class OiChangeOut(BaseModel):
+    """OI change between two stored snapshots of one day (Mark 1, 1.2). `from_ts` / `to_ts`
+    are the snapshots actually used; the UI shows their distance to the requested times."""
+
+    underlying_instrument_id: int
+    expiry: date
+    day: date
+    requested_from: datetime
+    requested_to: datetime
+    from_ts: datetime
+    to_ts: datetime
+    source: str
+    freshness: Freshness
+    spot_from: Decimal | None
+    spot_to: Decimal | None
+    pcr_from: Decimal | None
+    pcr_to: Decimal | None
+    call_oi_change_total: int
+    put_oi_change_total: int
+    strikes: list[OiStrikeOut]
+
+
+def _ist_at(day: date, hhmm: str) -> datetime:
+    try:
+        t = time.fromisoformat(hhmm)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"bad time {hhmm!r}") from exc
+    return ensure_utc(datetime.combine(day, t, tzinfo=IST))
+
+
+@router.get("/market/oi-change/expiries", response_model=list[date])
+async def oi_change_expiries(
+    db: DB, state: State, _: User, underlying_id: int, day: date | None = None
+) -> list[date]:
+    """Expiries with stored snapshots on `day` (IST, default today) for the active provider."""
+    d = day or utcnow().astimezone(IST).date()
+    pid = await provider_id(db, state.provider.info.code)
+    return await expiries_on_day(db, underlying_id, pid, d)
+
+
+@router.get("/market/oi-change", response_model=OiChangeOut)
+async def oi_change(
+    db: DB,
+    state: State,
+    _: User,
+    underlying_id: int,
+    expiry: date,
+    day: date | None = None,
+    start: Annotated[str, Query(pattern=r"^\d{2}:\d{2}$")] = "09:15",
+    end: Annotated[str, Query(pattern=r"^\d{2}:\d{2}$")] = "15:30",
+) -> OiChangeOut:
+    """Per-strike call/put OI change between the first stored snapshot at or after `start`
+    and the last at or before `end` (IST times on `day`), active provider only."""
+    now = utcnow()
+    d = day or now.astimezone(IST).date()
+    t_from, t_to = _ist_at(d, start), _ist_at(d, end)
+    if t_to <= t_from:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "end must be after start")
+    code = state.provider.info.code
+    pid = await provider_id(db, code)
+    pair = await snapshot_pair(db, underlying_id, expiry, pid, t_from, min(t_to, now))
+    if pair is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "no option chain snapshot stored in this window"
+        )
+    a, b = pair.start, pair.end
+    strikes = compare_chains(a.rows, b.rows)
+    if code == "fake":
+        fresh = Freshness.DEMO
+    elif d != now.astimezone(IST).date():
+        fresh = Freshness.HISTORICAL
+    else:
+        fresh = Freshness.DELAYED if (now - b.ts).total_seconds() < 600 else Freshness.STALE
+    return OiChangeOut(
+        underlying_instrument_id=underlying_id,
+        expiry=expiry,
+        day=d,
+        requested_from=t_from,
+        requested_to=t_to,
+        from_ts=a.ts,
+        to_ts=b.ts,
+        source=code,
+        freshness=fresh,
+        spot_from=a.underlying_price,
+        spot_to=b.underlying_price,
+        pcr_from=pcr(a.rows),
+        pcr_to=pcr(b.rows),
+        call_oi_change_total=sum(s.call_change or 0 for s in strikes),
+        put_oi_change_total=sum(s.put_change or 0 for s in strikes),
+        strikes=[
+            OiStrikeOut(
+                strike=s.strike,
+                call_oi_from=s.call_oi_from,
+                call_oi_to=s.call_oi_to,
+                call_change=s.call_change,
+                put_oi_from=s.put_oi_from,
+                put_oi_to=s.put_oi_to,
+                put_change=s.put_change,
+            )
+            for s in strikes
+        ],
     )
 
 

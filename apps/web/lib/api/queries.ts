@@ -13,6 +13,7 @@ import type {
   HealthResponse,
   Instrument,
   LoginRequest,
+  OiChangeResponse,
   OptionChainResponse,
   ProvidersResponse,
   QuotesResponse,
@@ -123,7 +124,11 @@ export const marketKeys = {
   quotes: (ids: number[]) => ["quotes", ids.join(",")] as const,
   coverage: (id?: number) => ["coverage", id ?? "all"] as const,
   expiries: (id: number) => ["chain", "expiries", id] as const,
-  chain: (id: number, expiry?: string) => ["chain", id, expiry ?? "latest"] as const,
+  chain: (id: number, expiry?: string, at?: string) =>
+    ["chain", id, expiry ?? "latest", at ?? "now"] as const,
+  oiExpiries: (id: number, day: string) => ["oi-change", "expiries", id, day] as const,
+  oiChange: (id: number, expiry: string, day: string, start: string, end: string) =>
+    ["oi-change", id, expiry, day, start, end] as const,
   collector: ["collector"] as const,
 };
 
@@ -189,16 +194,18 @@ export function useChainExpiries(underlyingId: number | null) {
   });
 }
 
-export function useOptionChain(underlyingId: number | null, expiry?: string) {
+/** `at` (ISO datetime) asks for the last snapshot stored at or before that moment. */
+export function useOptionChain(underlyingId: number | null, expiry?: string, at?: string) {
   return useQuery({
-    queryKey: marketKeys.chain(underlyingId ?? -1, expiry),
+    queryKey: marketKeys.chain(underlyingId ?? -1, expiry, at),
     queryFn: () => {
       const p = new URLSearchParams({ underlying_id: String(underlyingId) });
       if (expiry) p.set("expiry", expiry);
+      if (at) p.set("at", at);
       return api<OptionChainResponse>(`/market/option-chain?${p.toString()}`);
     },
     enabled: underlyingId != null,
-    refetchInterval: 60_000,
+    refetchInterval: at ? false : 60_000,
     retry: (count, err) => !(err instanceof ApiRequestError && err.status === 404) && count < 2,
   });
 }
@@ -208,5 +215,42 @@ export function useCollector() {
     queryKey: marketKeys.collector,
     queryFn: () => api<CollectorHealth>("/market/collector"),
     refetchInterval: 10_000,
+  });
+}
+
+// --- OI change (Mark 1, 1.2) -----------------------------------------------------------
+
+export function useOiChangeExpiries(underlyingId: number | null, day: string) {
+  return useQuery({
+    queryKey: marketKeys.oiExpiries(underlyingId ?? -1, day),
+    queryFn: () =>
+      api<string[]>(`/market/oi-change/expiries?underlying_id=${underlyingId}&day=${day}`),
+    enabled: underlyingId != null,
+    staleTime: 60_000,
+  });
+}
+
+export function useOiChange(
+  underlyingId: number | null,
+  expiry: string | undefined,
+  day: string,
+  start: string,
+  end: string,
+) {
+  return useQuery({
+    queryKey: marketKeys.oiChange(underlyingId ?? -1, expiry ?? "", day, start, end),
+    queryFn: () => {
+      const p = new URLSearchParams({
+        underlying_id: String(underlyingId),
+        expiry: expiry ?? "",
+        day,
+        start,
+        end,
+      });
+      return api<OiChangeResponse>(`/market/oi-change?${p.toString()}`);
+    },
+    enabled: underlyingId != null && !!expiry,
+    refetchInterval: 60_000,
+    retry: (count, err) => !(err instanceof ApiRequestError && err.status === 404) && count < 2,
   });
 }

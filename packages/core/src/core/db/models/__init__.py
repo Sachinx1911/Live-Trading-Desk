@@ -33,6 +33,7 @@ from core.db.models.market_data import (
     HistoricalCandle,
     MarketQuote,
     OptionChainSnapshot,
+    OptionStrikeSeries,
 )
 from core.db.models.reference import (
     Broker,
@@ -115,6 +116,7 @@ __all__ = [
     "OptimizationJob",
     "OptimizationResult",
     "OptionChainSnapshot",
+    "OptionStrikeSeries",
     "PaperAccount",
     "PaperOrder",
     "PaperOrderEvent",

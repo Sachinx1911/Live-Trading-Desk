@@ -154,10 +154,10 @@ def build_catalogue() -> Catalogue:
             )
         )
     return Catalogue(
-        dsl_schema_version="1.0",
+        dsl_schema_version=s.DSL_SCHEMA_VERSION,
         indicators=indicators,
         condition_kinds=["compare", "cross", "between", "slope", "label", "group", "not"],
-        operand_kinds=["indicator", "price", "const", "arith"],
+        operand_kinds=["indicator", "price", "const", "arith", "option"],
         price_fields=_alias_lits(s.PriceField),
         compare_ops=_lits(s.Compare, "op"),
         cross_directions=_lits(s.Cross, "direction"),

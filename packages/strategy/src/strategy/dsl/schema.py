@@ -10,7 +10,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-DSL_SCHEMA_VERSION = "1.0"
+DSL_SCHEMA_VERSION = "1.1"
+# 1.1 (Mark 1, Stage 2) adds the `option` operand; every 1.0 document is still valid 1.1.
+SUPPORTED_DSL_VERSIONS = ("1.0", "1.1")
 
 Timeframe = Literal["1m", "3m", "5m", "15m", "30m", "1h", "1d", "1w"]
 PriceField = Literal["open", "high", "low", "close", "volume", "oi"]
@@ -113,7 +115,48 @@ class ArithRef(_Model):
     right: Operand
 
 
-Operand = Annotated[IndicatorRef | PriceRef | ConstRef | ArithRef, Field(discriminator="kind")]
+OptionFeature = Literal["pcr", "iv_atm", "oi", "oi_change_from_open", "greek"]
+OptionSide = Literal["CE", "PE"]
+Greek = Literal["delta", "gamma", "theta", "vega", "iv"]
+_PER_STRIKE: tuple[str, ...] = ("oi", "oi_change_from_open", "greek")
+
+
+class OptionRef(_Model):
+    """Option-chain fact of the traded instrument's underlying (DSL 1.1), read from the last
+    stored chain snapshot at or before the bar's time (never later):
+
+    - `pcr`: total put OI / total call OI of the nearest expiry.
+    - `iv_atm`: implied volatility (%) of the ATM strike, mean of call and put.
+    - `oi` / `oi_change_from_open`: OI of one strike and side, or its change since the day's
+      opening snapshot (09:15 IST).
+    - `greek`: one Greek (or IV) of one strike and side.
+
+    Strikes are chosen relative to the ATM strike at that moment: `strike_offset` 0 is ATM,
+    +1 the next strike above, -1 the next below. Missing data gives no value (condition false).
+    """
+
+    kind: Literal["option"]
+    feature: OptionFeature
+    side: OptionSide | None = None
+    strike_offset: int = Field(default=0, ge=-10, le=10)
+    greek: Greek | None = None
+
+    @model_validator(mode="after")
+    def _fields_match_feature(self) -> OptionRef:
+        if self.feature in _PER_STRIKE and self.side is None:
+            raise ValueError(f"option feature {self.feature} needs side CE or PE")
+        if self.feature == "greek" and self.greek is None:
+            raise ValueError("option feature greek needs greek")
+        if self.feature != "greek" and self.greek is not None:
+            raise ValueError("greek is only used with feature greek")
+        if self.feature in ("pcr", "iv_atm") and (self.side is not None or self.strike_offset):
+            raise ValueError(f"option feature {self.feature} takes no side or strike_offset")
+        return self
+
+
+Operand = Annotated[
+    IndicatorRef | PriceRef | ConstRef | ArithRef | OptionRef, Field(discriminator="kind")
+]
 
 
 # -------------------------------------------------------------------------- conditions
@@ -249,7 +292,7 @@ class FillPreferences(_Model):
 
 # ---------------------------------------------------------------------------- document
 class StrategyDocument(_Model):
-    dsl_schema_version: Literal["1.0"]
+    dsl_schema_version: Literal["1.0", "1.1"]
     name: str = Field(max_length=80)
     description: str | None = None
     origin: Literal["user_nl", "user_visual", "ai_research", "import"]

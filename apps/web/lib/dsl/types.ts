@@ -8,7 +8,17 @@ export type IndicatorRef = { kind: "indicator"; id: string; field?: string; offs
 export type PriceRef = { kind: "price"; field: string; offset?: number };
 export type ConstRef = { kind: "const"; value: number };
 export type ArithRef = { kind: "arith"; op: "+" | "-" | "*" | "/"; left: Operand; right: Operand };
-export type Operand = IndicatorRef | PriceRef | ConstRef | ArithRef;
+/** DSL 1.1: option-chain fact of the underlying, as of the bar (see strategy.option_features). */
+export type OptionFeature = "pcr" | "iv_atm" | "oi" | "oi_change_from_open" | "greek";
+export type OptionRef = {
+  kind: "option";
+  feature: OptionFeature;
+  side?: "CE" | "PE" | null;
+  strike_offset?: number;
+  greek?: "delta" | "gamma" | "theta" | "vega" | "iv" | null;
+};
+export const OPTION_PER_STRIKE: OptionFeature[] = ["oi", "oi_change_from_open", "greek"];
+export type Operand = IndicatorRef | PriceRef | ConstRef | ArithRef | OptionRef;
 
 export type CompareCond = { kind: "compare"; left: Operand; op: string; right: Operand };
 export type CrossCond = { kind: "cross"; left: Operand; direction: string; right: Operand };
@@ -52,7 +62,7 @@ export type PositionSizing = { method: string; lots?: number | null; quantity?: 
 export type FillPreferences = { entry_order_type: string; limit_offset_points?: number; limit_timeout_bars?: number; stop_order_type: string };
 
 export interface DslDoc {
-  dsl_schema_version: "1.0";
+  dsl_schema_version: "1.0" | "1.1";
   name: string;
   description?: string | null;
   origin: string;
@@ -81,7 +91,7 @@ export interface DslDoc {
 
 export function emptyDoc(): DslDoc {
   return {
-    dsl_schema_version: "1.0",
+    dsl_schema_version: "1.1",
     name: "",
     description: null,
     origin: "user_visual",
@@ -111,7 +121,8 @@ export function emptyDoc(): DslDoc {
 export function coerceDoc(raw: Record<string, unknown>): DslDoc {
   const base = emptyDoc();
   const d = { ...base, ...(raw as Partial<DslDoc>) } as DslDoc;
-  d.dsl_schema_version = "1.0";
+  // Every 1.0 document is valid 1.1; the builder always saves the newest version.
+  d.dsl_schema_version = "1.1";
   d.universe = { ...base.universe, ...(d.universe ?? {}) };
   d.session = { ...base.session, ...(d.session ?? {}) };
   d.fill = { ...base.fill, ...(d.fill ?? {}) };
@@ -134,6 +145,8 @@ export function defaultOperand(kind: Operand["kind"], indicatorIds: string[]): O
       return { kind: "const", value: 0 };
     case "arith":
       return { kind: "arith", op: "*", left: { kind: "price", field: "close", offset: 0 }, right: { kind: "const", value: 1 } };
+    case "option":
+      return { kind: "option", feature: "pcr" };
   }
 }
 
@@ -172,6 +185,13 @@ export function operandText(o: Operand): string {
       return String(o.value);
     case "arith":
       return `(${operandText(o.left)} ${o.op} ${operandText(o.right)})`;
+    case "option": {
+      if (o.feature === "pcr") return "PCR";
+      if (o.feature === "iv_atm") return "ATM IV";
+      const k = o.strike_offset ? `ATM${o.strike_offset > 0 ? "+" : ""}${o.strike_offset}` : "ATM";
+      const what = o.feature === "greek" ? (o.greek ?? "?") : o.feature === "oi" ? "OI" : "OI chg";
+      return `${k} ${o.side ?? "?"} ${what}`;
+    }
   }
 }
 

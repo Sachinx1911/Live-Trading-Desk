@@ -183,3 +183,38 @@ class OptionChainSnapshot(Base):
     ingested_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class OptionStrikeSeries(Base):
+    """Hypertable on `ts`: one row per strike and side of every stored chain snapshot.
+    Derived from `option_chain_snapshots` (Mark 1 1.1) and rebuildable from it, so a rebuild
+    may replace rows. `oi_change_from_open` is against the first snapshot at or after 09:15 IST
+    of the same day; null when there is no such baseline (never guessed)."""
+
+    __tablename__ = "option_strike_series"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "underlying_instrument_id", "expiry", "strike", "option_type", "ts", "provider_id"
+        ),
+        CheckConstraint("option_type IN ('CE', 'PE')", name="option_type"),
+    )
+
+    underlying_instrument_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("instruments.id", ondelete="CASCADE"), nullable=False
+    )
+    expiry: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    strike: Mapped[Decimal] = mapped_column(Numeric(14, 4), nullable=False)
+    option_type: Mapped[str] = mapped_column(Text, nullable=False)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    provider_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("data_providers.id", ondelete="RESTRICT"), nullable=False
+    )
+    oi: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    oi_change_from_open: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    ltp: Mapped[Decimal | None] = mapped_column(Numeric(14, 4), nullable=True)
+    volume: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    iv: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    delta: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    gamma: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    theta: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    vega: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)

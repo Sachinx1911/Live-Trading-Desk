@@ -34,7 +34,7 @@ EXPECTED_TABLES = {
     "strategies", "strategy_versions", "strategy_conditions", "strategy_approvals",
     "strategy_activations",
     # market data
-    "historical_candles", "market_quotes", "option_chain_snapshots",
+    "historical_candles", "market_quotes", "option_chain_snapshots", "option_strike_series",
     "data_import_jobs", "data_quality_checks",
     # trading (Phase 3)
     "paper_accounts", "paper_orders", "paper_order_events", "paper_positions", "paper_trades",

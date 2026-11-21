@@ -64,12 +64,24 @@ export class ApiRequestError extends Error {
 
 function redirectToLogin() {
   setTokens(null);
-  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+  if (typeof window === "undefined" || window.location.pathname.startsWith("/login")) return;
+  // With dev auto-login on, an expired session silently signs in again instead of showing
+  // the login page; reloading lets every query refetch with the new token.
+  void tryDevLogin().then((r) => {
+    if (r === "ok") {
+      window.location.reload();
+      return;
+    }
+    if (r === "unreachable") {
+      // AppShell shows "API not reachable" and retries; no login form for a backend restart.
+      window.location.reload();
+      return;
+    }
     const next = encodeURIComponent(window.location.pathname);
     // Full reload on purpose: this runs outside React (fetch wrapper) and must clear all state.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(`/login?next=${next}`);
-  }
+  });
 }
 
 async function tryRefresh(): Promise<boolean> {
@@ -89,19 +101,26 @@ async function tryRefresh(): Promise<boolean> {
 
 /**
  * Local-dev convenience: ask the API for tokens without a password. The API only exposes
- * /auth/dev-login when DEV_AUTO_LOGIN_EMAIL is set and APP_ENV is not production; everywhere
- * else this returns false and the normal login page takes over.
+ * /auth/dev-login when DEV_AUTO_LOGIN_EMAIL is set and APP_ENV is not production.
+ * - "ok": tokens stored.
+ * - "off": the API answered and dev login is disabled (404) or refused; the login page applies.
+ * - "unreachable": no answer or a 5xx (API down or starting); callers retry instead of
+ *   showing the login page.
  */
-export async function tryDevLogin(): Promise<boolean> {
+export type DevLoginResult = "ok" | "off" | "unreachable";
+
+export async function tryDevLogin(): Promise<DevLoginResult> {
+  let res: Response;
   try {
-    const res = await fetch(`${API_URL}/api/v1/auth/dev-login`, { method: "POST" });
-    if (!res.ok) return false;
-    const data = (await res.json()) as TokenResponse;
-    setTokens({ access: data.access_token, refresh: data.refresh_token });
-    return true;
+    res = await fetch(`${API_URL}/api/v1/auth/dev-login`, { method: "POST" });
   } catch {
-    return false;
+    return "unreachable";
   }
+  if (res.status >= 500) return "unreachable";
+  if (!res.ok) return "off";
+  const data = (await res.json()) as TokenResponse;
+  setTokens({ access: data.access_token, refresh: data.refresh_token });
+  return "ok";
 }
 
 export async function api<T>(

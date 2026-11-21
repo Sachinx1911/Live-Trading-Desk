@@ -1,34 +1,49 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { hasSession, subscribeSession, tryDevLogin } from "@/lib/api/client";
 import { connectRealtime } from "@/lib/ws/store";
 
+const RETRY_MS = 3000;
+
 /**
  * Authenticated application frame. With no session token it first tries the API's
- * development-only /auth/dev-login (DEV_AUTO_LOGIN_EMAIL); when that is off it redirects to
- * /login. Token validity is enforced by the API (401 → client redirects), not guessed here.
+ * development-only /auth/dev-login (DEV_AUTO_LOGIN_EMAIL). If the API is not reachable yet
+ * (starting, restarting) it says so and retries every 3 s instead of showing the login page;
+ * only when the API answers that dev login is off does it redirect to /login.
+ * Token validity is enforced by the API (401 → client signs in again or redirects).
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const authed = useSyncExternalStore(subscribeSession, hasSession, () => false);
+  const [apiDown, setApiDown] = useState(false);
 
   useEffect(() => {
     // During hydration `authed` is the server snapshot (false); re-read the real session
     // here so a full page load with a stored token does not bounce to /login.
     if (!hasSession()) {
       let cancelled = false;
-      void tryDevLogin().then((ok) => {
-        // Success stores tokens, which notifies subscribers and re-runs this effect.
-        if (!cancelled && !ok) {
-          router.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`);
-        }
-      });
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const attempt = () => {
+        void tryDevLogin().then((r) => {
+          if (cancelled) return;
+          // "ok" stores tokens, which notifies subscribers and re-runs this effect.
+          if (r === "ok") return;
+          if (r === "off") {
+            router.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+            return;
+          }
+          setApiDown(true);
+          timer = setTimeout(attempt, RETRY_MS);
+        });
+      };
+      attempt();
       return () => {
         cancelled = true;
+        if (timer) clearTimeout(timer);
       };
     }
     if (!authed) return;
@@ -36,7 +51,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [authed, router]);
 
   if (!authed) {
-    return <div className="flex h-dvh items-center justify-center text-[13px] text-text-3">Checking session…</div>;
+    return (
+      <div className="flex h-dvh flex-col items-center justify-center gap-2 text-[13px] text-text-3" role="status">
+        <span className="hud-label text-accent-text">{apiDown ? "Connecting to the API" : "Checking session"}</span>
+        {apiDown && <span>API not reachable yet (starting or stopped). Retrying every 3 seconds…</span>}
+      </div>
+    );
   }
 
   return (

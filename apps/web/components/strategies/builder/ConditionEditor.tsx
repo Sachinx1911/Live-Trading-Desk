@@ -4,7 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DslCatalogue } from "@/lib/api/generated";
 import { ARITH_OPS, OP_LABEL, SLOPE_DIRECTIONS } from "@/lib/dsl-catalogue-fallback";
-import { conditionText, defaultCondition, defaultOperand, type Condition, type DslDoc, type IndicatorRef, type Operand } from "@/lib/dsl/types";
+import { conditionText, defaultCondition, defaultOperand, OPTION_PER_STRIKE, type Condition, type DslDoc, type IndicatorRef, type Operand, type OptionFeature, type OptionRef } from "@/lib/dsl/types";
 import { cn } from "@/lib/utils";
 import { NumberInput, Select, TextInput, Toggle } from "./fields";
 
@@ -20,7 +20,16 @@ const KIND_LABEL: Record<string, string> = {
   not: "NOT",
 };
 
-const OPERAND_KINDS = ["indicator", "price", "const", "arith"] as const;
+const OPERAND_KINDS = ["indicator", "price", "const", "arith", "option"] as const;
+const OPTION_FEATURES = ["pcr", "iv_atm", "oi", "oi_change_from_open", "greek"] as const;
+const OPTION_LABELS: Record<string, string> = {
+  pcr: "PCR",
+  iv_atm: "ATM IV",
+  oi: "Strike OI",
+  oi_change_from_open: "OI change since open",
+  greek: "Greek",
+};
+const GREEKS = ["delta", "gamma", "theta", "vega", "iv"] as const;
 
 function outputsOf(ctx: Ctx, id: string): string[] {
   const spec = ctx.doc.indicators[id];
@@ -34,7 +43,7 @@ export function OperandEditor({ value, onChange, ctx, depth = 0 }: { value: Oper
     <Select
       value={value.kind}
       options={OPERAND_KINDS}
-      labels={{ indicator: "Indicator", price: "Price", const: "Number", arith: "Formula" }}
+      labels={{ indicator: "Indicator", price: "Price", const: "Number", arith: "Formula", option: "Option chain" }}
       className="w-24"
       onChange={(k) => onChange(defaultOperand(k as Operand["kind"], ids))}
     />
@@ -75,6 +84,35 @@ export function OperandEditor({ value, onChange, ctx, depth = 0 }: { value: Oper
           <OperandEditor value={value.right} ctx={ctx} depth={depth + 1} onChange={(right) => onChange({ ...value, right })} />
         </span>
       );
+    case "option": {
+      const perStrike = OPTION_PER_STRIKE.includes(value.feature);
+      const setFeature = (f: string) => {
+        const feature = f as OptionFeature;
+        const next: OptionRef = { kind: "option", feature };
+        if (OPTION_PER_STRIKE.includes(feature)) {
+          next.side = value.side ?? "CE";
+          next.strike_offset = value.strike_offset ?? 0;
+        }
+        if (feature === "greek") next.greek = value.greek ?? "delta";
+        onChange(next);
+      };
+      return (
+        <span className="inline-flex flex-wrap items-center gap-1" title="Read from the last stored option-chain snapshot at or before the bar (DSL 1.1)">
+          {kindSel}
+          <Select value={value.feature} options={OPTION_FEATURES} labels={OPTION_LABELS} className="w-36" onChange={setFeature} />
+          {perStrike && (
+            <>
+              <span className="text-[10px] text-text-3">ATM</span>
+              <NumberInput value={value.strike_offset ?? 0} min={-10} max={10} step={1} className="w-12" onChange={(v) => onChange({ ...value, strike_offset: Math.max(-10, Math.min(10, Math.round(v ?? 0))) })} />
+              <Select value={value.side ?? "CE"} options={["CE", "PE"]} className="w-14" onChange={(side) => onChange({ ...value, side: side as "CE" | "PE" })} />
+            </>
+          )}
+          {value.feature === "greek" && (
+            <Select value={value.greek ?? "delta"} options={GREEKS} className="w-20" onChange={(g) => onChange({ ...value, greek: g as OptionRef["greek"] })} />
+          )}
+        </span>
+      );
+    }
   }
 }
 

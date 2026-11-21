@@ -50,6 +50,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggle = useUiStore((s) => s.toggleSidebar);
+  // The most specific matching item is active (/market/oi-change must not also light /market).
+  const activeHref = NAV_GROUPS.flatMap((g) => g.items)
+    .filter((i) => pathname === i.href || pathname.startsWith(i.href + "/"))
+    .reduce<string | null>((best, i) => (best == null || i.href.length > best.length ? i.href : best), null);
 
   return (
     <aside
@@ -74,7 +78,7 @@ export function Sidebar() {
                   <NavLink
                     item={item}
                     collapsed={collapsed}
-                    active={pathname === item.href || pathname.startsWith(item.href + "/")}
+                    active={item.href === activeHref}
                   />
                 </li>
               ))}

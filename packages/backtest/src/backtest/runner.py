@@ -37,7 +37,9 @@ from execution.simulator.engine import ExecutionSimulator, MarketState
 from execution.simulator.slippage import FixedBpsSlippage, SlippageModel, SpreadAwareSlippage
 from risk.engine import RiskEngine, _product_for
 from risk.limits import AccountState, InstrumentMeta
+from risk.market_history import PcrHistory
 from strategy.engine import RegimeProvider, StrategyEngine
+from strategy.option_features import ChainHistory
 from strategy.regime import RegimeDaily, RegimeDetector, provider_from_regimes, regime_table
 
 ProgressFn = Callable[[float], None]
@@ -284,7 +286,13 @@ def run_backtest(
     regime_provider: RegimeProvider | None = None,
     progress: ProgressFn | None = None,
     calendar: ExchangeCalendar | None = None,
+    market_history: PcrHistory | None = None,
+    option_history: ChainHistory | None = None,
 ) -> BacktestResult:
+    """`market_history`: stored PCR of the traded option's underlying (Mark 1, Stage 2). When
+    given, owner rules see the PCR as it was at each simulated moment (never later); when None
+    (no chain history stored for the range) rules that need it report `skipped`, and the
+    assumptions say so."""
     t0 = _time.perf_counter()
     cal = calendar or nse_calendar()
     doc = cfg.document()
@@ -308,7 +316,14 @@ def run_backtest(
     if regime_provider is None:
         regimes_by_day = _daily_regimes(candles, cal)
         regime_provider = provider_from_regimes(regimes_by_day)
-    engine = StrategyEngine(doc, ins.instrument_id, cal, cfg.strategy_version_id, regime_provider)
+    engine = StrategyEngine(
+        doc,
+        ins.instrument_id,
+        cal,
+        cfg.strategy_version_id,
+        regime_provider,
+        option_provider=option_history.at if option_history is not None else None,
+    )
     risk = RiskEngine(cfg.risk_limits)
     sim = ExecutionSimulator(
         _cost_model(cfg),
@@ -375,6 +390,7 @@ def run_backtest(
             kill_switch_active=False,
             mode=TradingMode.PAPER,
             product=product,
+            market=market_history.context_at(now) if market_history is not None else None,
         )
         if not decision.allowed or decision.intent is None:
             for r in decision.reasons:
@@ -543,6 +559,17 @@ def run_backtest(
     assumptions = cfg.assumptions()
     assumptions["end_of_data_flatten"] = flattened
     assumptions["warmup_bars"] = warmup
+    if option_history is not None:
+        assumptions["option_chain_snapshots"] = len(option_history)
+    assumptions["owner_rules_market_data"] = (
+        {
+            "pcr_points": len(market_history),
+            "first_ts": market_history.first_ts.isoformat() if market_history.first_ts else None,
+            "last_ts": market_history.last_ts.isoformat() if market_history.last_ts else None,
+        }
+        if market_history is not None
+        else "none: rules that need option-chain history were skipped"
+    )
     assumptions["bars"] = total_bars
     assumptions["data_hash"] = feed.source_hash
     if progress is not None:

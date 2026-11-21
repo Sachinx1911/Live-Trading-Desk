@@ -67,6 +67,20 @@ def _bs(spot: float, strike: float, t_years: float, iv: float, call: bool) -> tu
     return strike * _norm_cdf(-d2) - spot * _norm_cdf(-d1), _norm_cdf(d1) - 1.0
 
 
+def _bs_greeks(spot: float, strike: float, t_years: float, iv: float) -> tuple[float, float, float]:
+    """DEMO gamma, theta per calendar day (call, zero rate) and vega per 1 vol point.
+    All zero at or after expiry."""
+    if t_years <= 0 or iv <= 0:
+        return 0.0, 0.0, 0.0
+    sq = math.sqrt(t_years)
+    d1 = (math.log(spot / strike) + 0.5 * iv * iv * t_years) / (iv * sq)
+    pdf = math.exp(-0.5 * d1 * d1) / math.sqrt(2 * math.pi)
+    gamma = pdf / (spot * iv * sq)
+    theta = -(spot * pdf * iv) / (2 * sq) / 365
+    vega = spot * pdf * sq / 100
+    return gamma, theta, vega
+
+
 def _next_thursday(d: date) -> date:
     days = (3 - d.weekday()) % 7
     return d + timedelta(days=days or 7)
@@ -479,12 +493,17 @@ class FakeMarketDataProvider(MarketDataProvider):
         rng = self._rng(underlying_instrument_id, expiry.toordinal(), 3)
         step = 50 if underlying_instrument_id == 1 else 100
         atm = round(spot / step) * step
+        # DEMO: OI builds up or unwinds through the day (deterministic per strike, scaled by the
+        # IST time of day) so OI-change views have something to show; never real data.
+        ist = now.astimezone(IST)
+        day_frac = (ist.hour * 60 + ist.minute) / 1440
         rows: list[OptionChainRow] = []
         for k in range(-5, 6):
             strike = atm + k * step
             for ot in (OptionType.CE, OptionType.PE):
                 iv = 0.12 + 0.08 * rng.random() + 0.002 * abs(k)
                 price, delta = _bs(spot, float(strike), t_years, iv, ot == OptionType.CE)
+                gamma, theta, vega = _bs_greeks(spot, float(strike), t_years, iv)
                 ltp = _q(max(price, 0.05))
                 ins = next(
                     (
@@ -505,10 +524,15 @@ class FakeMarketDataProvider(MarketDataProvider):
                         bid=max(ltp - TICK, Decimal("0.05")),
                         ask=ltp + TICK,
                         volume=int(rng.lognormvariate(11, 0.8)),
-                        oi=int(rng.lognormvariate(13, 0.7)),
+                        oi=int(
+                            rng.lognormvariate(13, 0.7) * (1 + rng.uniform(-0.3, 0.6) * day_frac)
+                        ),
                         oi_change=int(rng.gauss(0, 50_000)),
                         iv=Decimal(str(round(iv * 100, 2))),
                         delta=Decimal(str(round(delta, 4))),
+                        gamma=Decimal(str(round(gamma, 6))),
+                        theta=Decimal(str(round(theta, 2))),
+                        vega=Decimal(str(round(vega, 2))),
                     )
                 )
         return OptionChainSnapshot(

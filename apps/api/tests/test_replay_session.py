@@ -197,3 +197,50 @@ def test_play_pause_speed_and_manager() -> None:
         assert await m.sweep() == 1
 
     asyncio.run(run())
+
+
+def test_owner_rule_sees_stored_pcr_in_replay() -> None:
+    """Mark 1, Stage 2: with PCR history the replay overlay blocks a PUT buy at PCR >= 2."""
+    from core.models import OptionType
+    from risk.market_history import PcrHistory, PcrPoint
+
+    put = InstrumentMeta(
+        instrument_id=22,
+        symbol="NIFTY25NOV25000PE",
+        segment=Segment.OPTIONS,
+        lot_size=1,
+        underlying_symbol="NIFTY",
+        option_type=OptionType.PE,
+    )
+    pts = [
+        PcrPoint(TODAY[0].ts - timedelta(minutes=1) + timedelta(minutes=3 * i), Decimal("2.5"), "x")
+        for i in range(len(TODAY) // 3 + 2)
+    ]
+
+    async def run(history: PcrHistory | None) -> list[dict]:  # type: ignore[type-arg]
+        s = ReplaySession(
+            user_id=1,
+            instrument_id=22,
+            day=DAYS[2],
+            timeframe=Timeframe.M1,
+            candles_1m=TODAY,
+            warmup_1m=WARM,
+            strategy=_strategy(),
+            strategy_version_id=1,
+            meta=put,
+            speed=600,
+            seed=3,
+            calendar=CAL,
+            market_history=history,
+        )
+        q = s.subscribe()
+        await s.step(len(TODAY))
+        return await _drain(q)
+
+    blocked = asyncio.run(run(PcrHistory(pts)))
+    reasons = [r for e in blocked if e["type"] == "signal_rejected" for r in e["reasons"]]
+    assert any("PCR" in r for r in reasons)
+    assert not any(e["type"] == "fill" for e in blocked)
+
+    free = asyncio.run(run(None))  # no history: the rule is skipped, as before Stage 2
+    assert any(e["type"] == "fill" for e in free)

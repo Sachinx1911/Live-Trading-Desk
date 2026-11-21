@@ -20,6 +20,7 @@ from strategy.dsl.schema import (
     LevelSpec,
     Not,
     Operand,
+    OptionRef,
     PriceRef,
     Slope,
     StrategyDocument,
@@ -62,6 +63,7 @@ class _Walker:
         self.leaves = 0
         self.has_noisy_cross = False
         self.numeric_consts = 0
+        self.uses_option_data = False
 
     def operand(self, op: Operand, depth: int = 0) -> None:
         if isinstance(op, IndicatorRef):
@@ -81,6 +83,12 @@ class _Walker:
             self.operand(op.right, depth + 1)
         elif isinstance(op, PriceRef):
             pass
+        elif isinstance(op, OptionRef):
+            self.uses_option_data = True
+            if self.doc.dsl_schema_version == "1.0":
+                self.report.errors.append(
+                    f"{self.where}: option operands need dsl_schema_version 1.1"
+                )
 
     def condition(self, c: Condition, depth: int = 1) -> None:
         if isinstance(c, Group):
@@ -319,4 +327,9 @@ def validate_document(doc: StrategyDocument, target: Target = "draft") -> Valida
             r.warnings.append(f"{w.where}: more than 6 leaf conditions")
         if w.has_noisy_cross and doc.entry is not None and doc.entry.confirm_bars == 0:
             r.warnings.append(f"{w.where}: cross on RSI with confirm_bars=0 is noisy")
+    if any(w.uses_option_data for w in walkers):
+        r.warnings.append(
+            "uses option-chain data: bars without a stored chain snapshot give no value "
+            "(conditions on them are false), so backtests only trade where chain history exists"
+        )
     return r

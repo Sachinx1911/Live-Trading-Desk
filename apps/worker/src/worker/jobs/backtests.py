@@ -27,11 +27,19 @@ from core.db.models import (
 )
 from core.db.models._enums import JobStatus, OptimizationKind
 from core.logging import get_logger
-from core.models import Candle, Timeframe
+from core.models import Candle, Instrument, Timeframe
 from core.settings import get_settings
-from core.time import utcnow
+from core.time import IST, utcnow
 from market_data.repo.candles import fetch_candles
+from market_data.repo.chains import (
+    chain_snapshots_between,
+    chain_underlying_id,
+    underlying_chain_oi_history,
+)
 from market_data.repo.instruments import get_instrument
+from risk.market_history import PcrHistory, PcrPoint
+from risk.owner_rules import pcr_from_oi
+from strategy.option_features import ChainHistory, document_uses_options
 
 log = get_logger(__name__)
 
@@ -277,6 +285,39 @@ async def _set_status(
     await db.commit()
 
 
+async def _pcr_history(
+    db: AsyncSession, instrument: Instrument, start: datetime, end: datetime
+) -> PcrHistory | None:
+    """Stored PCR of the traded option's underlying over the run (Mark 1, Stage 2), from the
+    same provider as the candles. None for non-options or when no chain history is stored,
+    in which case owner rules that need it are reported as skipped."""
+    provider = get_settings().default_market_data_provider
+    pts = await underlying_chain_oi_history(db, instrument, start, end, provider)
+    if not pts:
+        return None
+    return PcrHistory(
+        PcrPoint(
+            p.ts, pcr_from_oi(p.put_oi, p.call_oi), p.expiry.astimezone(IST).date().isoformat()
+        )
+        for p in pts
+    )
+
+
+async def _option_history(
+    db: AsyncSession, dsl: Any, instrument: Instrument, start: datetime, end: datetime
+) -> ChainHistory | None:
+    """Stored chain snapshots for DSL `option` operands (DSL 1.1), loaded only when the
+    strategy uses them; same provider as the candles, one day of lead-in."""
+    if not document_uses_options(dsl):
+        return None
+    und = await chain_underlying_id(db, instrument)
+    if und is None:
+        return None
+    provider = get_settings().default_market_data_provider
+    snaps = await chain_snapshots_between(db, und, start - timedelta(days=1), end, provider)
+    return ChainHistory.from_snapshots(snaps)
+
+
 async def run_backtest_job(ctx: dict[str, Any], job_id: int) -> dict[str, Any]:
     redis: Redis = ctx["redis"]
     reporter = ProgressReporter(redis, "backtest", job_id)
@@ -301,6 +342,8 @@ async def run_backtest_job(ctx: dict[str, Any], job_id: int) -> dict[str, Any]:
                 raise ValueError("no candles stored for the requested range; backfill first")
             config = _build_config(job, dsl, instrument, ctf, timeframe=job.timeframe.value)
             job.config_hash = config.config_hash()
+            history = await _pcr_history(db, instrument, job.start_at, job.end_at)
+            options = await _option_history(db, dsl, instrument, job.start_at, job.end_at)
             await reporter.report(1, f"{len(candles)} bars loaded")
             running_job = job
             last_db = 0.0
@@ -315,7 +358,12 @@ async def run_backtest_job(ctx: dict[str, Any], job_id: int) -> dict[str, Any]:
 
             cb = reporter.sync()
             result = await asyncio.to_thread(
-                run_backtest, config, candles, progress=lambda pct: cb(pct, "")
+                run_backtest,
+                config,
+                candles,
+                progress=lambda pct: cb(pct, ""),
+                market_history=history,
+                option_history=options,
             )
             await on_progress(99, "persisting")
             await _persist_result(db, job, result)

@@ -3,6 +3,7 @@
 from risk.engine import RiskDecision, RiskEngine
 from risk.kill_switch import KillSwitch
 from risk.limits import AccountState, InstrumentMeta, RiskLimits
+from risk.market_history import PcrHistory, PcrPoint
 from risk.owner_rules import OWNER_RULES, MarketContext, pcr_from_oi
 from risk.sizing import SizingResult, size_order
 
@@ -12,6 +13,8 @@ __all__ = [
     "InstrumentMeta",
     "KillSwitch",
     "MarketContext",
+    "PcrHistory",
+    "PcrPoint",
     "RiskDecision",
     "RiskEngine",
     "RiskLimits",

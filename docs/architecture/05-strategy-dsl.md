@@ -160,6 +160,26 @@ PriceField = Literal["open","high","low","close","volume","oi"]
 ```
 `offset` is ≥ 0 (past bars only). `ArithRef` nesting depth ≤ 2.
 
+**DSL 1.1 (Mark 1, Stage 2): `OptionRef`.** Option-chain facts of the traded instrument's
+underlying (the index itself, or the underlying of an option / future contract):
+
+```python
+class OptionRef(BaseModel):
+    kind: Literal["option"]
+    feature: Literal["pcr", "iv_atm", "oi", "oi_change_from_open", "greek"]
+    side: Literal["CE", "PE"] | None = None        # required for oi, oi_change_from_open, greek
+    strike_offset: int = 0                          # -10..10 strikes from ATM
+    greek: Literal["delta", "gamma", "theta", "vega", "iv"] | None = None  # feature greek only
+```
+
+Values come from the last stored chain snapshot (nearest unexpired expiry) at or before the
+bar's start time, never a later one (`strategy.option_features.ChainHistory`); the same code
+serves backtest, replay and paper (ADR-002). `pcr` = total put OI / total call OI;
+`iv_atm` = mean of the ATM call and put IV; `oi_change_from_open` is against the first
+snapshot at or after 09:15 IST of that day. Missing data gives no value, so the condition is
+false; the validator warns that such strategies only trade where chain history exists, and
+refuses `option` operands in a `1.0` document.
+
 ## 4. Condition grammar
 
 ```python
@@ -450,7 +470,7 @@ The NL draft before answers has `exit: null`, `stop_loss: null`, `target: null`,
 
 ## 12. Versioning and migration
 
-- `dsl_schema_version` is `"1.0"`. Minor versions (`1.x`) add optional fields only; the
+- `dsl_schema_version` is `"1.1"` (`"1.0"` documents stay valid). Minor versions (`1.x`) add optional fields only; the
   engine accepts any `1.x` ≤ its own. A major bump (`2.0`) ships a migration function
   `migrate_1_to_2(doc)` in `packages/strategy/dsl/migrations.py`; migrated documents are
   stored as **new** strategy versions (status `draft`) linked by `parent_version_id`, never

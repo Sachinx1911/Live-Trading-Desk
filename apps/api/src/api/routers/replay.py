@@ -16,9 +16,17 @@ from core.db.models import Strategy, StrategyVersion
 from core.models import Timeframe
 from core.time import IST, ensure_utc
 from market_data.repo.candles import fetch_candles
+from market_data.repo.chains import (
+    chain_snapshots_between,
+    chain_underlying_id,
+    underlying_chain_oi_history,
+)
 from market_data.repo.instruments import get_instrument
 from risk.limits import InstrumentMeta
+from risk.market_history import PcrHistory, PcrPoint
+from risk.owner_rules import pcr_from_oi
 from strategy.dsl.schema import StrategyDocument
+from strategy.option_features import ChainHistory, document_uses_options
 
 router = APIRouter(prefix="/replay", tags=["replay"])
 
@@ -85,6 +93,8 @@ async def create_session(body: SessionIn, db: DB, user: User, state: State) -> S
         raise HTTPException(status.HTTP_404_NOT_FOUND, "no 1-minute candles stored for that day")
     doc: StrategyDocument | None = None
     meta: InstrumentMeta | None = None
+    history: PcrHistory | None = None
+    options: ChainHistory | None = None
     warm: list[Any] = []
     if body.strategy_version_id is not None:
         v = await db.get(StrategyVersion, body.strategy_version_id)
@@ -109,6 +119,24 @@ async def create_session(body: SessionIn, db: DB, user: User, state: State) -> S
         warm = await fetch_candles(
             db, body.instrument_id, Timeframe.M1, start - timedelta(days=10), start, provider
         )
+        # Owner rules in replay see the PCR stored for that day (Mark 1, Stage 2).
+        pts = await underlying_chain_oi_history(db, ins, start, end, provider)
+        if pts:
+            history = PcrHistory(
+                PcrPoint(
+                    p.ts,
+                    pcr_from_oi(p.put_oi, p.call_oi),
+                    p.expiry.astimezone(IST).date().isoformat(),
+                )
+                for p in pts
+            )
+        if document_uses_options(doc):
+            und = await chain_underlying_id(db, ins)
+            if und is not None:
+                snaps = await chain_snapshots_between(
+                    db, und, start - timedelta(days=1), end, provider
+                )
+                options = ChainHistory.from_snapshots(snaps)
     try:
         sess = manager.add(
             ReplaySession(
@@ -124,6 +152,8 @@ async def create_session(body: SessionIn, db: DB, user: User, state: State) -> S
                 speed=body.speed,
                 seed=body.seed,
                 calendar=cal,
+                market_history=history,
+                option_history=options,
             )
         )
     except (RuntimeError, ValueError) as exc:

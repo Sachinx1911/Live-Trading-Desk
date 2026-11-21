@@ -15,6 +15,7 @@ from worker.jobs.market_data import backfill_instrument, eod_gap_report, sync_in
 from worker.jobs.nse_reference import import_nse_reference
 from worker.jobs.regime import compute_regime_daily, compute_regime_intraday
 from worker.jobs.scanner import compute_scan_snapshot
+from worker.jobs.strike_series import rebuild_strike_series_job
 from worker.jobs.system import heartbeat
 
 log = get_logger(__name__)
@@ -49,6 +50,7 @@ class WorkerSettings:
         compute_regime_daily,
         compute_regime_intraday,
         compute_scan_snapshot,
+        rebuild_strike_series_job,
     ]
     cron_jobs = [
         cron(heartbeat, minute=set(range(0, 60, 5)), run_at_startup=True),

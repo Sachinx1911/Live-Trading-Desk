@@ -1195,3 +1195,34 @@ export interface VersionReadiness {
   live_activations: number;
   blockers: Partial<Record<StrategyVersionStatus, string[]>>;
 }
+
+// --- hand-appended: OI change (Mark 1, 1.2) — replace with `pnpm gen:api` output ----------
+
+export interface OiStrikeOut {
+  strike: string;
+  call_oi_from: number | null;
+  call_oi_to: number | null;
+  call_change: number | null;
+  put_oi_from: number | null;
+  put_oi_to: number | null;
+  put_change: number | null;
+}
+
+export interface OiChangeResponse {
+  underlying_instrument_id: number;
+  expiry: string;
+  day: string;
+  requested_from: string;
+  requested_to: string;
+  from_ts: string;
+  to_ts: string;
+  source: string;
+  freshness: Freshness;
+  spot_from: string | null;
+  spot_to: string | null;
+  pcr_from: string | null;
+  pcr_to: string | null;
+  call_oi_change_total: number;
+  put_oi_change_total: number;
+  strikes: OiStrikeOut[];
+}

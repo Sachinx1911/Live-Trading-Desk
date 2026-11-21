@@ -91,6 +91,9 @@ async def test_universe_and_option_chain() -> None:
     ce = [r for r in chain.rows if r.option_type == "CE"]
     assert all(r.iv is not None and 12 <= r.iv <= 22 for r in chain.rows)
     assert all(r.delta is not None and 0 <= r.delta <= 1 for r in ce)
+    assert all(r.gamma is not None and r.gamma >= 0 for r in chain.rows)
+    assert all(r.vega is not None and r.vega >= 0 for r in chain.rows)
+    assert all(r.theta is not None and r.theta <= 0 for r in chain.rows)
 
 
 def test_registry() -> None:

@@ -34,6 +34,7 @@ from market_data.candles import CandleBuilder
 from market_data.repo.candles import upsert_candles
 from market_data.repo.chains import expiries_for, write_snapshot
 from market_data.repo.quotes import cache_quote, freshness, write_quotes
+from market_data.strike_series import write_series_for
 from market_data.sync import sync_instrument_master
 from providers.base import ConnectionState, MarketDataProvider
 from providers.registry import create as create_provider
@@ -220,6 +221,14 @@ class Collector:
                         log.warning("collector.chain_failed", symbol=und.symbol, error=str(exc))
                         continue
                     await write_snapshot(db, snap)
+                    try:
+                        # Derived per-strike rows; a failure here must not lose the raw snapshot.
+                        async with db.begin_nested():
+                            await write_series_for(db, snap)
+                    except Exception as exc:
+                        log.warning(
+                            "collector.strike_series_failed", symbol=und.symbol, error=str(exc)
+                        )
                     log.info(
                         "collector.chain", symbol=und.symbol, expiry=str(exp), rows=len(snap.rows)
                     )

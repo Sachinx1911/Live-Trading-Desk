@@ -34,6 +34,7 @@ from strategy.dsl.schema import (
     LevelSpec,
     Not,
     Operand,
+    OptionRef,
     PriceRef,
     Slope,
     StrategyDocument,
@@ -42,6 +43,7 @@ from strategy.dsl.schema import (
 )
 from strategy.indicators import IndicatorError
 from strategy.indicators import get as get_indicator
+from strategy.option_features import OptionProvider, option_value
 
 RegimeProvider = Callable[[datetime], dict[str, Any]]
 
@@ -92,6 +94,7 @@ class StrategyEngine:
         strategy_version_id: int,
         regime_provider: RegimeProvider | None = None,
         *,
+        option_provider: OptionProvider | None = None,
         monitor_levels: bool = True,
         max_rows: int = 800,
     ) -> None:
@@ -101,6 +104,8 @@ class StrategyEngine:
         self.tz = calendar.tz
         self.version_id = strategy_version_id
         self.regime_provider = regime_provider
+        # DSL 1.1 `option` operands: chain view as of a bar's start time (never later).
+        self.option_provider = option_provider
         self.monitor_levels = monitor_levels
         self._rows: list[dict[str, Any]] = []
         self._max_rows = max_rows
@@ -242,6 +247,11 @@ class StrategyEngine:
             return None if v is None else float(v)
         if isinstance(op, IndicatorRef):
             return self._ind_value(op.id, op.field, op.offset + offset_base)
+        if isinstance(op, OptionRef):
+            idx = len(self._rows) - 1 - offset_base
+            if idx < 0 or self.option_provider is None:
+                return None
+            return option_value(op, self.option_provider(self._rows[idx]["ts"]))
         if isinstance(op, ArithRef):
             left, right = self._value(op.left, offset_base), self._value(op.right, offset_base)
             if not isinstance(left, int | float) or not isinstance(right, int | float):

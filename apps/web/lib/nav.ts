@@ -51,6 +51,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Data",
     items: [
       { label: "Market Data", href: "/market", icon: CandlestickChart, phase: 2 },
+      { label: "OI Change", href: "/market/oi-change", icon: BarChart3 },
       { label: "Market Scanner", href: "/scanner", icon: Radar, phase: 5 },
     ],
   },

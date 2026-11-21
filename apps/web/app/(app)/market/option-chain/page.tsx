@@ -14,6 +14,10 @@ export default function OptionChainPage() {
   const [symbol, setSymbol] = useState("NIFTY");
   const [ids, setIds] = useState<Record<string, number>>({});
   const [expiry, setExpiry] = useState<string | undefined>(undefined);
+  // Empty = latest snapshot; otherwise an IST date and time to look back to (Mark 1, 1.3).
+  const [atDay, setAtDay] = useState("");
+  const [atTime, setAtTime] = useState("");
+  const at = atDay && atTime ? `${atDay}T${atTime}:00+05:30` : undefined;
   const id = ids[symbol] ?? null;
   const expiries = useChainExpiries(id);
 
@@ -74,9 +78,28 @@ export default function OptionChainPage() {
             ))}
           </select>
         </label>
+        <label className="flex items-center gap-2 text-xs text-text-2">
+          At
+          <input type="date" value={atDay} onChange={(e) => setAtDay(e.target.value)} className="h-7 border border-border bg-pane px-2 text-xs text-text-1" />
+          <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className="h-7 border border-border bg-pane px-2 text-xs text-text-1" />
+        </label>
+        {at ? (
+          <button
+            type="button"
+            onClick={() => {
+              setAtDay("");
+              setAtTime("");
+            }}
+            className="rounded-[var(--r-pill)] border border-border px-2 py-0.5 text-[11px] text-accent-text"
+          >
+            Back to latest
+          </button>
+        ) : (
+          <span className="text-[11px] text-text-3">latest snapshot</span>
+        )}
         {id == null && <span className="text-[11px] text-text-3">{symbol} not found in the instrument master yet.</span>}
       </PanelCard>
-      <OptionChainTable underlyingId={id} expiry={effectiveExpiry ? `${effectiveExpiry}T15:30:00+05:30` : undefined} symbol={symbol} />
+      <OptionChainTable underlyingId={id} expiry={effectiveExpiry ? `${effectiveExpiry}T15:30:00+05:30` : undefined} symbol={symbol} at={at} />
     </div>
   );
 }
