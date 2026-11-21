@@ -33,3 +33,6 @@ next-env.d.ts
 
 # NL builder evaluation reports (local runs)
 nl-eval-report*.json
+
+# Reference repositories: shallow clones for reading only (summaries in references/*.md are committed)
+references/_repos/
