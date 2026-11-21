@@ -16,10 +16,11 @@ Mark 1 stages), what to avoid, and the licence.
 | [hectorg2211/jarvis](hectorg2211-jarvis.md) | Windows double-clap → open apps on chosen monitors + cached ElevenLabs welcome | Protocol with screen layout, window placement, cached voice phrases (Mark 2) | None (all rights reserved) | 2026-11-21 |
 | [open-jarvis/OpenJarvis](open-jarvis-OpenJarvis.md) | Stanford's local-first personal-agent framework: 5 primitives, registries, memory backends, traces, proactive agent, Tauri app | JARVIS core design checklist: tool spec + confirmation, approval queue, hybrid memory, guardrails, traces | Apache-2.0 | 2026-11-21 |
 | [microsoft/JARVIS](microsoft-JARVIS.md) | Microsoft Research: HuggingGPT (LLM plans tool graph), TaskBench (planning benchmark), EasyTool (concise tool docs) | Multi-step plans with step dependencies, scoring the JARVIS command eval set, writing tool descriptions | MIT (TaskBench Apache-2.0) | 2026-11-21 |
+| [Sachinx1911/Stock-Market-Prediction-Software](sachinx1911-stock-market-prediction-software.md) | Owner's earlier project "AI-MIOS v1": NSE end-of-day analysis, 10-year data, indicators, market breadth, RSS news analyst, daily AI brief, accuracy loop scoring every AI statement | Accuracy loop for JARVIS statements, news pipeline, market breadth, daily brief, importing its 10-year data | Owner's own | 2026-11-21 |
 
 ## Design
 
-- [design-reference-images.md](design-reference-images.md) — eighteen images chosen by the owner (2026-11-21) for the JARVIS desktop look: per-image takeaways, extracted design tokens, mapping to our two screens, readability rules. Images kept locally only (`references/_images/`, git-ignored).
+- [design-reference-images.md](design-reference-images.md) — twenty images chosen by the owner (2026-11-21) for the JARVIS desktop look: per-image takeaways, extracted design tokens, mapping to our two screens, readability rules. Images kept locally only (`references/_images/`, git-ignored).
 
 ## Videos
 

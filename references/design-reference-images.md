@@ -1,6 +1,6 @@
 # Design reference images (owner, 2026-11-21)
 
-Eighteen images the owner chose as the **design reference for the JARVIS desktop**. They extend
+Twenty images the owner chose as the **design reference for the JARVIS desktop**. They extend
 `docs/mark-1-plan.md` §5 (workshop monitors). Six are film stills (Iron Man, Avengers: Age of
 Ultron, Spider-Man: Brand New Day), one is a product photo of a transparent display desk, one is a
 fan recreation. All are third-party material: kept locally in `references/_images/` as `NN-short-name.ext` matching the numbers below (git-ignored,
@@ -28,6 +28,8 @@ public repo) and **never used in the product**; only the design language below i
 | 16 | Same console with a 3D globe and time-zone bands (`-5HRS ZULU`…) | **Market sessions on a globe / time band**: which exchanges are open now (multi-market, Phase 9); time bands for IST session windows |
 | 17 | Component locator: modal "LOCATING MISSING COMPONENT" with progress, red "CRITICAL COMPONENT MISSING", right-side diagnostic tree with red missing items, dial row at the bottom | **Search/diagnose task modal** with progress; **missing items in red in a tree** = data-gap report, missing chain snapshots, failed jobs |
 | 18 | Modern energy dashboard (not film): isometric 3D blocks connected by glowing teal lines, KPI row on top, line charts below, calm dark grey | Clean, highly readable alternative to the film look. **System map**: broker → collector → database → trader → paper account as isometric blocks with live status on the links; KPI row on top |
+| 19 | "MTOX-2 · SEQUENCE" analysis screen (film-style, source not identified): a particle DNA helix that changes from **blue to amber** along its length, linked points with callouts; right column of three stacked **percentage cards** (`63.3%`, `33.5%`, `55.3%`) each with a thin bar; bottom row of repeated module tiles `SYNC.DATA · SCAN.A/B · REC.SCAN` with ring dials and a small bar histogram `SYS.3643`; log tabs on top | **Two-colour hero** for two opposing sides (calls blue / puts amber along the strike axis, e.g. OI by strike); **stacked KPI cards on the right** (PCR, IV, max-pain distance); **bottom row of module status tiles** with a ring each (collector, sync, scan, worker); log tabs = recent jobs |
+| 20 | Four sparse widgets on plain near-black (concept-art sheet, source not identified): a particle sphere; a horizontal chain of **concentric amber rings** of different sizes on one line, each with a leader line down to a tiny label block; an orbit diagram with a red elliptical path and a long tick-marked axis with markers; a dense **compass/astrolabe dial** with a small cyan core; very little text, lots of empty space | **Amber as the main line colour** with cyan only as a small accent (an alternative palette to cyan-first); **rings on a line** = a timeline or strike ladder where ring size is a value (e.g. OI per strike, events through the session); **tick axis with markers** = price ladder with entry, stop, target; **calm, sparse composition**: empty space instead of filling every panel |
 
 ## Design language extracted
 
@@ -61,6 +63,8 @@ public repo) and **never used in the product**; only the design language below i
 | Hero + telemetry left + queue right (15) | Main screen layout during market hours |
 | Time bands / globe (16) | Session clock and exchange status (Phase 9) |
 | Red missing items in a tree (17) | Data completeness and job health view |
+| Blue/amber hero + KPI cards right + module row bottom (19) | Option-chain screen: OI by strike as the hero (calls blue, puts amber), PCR/IV cards right, data-module status row at the bottom |
+| Rings on a line, tick axis with markers (20) | Strike ladder with ring size = OI; position view with entry / stop / target markers on one price axis |
 | Isometric system map (18) | Health Check protocol result as a live diagram |
 | Table with TRUE/FALSE state column (8) | Health check: broker session, feed, collector, worker, kill switch, owner rules |
 
