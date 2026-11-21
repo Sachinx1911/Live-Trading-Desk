@@ -201,9 +201,12 @@ them; and what sits at the centre of the dashboard.
 
 On 2026-11-21 the owner supplied a film still of the Iron Man workshop desk and decided
 that our desktop design is to be built after the monitors in it. This reference takes
-priority over the HUD mock-up drawn in the planning session. The image itself is not in
-the repository (the repository is public and the still is copyrighted); the owner has it,
-and this is what it shows:
+priority over the HUD mock-up drawn in the planning session.
+
+![Design reference: workshop monitors](assets/design-reference-workshop-screens.webp)
+
+The image is a film still supplied by the owner and kept here only as a design reference;
+it is not our work and is not to be used in the product itself. What it shows:
 
 - Thin, nearly frameless glass monitors on arms, angled around the desk, plus a larger
   screen behind. The interface looks as if it floats on dark glass.
