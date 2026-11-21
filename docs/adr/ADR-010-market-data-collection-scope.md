@@ -10,7 +10,7 @@ be obtained retroactively from brokers.
 ## Decision
 The collector (`apps/collector`, extracted from the worker in Phase 2) always stores:
 - 1-minute candles built from the live feed for all tracked instruments.
-- Options-chain snapshots every 5 minutes for tracked expiries (OI, ΔOI, IV, LTP, bid/ask).
+- Options-chain snapshots every 3 minutes (`COLLECT_CHAIN_INTERVAL_S`, was 5 until 2026-11-21; the exchange refreshes OI about every 3 minutes) for tracked expiries (OI, ΔOI, IV, LTP, bid/ask).
 - India VIX at 1-minute resolution.
 - The bid/ask at the moment of every paper fill.
 

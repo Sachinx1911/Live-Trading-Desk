@@ -156,3 +156,9 @@ Registry of the owner's hard market rules in `risk/owner_rules.py`, run by the r
 - [ ] Not yet verified on a live session (database was down when it was built); show PCR on the `/market` option chain and in the rejection journal UI
 - [ ] Chain history in backtest/replay so the rule is enforced there too
 
+## Option-chain cadence (2026-11-21)
+
+- [x] Chain snapshot interval is a setting, `COLLECT_CHAIN_INTERVAL_S`, default 180 s (was a fixed 5 minutes); ADR-010 updated
+- [x] `uv run python -m collector.oi_cadence --underlying NIFTY --minutes 20 --poll 15`: read-only tool that polls the chain and reports how often OI really changes
+- [ ] Run the cadence tool in a live session and record the measured gap here (built on a Saturday; Sensibull states about 3 minutes)
+

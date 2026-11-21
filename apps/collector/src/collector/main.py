@@ -1,5 +1,6 @@
 """Collector: one provider feed -> 1-minute candles (DB), quote cache (Redis), tick pub/sub,
-option-chain snapshots every 5 minutes, VIX via the normal tick path, optional raw ticks.
+option-chain snapshots every COLLECT_CHAIN_INTERVAL_S (default 3 minutes), VIX via the normal
+tick path, optional raw ticks.
 
 Runs forever; the provider adapter owns reconnects, this loop owns restarts. Everything
 it stores carries provider_id / is_demo so demo data can never be mistaken for real.
@@ -41,7 +42,6 @@ log = get_logger("collector")
 
 TICK_CHANNEL = "market.tick"
 CANDLE_CHANNEL = "market.candle"
-CHAIN_INTERVAL = timedelta(minutes=5)
 QUOTE_CACHE_TTL_S = 7 * 24 * 3600  # survives weekends and holidays; freshness says how old
 
 
@@ -198,7 +198,8 @@ class Collector:
             await db.commit()
 
     async def _chain_snapshots(self, now: datetime) -> None:
-        if self._last_chain_at and now - self._last_chain_at < CHAIN_INTERVAL:
+        interval = timedelta(seconds=self.settings.collect_chain_interval_s)
+        if self._last_chain_at and now - self._last_chain_at < interval:
             return
         if not self.cal.is_open(now) and self.provider.info.code != "fake":
             return

@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,7 +38,10 @@ class Settings(BaseSettings):
 
     collect_raw_ticks: bool = False
     collect_symbols: str = "NIFTY,BANKNIFTY,INDIAVIX"  # canonical symbols the collector follows
-    collect_chain_underlyings: str = "NIFTY,BANKNIFTY"  # option-chain snapshots every 5 min
+    collect_chain_underlyings: str = "NIFTY,BANKNIFTY"  # option-chain snapshots
+    # Seconds between chain snapshots. The exchange refreshes OI about every 3 minutes,
+    # so polling faster stores duplicates.
+    collect_chain_interval_s: int = Field(default=180, ge=60, le=3600)
     data_dir: str = "data"  # Parquet archive root (raw ticks)
     live_trading_enabled: bool = False  # hard switch; gateway refuses everything when False
     paper_default_capital: int = 100_000  # ₹1,00,000 per master prompt, user-editable per account
