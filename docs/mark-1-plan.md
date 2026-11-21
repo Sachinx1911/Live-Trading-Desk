@@ -192,10 +192,43 @@ Mark 2).
 
 The owner wants the dashboard to look like the JARVIS interface from the films (dark
 field, cyan line work, rings and gauges, glass panels, a central core). A first mock-up
-was shown in the planning session. **The visual design discussion is postponed by the
-owner** and resumes when they raise it. Open when it does: whether the HUD look is an
+was shown in the planning session, and the owner then supplied a reference image (below).
+**The visual design discussion is postponed by the owner** and resumes when they raise it. Open when it does: whether the HUD look is an
 additional theme next to the existing TradingView-based dark and light themes, or replaces
 them; and what sits at the centre of the dashboard.
+
+### Design reference: the workshop monitors
+
+On 2026-11-21 the owner supplied a film still of the Iron Man workshop desk and decided
+that our desktop design is to be built after the monitors in it. This reference takes
+priority over the HUD mock-up drawn in the planning session. The image itself is not in
+the repository (the repository is public and the still is copyrighted); the owner has it,
+and this is what it shows:
+
+- Thin, nearly frameless glass monitors on arms, angled around the desk, plus a larger
+  screen behind. The interface looks as if it floats on dark glass.
+- Near-black, blue-tinted background. One cyan / ice-blue for all line work and text.
+  Small orange accents only for highlighted or warning items.
+- A dense mosaic of many small panels in a tight grid, with thin outlines and almost no
+  filled blocks.
+- Circular elements everywhere: ring gauges, radial dials, rows and columns of round icons.
+- One large hero graphic per screen (a wireframe schematic on one, a big circular readout
+  on another), surrounded by small data panels, thin bar charts, small tables and text
+  columns.
+- The rear screen is a feed wall: a grid of thumbnails with a video tile.
+- Very small technical type, a soft glow on lines, slight transparency.
+
+How it maps to the owner's two screens:
+
+| In the reference | In the product |
+|---|---|
+| Screen with the hero graphic | Main screen: the chart or the requested content in the centre, small panels around it |
+| Screen of ring gauges | Second screen: PCR, VIX, risk and OI-change gauges, and JARVIS's panels |
+| Feed wall | Grid of alerts, signals and positions |
+| Orange highlights | Warnings and rules close to triggering |
+
+One constraint the reference does not have: prices and key numbers must be readable at a
+glance, so the style is kept but important figures are set larger than in the film.
 
 ## 6. Data sources
 
