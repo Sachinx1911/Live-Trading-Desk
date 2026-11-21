@@ -36,3 +36,4 @@ nl-eval-report*.json
 
 # Reference repositories: shallow clones for reading only (summaries in references/*.md are committed)
 references/_repos/
+references/_images/
