@@ -71,10 +71,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-pane p-6">
+    <div className="flex min-h-dvh items-center justify-center p-6">
       <div className="glass w-full max-w-[360px] rounded-[var(--r-lg)] p-7">
         <div className="mb-6 flex items-center gap-3">
-          <span className="flex size-8 items-center justify-center rounded-[var(--r-sm)] bg-accent text-[13px] font-bold text-white">TP</span>
+          <span className="flex size-8 items-center justify-center rounded-full border border-accent bg-accent-soft font-mono text-[12px] font-bold text-accent-text hud-glow">TP</span>
           <div>
             <h1 className="text-[16px] font-semibold text-text-1">Trading Platform</h1>
             <p className="text-[12px] text-text-3">Sign in to your terminal</p>

@@ -108,6 +108,16 @@ import-linter, web lint/typecheck/build clean.
 - [x] Light theme (TradingView light: #ebebeb page, white panes, #f2f2f2 controls, #222 selected pill) with a Dark / Light / System switch in the user menu and `/settings/profile`; applied before first paint, charts re-skin live
 - [ ] Hover/transition tokens still measured by eye, not from TradingView
 
+## Design system · HUD theme (2026-11-21, owner request "old design change kar")
+
+- [x] Dark theme replaced by the HUD palette from `references/design-reference-images.md`: navy `#05080f` page, `#0a1220` panels, cyan `#5fd4ff` line/accent, ice-blue text, amber `#ffb347` for panel headers and warnings, red `#ff4d4d` only for danger, green only for positive P&L; near-square radii; faint grid and top glow behind panels
+- [x] New utilities `hud-label` (mono, uppercase, 0.12em), `hud-frame` (bracketed corners), `hud-glow`; `.hud-panel` unfold animation 0.22 s, off with reduced motion
+- [x] `PanelCard` (every panel), sidebar (cyan active edge, mono group labels), top bar (ring badge, mono page title, outlined status pills), login badge; chart palette fallback updated (charts read the tokens)
+- [x] Light theme kept as the daytime option (TradingView light, square HUD radii reverted there); Dark / Light / System switch unchanged
+- [x] Index tiles: HUD frame, monospaced symbol label, 36px tabular hero price; demo quotes keep the demo stripes instead of the frame (the demo marking wins)
+- [x] `tsc --noEmit` and eslint clean; login, dashboard and market pages checked in the browser (no market data running, so prices showed as Disconnected)
+- [ ] Remaining pages checked one by one; P&L and PCR hero numbers; look of live prices and demo stripes with the collector running; JARVIS core, ring and tile-grid components come with Stage 4 panels
+
 ## Market regime · Module 6 (2026-11-18, deterministic, no LLM)
 
 - [x] `strategy/regime.py`: daily regime (trend up/down/sideways from close·EMA20·EMA50 with ADX confirmation, strength from ADX, volatility from the VIX 1-year percentile or ATR %, structure from swing highs/lows, event flag) and intraday day type after 09:45 IST (opening range, VWAP distance, ATR ratio)

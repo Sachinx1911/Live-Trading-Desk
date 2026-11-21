@@ -62,7 +62,7 @@ function Pill({
     dot === "up" ? "bg-up" : dot === "down" ? "bg-down" : dot === "warn" ? "bg-warn" : dot === "ai" ? "bg-ai" : "bg-text-3";
   const inner = (
     <span
-      className={cn("inline-flex h-7 shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--r-pill)] bg-raised px-3 text-[13px] text-text-2", href && "hover:bg-raised-hover", className)}
+      className={cn("inline-flex h-7 shrink-0 items-center gap-2 whitespace-nowrap rounded-[var(--r-pill)] border border-border bg-raised px-3 text-[13px] text-text-2", href && "hover:bg-raised-hover", className)}
       title={title}
     >
       {dot && <span className={cn("size-1.5 shrink-0 rounded-full", dotClass)} aria-hidden />}
@@ -170,9 +170,9 @@ export function TopBar() {
     <header className="flex h-[var(--h-toolbar)] shrink-0 items-center justify-between gap-4 border-b border-border bg-pane px-3">
       <div className="flex min-w-0 items-center gap-3">
         <Link href="/dashboard" className="flex items-center gap-2" aria-label="Dashboard">
-          <span className="flex size-6 items-center justify-center rounded-[var(--r-sm)] bg-accent text-[11px] font-bold text-white">TP</span>
+          <span className="flex size-6 items-center justify-center rounded-full border border-accent bg-accent-soft font-mono text-[10px] font-bold text-accent-text hud-glow">TP</span>
         </Link>
-        <h1 className="truncate text-[14px] font-semibold text-text-1">{item?.label ?? "Trading Platform"}</h1>
+        <h1 className="hud-label truncate text-[12px] text-text-1">{item?.label ?? "Trading Platform"}</h1>
         <SymbolSearch />
       </div>
       <div className="flex min-w-0 shrink items-center gap-2">

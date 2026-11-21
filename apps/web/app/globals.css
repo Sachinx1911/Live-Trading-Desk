@@ -3,73 +3,83 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Design tokens — TradingView-measured themes
- * (docs/architecture/09-design-reference-tradingview.md §2 dark, §3 light). Dark is the
- * default on :root; `html[data-theme="light"]` overrides the surfaces/text/tints below.
- * Components never use raw hex values; they use these variables or the Tailwind colour
- * utilities mapped below. The legacy utility names (bg-panel, text-text-muted, text-cyan-accent,
- * text-pnl-positive, …) are kept and remapped so every screen follows the new palette.
+ * Design tokens — HUD "workshop monitor" theme (dark, default) from the owner's design
+ * references (references/design-reference-images.md, 2026-11-21), and the TradingView light
+ * theme (docs/architecture/09-design-reference-tradingview.md §3) as the daytime option.
+ * Rules carried over from the references: one cyan line colour, amber only for headers and
+ * "watch this", red only for real danger (loss, kill switch, rule hit, live), green only for
+ * positive P&L; monospaced uppercase labels; numbers tabular and readable at hero size.
+ * Components never use raw hex values; they use these variables or the Tailwind utilities
+ * mapped below. Legacy utility names (bg-panel, text-text-muted, text-cyan-accent, …) are
+ * kept and remapped so every screen follows the palette.
  */
 :root {
-  /* surfaces */
-  --bg-app: #222222; /* chrome: page background, top bar fallbacks */
-  --bg-pane: #000000; /* content panes, charts, rails */
-  --bg-raised: #303030; /* pills, selected rows, raised controls */
-  --bg-hover: #2a2a2a;
-  --bg-selected: #303030;
-  --bg-row-hover: #1a1a1a;
-  --border: #303030;
-  --border-row: #1e1e1e;
-  --border-strong: #464646;
+  /* surfaces: near-black navy, panels one step lighter */
+  --bg-app: #05080f; /* page background behind panels */
+  --bg-pane: #0a1220; /* panels, charts, rails */
+  --bg-raised: #10213a; /* pills, selected rows, raised controls */
+  --bg-hover: #0e1b2e;
+  --bg-selected: #0f2a40;
+  --bg-row-hover: #0c1828;
+  --border: #15304a; /* thin cyan-tinted hairline */
+  --border-row: #0f2236;
+  --border-strong: #1f4a6b;
 
-  /* text */
-  --text-1: #dbdbdb;
-  --text-2: #b8b8b8;
-  --text-3: #8c8c8c;
-  --text-disabled: #555555;
+  /* text: ice blue */
+  --text-1: #d8f4ff;
+  --text-2: #94c3da;
+  --text-3: #5f8aa4;
+  --text-disabled: #34526a;
 
   /* accents */
-  --accent: #2962ff;
-  --accent-hover: #1e53e5;
-  --accent-soft: #132042;
-  --ai: #a78bfa;
-  --ai-soft: #2b2140;
-  --up: #22ab94;
-  --up-candle: #089981;
-  --up-soft: #10443b;
-  --down: #f23645;
-  --down-soft: #4d191d;
-  --warn: #ff9800;
-  --warn-soft: #593a1b;
-  --text-on-selected: var(--text-1);
-  --bg-raised-hover: #3a3a3a;
-  --accent-text: #5b9cf6; /* accent as readable text on this surface */
+  --accent: #5fd4ff; /* the one line colour */
+  --accent-hover: #3fc2f2;
+  --accent-soft: #0c2a3f;
+  --hud-amber: #ffb347; /* headers, highlights, close-to-a-rule */
+  --ai: #b9a4ff;
+  --ai-soft: #231d40;
+  --up: #2fd3a6; /* positive P&L only */
+  --up-candle: #1fb893;
+  --up-soft: #0c3a33;
+  --down: #ff4d4d; /* danger only */
+  --down-soft: #3d1418;
+  --warn: #ffb347;
+  --warn-soft: #3a2a12;
+  --text-on-selected: #e9f9ff;
+  --bg-raised-hover: #15304d;
+  --accent-text: #5fd4ff;
+
+  /* glow and frames */
+  --glow: 0 0 10px rgba(95, 212, 255, 0.18);
+  --glow-strong: 0 0 14px rgba(95, 212, 255, 0.35);
+  --frame: rgba(95, 212, 255, 0.55); /* corner brackets */
+  --grid-line: rgba(95, 212, 255, 0.035);
 
   /* overlays & chart */
-  --glass-bg: rgba(19, 19, 19, 0.85);
-  --glass-ring: rgba(140, 140, 140, 0.1);
-  --glass-shadow: 0 0 2px rgba(0, 0, 0, 1), 0 8px 32px rgba(0, 0, 0, 0.6);
-  --backdrop: rgba(26, 26, 26, 0.4);
-  --tooltip-bg: #303030;
+  --glass-bg: rgba(8, 16, 30, 0.86);
+  --glass-ring: rgba(95, 212, 255, 0.22);
+  --glass-shadow: 0 0 2px rgba(0, 0, 0, 1), 0 0 24px rgba(95, 212, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.7);
+  --backdrop: rgba(2, 6, 12, 0.6);
+  --tooltip-bg: #10213a;
   --tooltip-fg: var(--text-1);
-  --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  --chart-grid: rgba(255, 255, 255, 0.04);
-  --chart-crosshair: #8c8c8c;
-  --chart-text: #b8b8b8;
-  --demo-stripe: rgba(255, 255, 255, 0.04);
-  --selection: rgba(41, 98, 255, 0.35);
+  --tooltip-shadow: 0 0 0 1px rgba(95, 212, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.6);
+  --chart-grid: rgba(95, 212, 255, 0.05);
+  --chart-crosshair: #5fd4ff;
+  --chart-text: #94c3da;
+  --demo-stripe: rgba(185, 164, 255, 0.06);
+  --selection: rgba(95, 212, 255, 0.3);
 
-  /* radii & heights */
-  --r-pill: 14px;
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 20px;
-  --h-toolbar: 38px;
+  /* radii & heights: thin, near-square shapes */
+  --r-pill: 3px;
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --h-toolbar: 40px;
   --h-control: 28px;
   --h-chip: 34px;
   --h-row: 41px;
   --h-row-dense: 34px;
-  --h-th: 50px;
+  --h-th: 44px;
 
   /* legacy aliases (still referenced by components) */
   --bg-panel: var(--bg-pane);
@@ -81,7 +91,7 @@
   --accent-cyan: var(--accent);
   --accent-cyan-dim: var(--accent-hover);
   --accent-ai: var(--ai);
-  --accent-ai-dim: #5b21b6;
+  --accent-ai-dim: #6d4fd6;
   --pnl-positive: var(--up);
   --pnl-negative: var(--down);
   --state-live: var(--up);
@@ -98,28 +108,28 @@
   --foreground: var(--text-1);
   --card: var(--bg-pane);
   --card-foreground: var(--text-1);
-  --popover: #1a1a1a;
+  --popover: #0b1626;
   --popover-foreground: var(--text-1);
   --primary: var(--accent);
-  --primary-foreground: #ffffff;
+  --primary-foreground: #03121c;
   --secondary: var(--bg-raised);
   --secondary-foreground: var(--text-1);
   --muted: var(--bg-raised);
   --muted-foreground: var(--text-2);
   --accent-foreground: var(--text-1);
   --destructive: var(--down);
-  --input: var(--border);
+  --input: var(--border-strong);
   --ring: var(--accent);
   --chart-1: var(--accent);
-  --chart-2: var(--ai);
+  --chart-2: var(--hud-amber);
   --chart-3: var(--up);
   --chart-4: var(--down);
-  --chart-5: var(--warn);
-  --radius: 0.5rem;
+  --chart-5: var(--ai);
+  --radius: 0.25rem;
   --sidebar: var(--bg-pane);
   --sidebar-foreground: var(--text-3);
   --sidebar-primary: var(--accent);
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary-foreground: #03121c;
   --sidebar-accent: var(--bg-raised);
   --sidebar-accent-foreground: var(--text-1);
   --sidebar-border: var(--border);
@@ -175,6 +185,17 @@ html[data-theme="light"] {
   --chart-text: #707070;
   --demo-stripe: rgba(0, 0, 0, 0.04);
   --selection: rgba(41, 98, 255, 0.25);
+  --hud-amber: #c96a00;
+  --glow: none;
+  --glow-strong: none;
+  --frame: rgba(0, 0, 0, 0.18);
+  --grid-line: transparent;
+  --r-pill: 14px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 20px;
+  --primary-foreground: #ffffff;
+  --sidebar-primary-foreground: #ffffff;
   color-scheme: light;
 }
 
@@ -210,6 +231,7 @@ html[data-theme="light"] {
   --color-selected: var(--bg-selected);
   --color-on-selected: var(--text-on-selected);
   --color-accent-text: var(--accent-text);
+  --color-amber: var(--hud-amber);
   --color-backdrop: var(--backdrop);
   --color-tooltip: var(--tooltip-bg);
   --color-tooltip-fg: var(--tooltip-fg);
@@ -301,6 +323,35 @@ html[data-theme="light"] {
     var(--glass-shadow);
 }
 
+/* HUD label: monospaced, uppercase, wide tracking (design references, "Type"). */
+@utility hud-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Bracketed corners on a panel: four thin L-shapes in the frame colour. */
+@utility hud-frame {
+  background-image:
+    linear-gradient(var(--frame), var(--frame)), linear-gradient(var(--frame), var(--frame)),
+    linear-gradient(var(--frame), var(--frame)), linear-gradient(var(--frame), var(--frame)),
+    linear-gradient(var(--frame), var(--frame)), linear-gradient(var(--frame), var(--frame)),
+    linear-gradient(var(--frame), var(--frame)), linear-gradient(var(--frame), var(--frame));
+  background-repeat: no-repeat;
+  background-size:
+    10px 1px, 1px 10px, 10px 1px, 1px 10px,
+    10px 1px, 1px 10px, 10px 1px, 1px 10px;
+  background-position:
+    left top, left top, right top, right top,
+    left bottom, left bottom, right bottom, right bottom;
+}
+
+@utility hud-glow {
+  box-shadow: var(--glow);
+}
+
 /* 28px pill control (§5). */
 @utility pill {
   height: var(--h-control);
@@ -318,6 +369,30 @@ html[data-theme="light"] {
   body {
     @apply min-h-full bg-background text-foreground text-[14px] leading-5;
     font-variant-numeric: tabular-nums;
+    /* faint workshop grid behind the panels, a soft cyan glow from the top */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(95, 212, 255, 0.07), transparent 70%),
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+    background-attachment: fixed;
+  }
+  html[data-theme="light"] body {
+    background-image: none;
+  }
+  /* panels unfold quickly (< 0.3 s, plan §4 market-hours rule) */
+  @keyframes hud-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .hud-panel {
+    animation: hud-in 0.22s ease-out both;
   }
   ::selection {
     background: var(--selection);
@@ -332,7 +407,8 @@ html[data-theme="light"] {
     border-radius: 6px;
   }
   @media (prefers-reduced-motion: reduce) {
-    .animate-pulse {
+    .animate-pulse,
+    .hud-panel {
       animation: none;
     }
   }

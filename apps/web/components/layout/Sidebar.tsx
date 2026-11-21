@@ -9,8 +9,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useUiStore } from "@/components/layout/ui-store";
 
 /*
- * Icon rail per the TradingView reference (§5): 52px black rail, 36px icon buttons, active
- * item on a #303030 pill, groups separated by 1px lines. Expands to 220px with labels.
+ * Icon rail (52px, expands to 220px with labels). HUD style: active item lit in cyan with a
+ * 2px edge, group labels as monospaced uppercase, groups separated by hairlines.
  */
 function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolean; active: boolean }) {
   const Icon = item.icon;
@@ -21,7 +21,7 @@ function NavLink({ item, collapsed, active }: { item: NavItem; collapsed: boolea
       className={cn(
         "group flex h-9 items-center gap-3 rounded-[var(--r-sm)] text-[14px] outline-none transition-colors",
         "text-text-3 hover:bg-hover hover:text-text-1 focus-visible:ring-1 focus-visible:ring-ring",
-        active && "bg-selected text-on-selected",
+        active && "bg-accent-soft text-accent-text shadow-[inset_2px_0_0_var(--accent)]",
         item.live && !active && "text-down/70 hover:text-down",
         item.live && active && "text-down",
         collapsed ? "mx-2 size-9 justify-center" : "mx-2 px-2.5",
@@ -64,7 +64,7 @@ export function Sidebar() {
           <div key={group.label}>
             {gi > 0 && <div className="mx-3 my-1.5 border-t border-border" aria-hidden />}
             {!collapsed && (
-              <p className="px-5 pt-1 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-text-3">
+              <p className="hud-label px-5 pt-1 pb-0.5 text-[10px] text-text-3">
                 {group.label}
               </p>
             )}

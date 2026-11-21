@@ -55,16 +55,16 @@ export function watchSystemTheme(cb: () => void): () => void {
 /** CSS variable snapshot for canvas charts (Lightweight Charts cannot read var()). */
 export function chartPalette() {
   const fallback = {
-    bg: "#000000",
-    text: "#b8b8b8",
-    grid: "rgba(255,255,255,0.04)",
-    border: "#303030",
-    crosshair: "#8c8c8c",
-    crosshairLabel: "#303030",
-    up: "#089981",
-    down: "#f23645",
-    priceLine: "#b8b8b8",
-    accent: "#2962ff",
+    bg: "#0a1220",
+    text: "#94c3da",
+    grid: "rgba(95,212,255,0.05)",
+    border: "#1f4a6b",
+    crosshair: "#5fd4ff",
+    crosshairLabel: "#10213a",
+    up: "#1fb893",
+    down: "#ff4d4d",
+    priceLine: "#94c3da",
+    accent: "#5fd4ff",
   };
   if (typeof document === "undefined") return fallback;
   const cs = getComputedStyle(document.documentElement);
